@@ -45,7 +45,17 @@ async function fd(pathname) {
     if (!r.ok) throw new Error(r.status === 429 ? 'Veri kaynağı istek sınırına ulaştı, bir dakika sonra tekrar dene.' : `Veri kaynağı hata verdi (${r.status}).`);
     return data;
 }
-const leagueMatches = code => cached('m' + code, 5 * 60e3, () => fd(`/competitions/${code}/matches`));
+const liveFlag = {};   // o ligde şu an canlı maç var mı? Varsa önbellek 1 dakikaya iner
+const isLiveStatus = st => st === 'IN_PLAY' || st === 'PAUSED' || st === 'LIVE';
+const leagueMatches = code => cached('m' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
+    const d = await fd(`/competitions/${code}/matches`);
+    liveFlag[code] = (d.matches || []).some(m => isLiveStatus(m.status));
+    return d;
+});
+function loadAdjustments() {
+    try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'duzeltmeler.json'), 'utf8')); }
+    catch (e) { if (e.code !== 'ENOENT') console.log('duzeltmeler.json okunamadı:', e.message); return {}; }
+}
 const leagueStandings = code => cached('s' + code, 30 * 60e3, () => fd(`/competitions/${code}/standings`));
 const okLeague = (req, res) => { if (!LEAGUE_CODES.includes(req.params.leagueId)) { res.status(400).json({ error: 'Geçersiz lig' }); return false; } return true; };
 
@@ -107,13 +117,43 @@ async function attachMarket(code, matches) {
     });
 }
 
+// ---------- Sakat / cezalı oyuncu bilgisi (API-Football, isteğe bağlı). Olasılıkları DEĞİŞTİRMEZ, sadece gösterir ----------
+const APIFOOTBALL_KEY = process.env.APIFOOTBALL_KEY || '';
+const AF_LEAGUES = { '2021': 39, '2014': 140, '2019': 135, '2002': 78, '2015': 61, '2001': 2, '2003': 88, '2017': 94 };
+const AF_SEASON = parseInt(process.env.AF_SEASON) || (new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1);
+async function fetchInjuries(code) {
+    const r = await fetch(`https://v3.football.api-sports.io/injuries?league=${AF_LEAGUES[code]}&season=${AF_SEASON}`, { headers: { 'x-apisports-key': APIFOOTBALL_KEY } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (data.errors && Object.keys(data.errors).length) throw new Error(JSON.stringify(data.errors));   // api-sports hataları 200 ile döner
+    const since = Date.now() - 36 * 3600e3;
+    return (data.response || []).filter(x => x.fixture && new Date(x.fixture.date).getTime() >= since && x.team && x.player)
+        .map(x => ({ team: x.team.name, ad: String(x.player.name || '').slice(0, 40), tur: x.player.type, neden: String(x.player.reason || '').slice(0, 40), t: new Date(x.fixture.date).getTime() }));
+}
+async function attachInjuries(code, matches) {
+    if (!APIFOOTBALL_KEY || !AF_LEAGUES[code]) return matches;
+    let list;
+    try { list = await cached('i' + code, 12 * 3600e3, () => fetchInjuries(code)); }
+    catch (e) { console.log('Sakatlık servisi hatası:', e.message); return matches; }
+    return matches.map(m => {
+        if (!m.prediction) return m;
+        const t = new Date(m.utcDate).getTime();
+        const pick = team => list.filter(x => Math.abs(x.t - t) <= 36 * 3600e3 && nameScore(team, x.team) >= 0.5).slice(0, 8).map(x => ({ ad: x.ad, tur: x.tur, neden: x.neden }));
+        const home = pick(m.homeTeam), away = pick(m.awayTeam);
+        return home.length || away.length ? { ...m, prediction: { ...m.prediction, injuries: { home, away } } } : m;
+    });
+}
+
 app.get('/api/matches/:leagueId', async (req, res) => {
     if (!okLeague(req, res)) return;
     const code = req.params.leagueId;
     try {
-        res.json(await cached('a' + code, 5 * 60e3, async () => {
+        res.json(await cached('a' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
             const data = await leagueMatches(code);
-            return { competition: data.competition, resultSet: data.resultSet, matches: await attachMarket(code, analyzeMatches(data.matches)) };
+            let ms = analyzeMatches(data.matches, loadAdjustments());
+            ms = await attachMarket(code, ms);
+            ms = await attachInjuries(code, ms);
+            return { competition: data.competition, resultSet: data.resultSet, matches: ms };
         }));
     } catch (error) { res.status(502).json({ error: error.message }); }
 });
@@ -123,6 +163,7 @@ app.get('/api/matches/:leagueId', async (req, res) => {
 // tablosundan MS, çifte şans, alt/üst ve KG değerlerini TEK kaynaktan türetir.
 const MAX_GOALS = 10;
 const DC_RHO = -0.08;   // Dixon-Coles düşük skor düzeltmesi (0-0 ve 1-1 biraz artar)
+const HALF_LIFE_DAYS = parseFloat(process.env.HALF_LIFE_DAYS) || 0;  // 0 = kapalı. >0 ise eski maçların ağırlığı bu kadar günde yarıya düşer
 const SHRINK = 5;       // az maçı olan takımı lig ortalamasına doğru çeker
 const FORM_WEIGHT = 0.05; // son 5 maç formunun beklenen gole etkisi (en fazla ±%5)
 
@@ -151,8 +192,10 @@ function scoreMatrix(lh, la) {
     return m;
 }
 
-function buildTeamStats(matches) {
+function buildTeamStats(matches, refDate) {
     const t = {}; let hg = 0, ag = 0, n = 0; const list = [];
+    const ref = refDate ? new Date(refDate).getTime() : Date.now();
+    const wOf = d => HALF_LIFE_DAYS > 0 ? Math.pow(0.5, Math.max(0, (ref - new Date(d).getTime()) / 864e5) / HALF_LIFE_DAYS) : 1;
     const get = name => t[name] || (t[name] = { form: [], games: [], hGF: 0, hGA: 0, hN: 0, aGF: 0, aGA: 0, aN: 0 });
     const finished = matches
         .filter(m => m.status === 'FINISHED' && m.score && m.score.fullTime && m.score.fullTime.home !== null && m.score.fullTime.away !== null)
@@ -160,14 +203,15 @@ function buildTeamStats(matches) {
     finished.forEach(match => {
         const H = get(match.homeTeam.shortName), A = get(match.awayTeam.shortName);
         const hs = match.score.fullTime.home, as = match.score.fullTime.away;
-        H.hGF += hs; H.hGA += as; H.hN++;
-        A.aGF += as; A.aGA += hs; A.aN++;
+        const w = wOf(match.utcDate);
+        H.hGF += hs * w; H.hGA += as * w; H.hN += w;
+        A.aGF += as * w; A.aGA += hs * w; A.aN += w;
         H.form.push(hs > as ? 'G' : hs < as ? 'M' : 'B');
         A.form.push(as > hs ? 'G' : as < hs ? 'M' : 'B');
         H.games.push({ opp: match.awayTeam.shortName, gf: hs, ga: as, home: true });
         A.games.push({ opp: match.homeTeam.shortName, gf: as, ga: hs, home: false });
         list.push({ d: match.utcDate, h: match.homeTeam.shortName, a: match.awayTeam.shortName, hs, as });
-        hg += hs; ag += as; n++;
+        hg += hs * w; ag += as * w; n += w;
     });
     return { teams: t, avgHome: n ? hg / n : 1.5, avgAway: n ? ag / n : 1.2, finished: list };
 }
@@ -190,7 +234,7 @@ function teamSummary(T) {
     return { all: part(g), home: part(g.filter(x => x.home)), away: part(g.filter(x => !x.home)), last5: g.slice(-5) };
 }
 
-function predictMatch(home, away, league, homeStats, awayStats) {
+function predictMatch(home, away, league, homeStats, awayStats, adj) {
     const { avgHome, avgAway } = league;
     const strength = (sum, cnt, avg) => (sum + SHRINK * avg) / (cnt + SHRINK) / avg;
     const empty = { form: [], games: [], hGF: 0, hGA: 0, hN: 0, aGF: 0, aGA: 0, aN: 0 };
@@ -199,6 +243,16 @@ function predictMatch(home, away, league, homeStats, awayStats) {
     const awayAtt = strength(A.aGF, A.aN, avgAway), awayDef = strength(A.aGA, A.aN, avgHome);
     let lh = avgHome * homeAtt * awayDef * formFactor(formScore(H.form));
     let la = avgAway * awayAtt * homeDef * formFactor(formScore(A.form));
+    // Elle girilen düzeltmeler (duzeltmeler.json): sakat/cezalı, hava, saha durumu gibi. Backtest EDİLMEZ.
+    const notes = [];
+    const cl = x => Math.max(-0.3, Math.min(0.3, +x || 0));
+    const live = x => x && typeof x === 'object' && (!x.bitis || new Date(x.bitis + 'T23:59:59') >= new Date());
+    const clean = t => String(t).replace(/[<>"'`]/g, '').slice(0, 80);
+    const tA = (adj && adj.takimlar) || {}, mA = (adj && adj.maclar) || {};
+    if (live(tA[home])) { lh *= 1 + cl(tA[home].atak); la *= 1 + cl(tA[home].savunma); if (tA[home].not) notes.push(clean(home + ': ' + tA[home].not)); }
+    if (live(tA[away])) { la *= 1 + cl(tA[away].atak); lh *= 1 + cl(tA[away].savunma); if (tA[away].not) notes.push(clean(away + ': ' + tA[away].not)); }
+    const mk = mA[home + '-' + away];
+    if (live(mk)) { lh *= 1 + cl(mk.gol); la *= 1 + cl(mk.gol); if (mk.not) notes.push(clean(mk.not)); }
     lh = Math.max(0.25, Math.min(4, lh)); la = Math.max(0.25, Math.min(4, la));
 
     const m = scoreMatrix(lh, la);
@@ -241,6 +295,7 @@ function predictMatch(home, away, league, homeStats, awayStats) {
         over15, under15: 100 - over15, over25, under25: 100 - over25,
         over35, under35: 100 - over35, over45, under45: 100 - over45,
         kgVar, kgYok: 100 - kgVar,
+        adjust: notes.length ? notes : undefined,
         combos, stats: { home: teamSummary(H), away: teamSummary(A), h2h },
         expectedHomeGoals: lh.toFixed(1), expectedAwayGoals: la.toFixed(1),
         homeForm: H.form.slice(-5).join('') || '----',
@@ -248,13 +303,13 @@ function predictMatch(home, away, league, homeStats, awayStats) {
     };
 }
 
-function analyzeMatches(matches) {
+function analyzeMatches(matches, adj) {
     const league = buildTeamStats(matches);
     return matches.map(match => {
         const home = match.homeTeam.shortName;
         const away = match.awayTeam.shortName;
         if (match.status === 'FINISHED') return { ...match, prediction: null, result: `${match.score.fullTime.home} - ${match.score.fullTime.away}` };
-        return { ...match, prediction: predictMatch(home, away, league, league.teams[home], league.teams[away]) };
+        return { ...match, prediction: predictMatch(home, away, league, league.teams[home], league.teams[away], adj) };
     });
 }
 
@@ -301,5 +356,6 @@ app.post('/api/check-results', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`✅ Sunucu çalışıyor: http://localhost:${PORT}`);
+    if (!APIFOOTBALL_KEY) console.log('ℹ️  APIFOOTBALL_KEY yok: sakat/cezalı listesi kapalı.');
     if (!ODDS_API_KEY) console.log('ℹ️  ODDS_API_KEY yok: "💰 Değerli" etiketi kapalı (gerçek oran gerekir).');
 });
