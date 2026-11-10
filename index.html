@@ -488,7 +488,7 @@ function retryCurrent() {
 }
 
 // Geçmiş test sonuçları (tek maç başına tutma %). null bırakılan kategori için yazı gösterilmez.
-const BACKTEST_STATS = { banko: 86, guvenilir: 79.9, riskli: null, cilgin: null };
+const BACKTEST_STATS = { banko: 83.6, guvenilir: 76.9, riskli: 62.1, cilgin: 46.9 };
 function renderBacktestBadges() {
     Object.entries(BACKTEST_STATS).forEach(([k, v]) => {
         const el = document.querySelector('.auto-' + k);
