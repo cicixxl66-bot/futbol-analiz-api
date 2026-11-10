@@ -1,35 +1,121 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+
+// .env dosyası varsa oku (ek paket gerekmez). Anahtarlar koda YAZILMAZ.
+try {
+    fs.readFileSync(path.join(__dirname, '.env'), 'utf8').split(/\r?\n/).forEach(l => {
+        const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+        if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    });
+} catch (e) {}
+
+const API_KEY = process.env.API_KEY || '';
+const BASE_URL = 'https://api.football-data.org/v4';
+const TELEGRAM_ENABLED = process.env.TELEGRAM_ENABLED === 'true';   // herkese açık sitede KAPALI kalmalı
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+const ODDS_API_KEY = process.env.ODDS_API_KEY || '';                 // isteğe bağlı: gerçek piyasa oranı (The Odds API)
+const ODDS_CACHE_MS = (parseFloat(process.env.ODDS_CACHE_HOURS) || 12) * 3600e3;
+const VALUE_EDGE = 0.05;                                             // "değerli" için minimum avantaj (%5)
+const PORT = process.env.PORT || 3000;
+const LEAGUE_CODES = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017'];
+if (!API_KEY) console.log('⚠️  API_KEY tanımlı değil. .env dosyası oluştur (.env.example dosyasına bak) ya da Render ortam değişkenlerine ekle.');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
-const API_KEY = '34f5d9bc97ec481ca31f10bdc8b79230'; 
-const BASE_URL = 'https://api.football-data.org/v4';
+// ---------- Önbellek: herkese açık sitede football-data limitini (dk'da 10 istek) korur ----------
+const cache = new Map();
+function cached(key, ttl, fn) {
+    const hit = cache.get(key);
+    if (hit && Date.now() - hit.t < ttl) return hit.p;
+    const p = fn().catch(err => {
+        if (hit) { cache.set(key, { t: Date.now() - ttl + 30000, p: hit.p }); return hit.p; }   // hata olursa eski veriyi göster
+        cache.delete(key); throw err;
+    });
+    cache.set(key, { t: Date.now(), p });
+    return p;
+}
+async function fd(pathname) {
+    const r = await fetch(`${BASE_URL}${pathname}`, { headers: { 'X-Auth-Token': API_KEY } });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 429 ? 'Veri kaynağı istek sınırına ulaştı, bir dakika sonra tekrar dene.' : `Veri kaynağı hata verdi (${r.status}).`);
+    return data;
+}
+const leagueMatches = code => cached('m' + code, 5 * 60e3, () => fd(`/competitions/${code}/matches`));
+const leagueStandings = code => cached('s' + code, 30 * 60e3, () => fd(`/competitions/${code}/standings`));
+const okLeague = (req, res) => { if (!LEAGUE_CODES.includes(req.params.leagueId)) { res.status(400).json({ error: 'Geçersiz lig' }); return false; } return true; };
 
-const TELEGRAM_BOT_TOKEN = '9212893872:AAHK2bs0wn4vTEDtpF9Y2pN95-3VdjE80Y0';
-const TELEGRAM_CHAT_ID = '6772692162';
+// ---------- Sayfa, ads.txt, sağlık kontrolü ----------
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/ads.txt', (req, res) => res.type('text/plain').send('google.com, pub-8868735664160445, DIRECT, f08c47fec0942fa0\n'));
+app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.get('/api/standings/:leagueId', async (req, res) => {
-    try {
-        const response = await fetch(`${BASE_URL}/competitions/${req.params.leagueId}/standings`, {
-            headers: { 'X-Auth-Token': API_KEY }
-        });
-        const data = await response.json();
-        res.json(data);
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    if (!okLeague(req, res)) return;
+    try { res.json(await leagueStandings(req.params.leagueId)); }
+    catch (error) { res.status(502).json({ error: error.message }); }
 });
 
-app.get('/api/matches/:leagueId', async (req, res) => {
-    try {
-        const response = await fetch(`${BASE_URL}/competitions/${req.params.leagueId}/matches`, {
-            headers: { 'X-Auth-Token': API_KEY }
+// ---------- Gerçek piyasa oranı (The Odds API, isteğe bağlı) -> "Değerli" etiketi ----------
+const ODDS_SPORTS = { '2021': 'soccer_epl', '2014': 'soccer_spain_la_liga', '2019': 'soccer_italy_serie_a', '2002': 'soccer_germany_bundesliga', '2015': 'soccer_france_ligue_one', '2001': 'soccer_uefa_champs_league', '2003': 'soccer_netherlands_eredivisie', '2017': 'soccer_portugal_primeira_liga' };
+const STOP = new Set(['fc', 'cf', 'afc', 'ac', 'sc', 'sv', 'ssc', 'as', 'us', 'rc', 'rcd', 'ud', 'cd', 'fk', 'vfl', 'vfb', 'tsg', 'fsv', 'bv', 'sl', 'club', 'de', 'the', 'calcio', '1']);
+const toks = s => new Set((s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t && !STOP.has(t)));
+const jac = (a, b) => { const i = [...a].filter(x => b.has(x)).length, u = new Set([...a, ...b]).size; return u ? i / u : 0; };
+const nameScore = (team, oddsName) => Math.max(...[team.name, team.shortName].filter(Boolean).map(n => jac(toks(n), toks(oddsName))), 0);
+
+async function fetchOdds(code) {
+    const url = `https://api.the-odds-api.com/v4/sports/${ODDS_SPORTS[code]}/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=totals&oddsFormat=decimal`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const events = await r.json();
+    return events.map(ev => {
+        const over = [], under = [];
+        (ev.bookmakers || []).forEach(b => (b.markets || []).filter(m => m.key === 'totals').forEach(m => {
+            const o = m.outcomes.find(x => x.name === 'Over' && x.point === 2.5), u = m.outcomes.find(x => x.name === 'Under' && x.point === 2.5);
+            if (o && u) { over.push(o.price); under.push(u.price); }
+        }));
+        const avg = a => a.reduce((s, x) => s + x, 0) / a.length;
+        return { home: ev.home_team, away: ev.away_team, time: new Date(ev.commence_time).getTime(), books: over.length, over: over.length ? avg(over) : null, under: under.length ? avg(under) : null };
+    }).filter(e => e.books >= 3);
+}
+
+async function attachMarket(code, matches) {
+    if (!ODDS_API_KEY || !ODDS_SPORTS[code]) return matches;
+    let events;
+    try { events = await cached('o' + code, ODDS_CACHE_MS, () => fetchOdds(code)); }
+    catch (e) { console.log('Oran servisi hatası:', e.message); return matches; }
+    return matches.map(m => {
+        if (!m.prediction) return m;
+        const t = new Date(m.utcDate).getTime();
+        let best = null, bestScore = 0;
+        events.forEach(ev => {
+            if (Math.abs(ev.time - t) > 36 * 3600e3) return;
+            const h = nameScore(m.homeTeam, ev.home), a = nameScore(m.awayTeam, ev.away);
+            if (h >= 0.5 && a >= 0.5 && h + a > bestScore) { best = ev; bestScore = h + a; }
         });
-        const data = await response.json();
-        const analyzedMatches = analyzeMatches(data.matches);
-        res.json({ competition: data.competition, resultSet: data.resultSet, matches: analyzedMatches });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+        if (!best) return m;
+        const p = m.prediction, value = [];
+        [['over25', best.over], ['under25', best.under]].forEach(([k, odd]) => {
+            const edge = p[k] / 100 * odd - 1;
+            if (edge >= VALUE_EDGE && edge <= 0.30) value.push({ key: k, odd: +odd.toFixed(2), edge: Math.round(edge * 100) });   // %30 üstü genelde model/eşleşme hatasıdır
+        });
+        return { ...m, prediction: { ...p, market: { over25: +best.over.toFixed(2), under25: +best.under.toFixed(2), books: best.books }, value } };
+    });
+}
+
+app.get('/api/matches/:leagueId', async (req, res) => {
+    if (!okLeague(req, res)) return;
+    const code = req.params.leagueId;
+    try {
+        res.json(await cached('a' + code, 5 * 60e3, async () => {
+            const data = await leagueMatches(code);
+            return { competition: data.competition, resultSet: data.resultSet, matches: await attachMarket(code, analyzeMatches(data.matches)) };
+        }));
+    } catch (error) { res.status(502).json({ error: error.message }); }
 });
 
 // ========== POISSON TAHMİN MODELİ ==========
@@ -172,8 +258,12 @@ function analyzeMatches(matches) {
     });
 }
 
+// ---------- Telegram (yalnızca TELEGRAM_ENABLED=true ise; herkese açık sitede kapalı kalır) ----------
+const tgOff = res => res.status(403).json({ success: false, ok: false, disabled: true, error: 'Telegram bu sunucuda kapalı.' });
+
 app.post('/api/telegram/send', async (req, res) => {
-    const { message } = req.body;
+    if (!TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return tgOff(res);
+    const message = typeof req.body.message === 'string' ? req.body.message.slice(0, 4000) : '';
     if (!message) return res.status(400).json({ success: false, error: 'Mesaj boş' });
     try {
         const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -186,36 +276,30 @@ app.post('/api/telegram/send', async (req, res) => {
 });
 
 app.get('/api/telegram/test', async (req, res) => {
+    if (!TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return tgOff(res);
     try {
         const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe`);
         const data = await response.json();
-        res.json(data);
-    } catch (error) { res.status(500).json({ error: error.message }); }
+        res.json({ ok: !!data.ok });   // bot bilgilerini dışarı vermiyoruz
+    } catch (error) { res.status(500).json({ ok: false }); }
 });
 
 app.post('/api/check-results', async (req, res) => {
-    const { matchIds } = req.body;
-    if (!matchIds || !Array.isArray(matchIds)) return res.status(400).json({ error: 'matchIds gerekli' });
-    try {
-        const results = {};
-        const leagueCodes = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017'];
-        for (const code of leagueCodes) {
-            try {
-                const response = await fetch(`${BASE_URL}/competitions/${code}/matches`, { headers: { 'X-Auth-Token': API_KEY } });
-                const data = await response.json();
-                if (data.matches) {
-                    data.matches.forEach(m => {
-                        if (matchIds.includes(m.id)) {
-                            results[m.id] = { status: m.status, homeScore: m.score.fullTime.home, awayScore: m.score.fullTime.away, winner: m.score.winner };
-                        }
-                    });
-                }
-            } catch (e) {}
-        }
-        res.json({ results });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    const ids = Array.isArray(req.body.matchIds) ? req.body.matchIds.filter(Number.isInteger).slice(0, 100) : null;
+    if (!ids) return res.status(400).json({ error: 'matchIds gerekli' });
+    const results = {};
+    const all = await Promise.allSettled(LEAGUE_CODES.map(leagueMatches));   // önbellekten okunur, API'yi yormaz
+    if (all.every(x => x.status === 'rejected')) return res.status(502).json({ error: 'Veri kaynağına ulaşılamadı.' });
+    all.forEach(x => {
+        if (x.status !== 'fulfilled' || !x.value.matches) return;
+        x.value.matches.forEach(m => {
+            if (ids.includes(m.id)) results[m.id] = { status: m.status, homeScore: m.score.fullTime.home, awayScore: m.score.fullTime.away, winner: m.score.winner };
+        });
+    });
+    res.json({ results });
 });
 
-app.listen(3000, () => {
-    console.log('✅ Proxy + Tahmin + Telegram + Sonuç Kontrolü çalışıyor!');
+app.listen(PORT, () => {
+    console.log(`✅ Sunucu çalışıyor: http://localhost:${PORT}`);
+    if (!ODDS_API_KEY) console.log('ℹ️  ODDS_API_KEY yok: "💰 Değerli" etiketi kapalı (gerçek oran gerekir).');
 });

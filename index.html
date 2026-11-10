@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1f2421">
+    <meta name="description" content="Futbol maç tahminleri, oran analizi ve kupon merkezi.">
+    <meta name="google-adsense-account" content="ca-pub-8868735664160445">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8868735664160445" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+    <title>Futbol Analiz - Kupon Merkezi</title>
+    <style>
+        :root {
+            --bg:#1f2421; --bg2:#2c322f; --card:#353c38; --card2:#3b433f; --ink:#1a1204; --pit:#2a302d;
+            --accent:#ffb627; --accent2:#f59e0b; --text:#f2f5ef; --muted:#aab7ae; --border:#4d5851;
+            --green:#4ade80; --yellow:#e9c85a; --red:#f87171; --orange:#fb923c; --purple:#b9a6f0; --pink:#f28ba8; --sky:#7cc4e8;
+            --display:'Barlow Condensed','Arial Narrow','Segoe UI',system-ui,sans-serif;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:'Barlow','Segoe UI',system-ui,sans-serif; background-color:#174428; background-image:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.4) 100%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1050 680' fill='none' stroke='white' stroke-opacity='.16' stroke-width='3'%3E%3Crect x='25' y='25' width='1000' height='630'/%3E%3Cpath d='M525 25V655'/%3E%3Ccircle cx='525' cy='340' r='91'/%3E%3Ccircle cx='525' cy='340' r='5' fill='white' fill-opacity='.16'/%3E%3Crect x='25' y='138' width='165' height='404'/%3E%3Crect x='25' y='238' width='55' height='204'/%3E%3Crect x='860' y='138' width='165' height='404'/%3E%3Crect x='970' y='238' width='55' height='204'/%3E%3C/svg%3E"),repeating-linear-gradient(90deg,#174428 0 90px,#1c5232 90px 180px); background-size:100% 100%,cover,auto; background-position:center; background-repeat:no-repeat,no-repeat,repeat; background-attachment:fixed; color:var(--text); font-size:14px; line-height:1.45; min-height:100vh; font-variant-numeric:tabular-nums; }
+        button { font-family:inherit; }
+        :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+        .header { background:var(--bg2); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; flex-wrap:wrap; gap:10px; }
+        .header h1 { font-family:var(--display); font-size:1.7rem; font-weight:700; letter-spacing:.01em; display:flex; align-items:center; gap:10px; line-height:1; }
+        .header h1 .logo-icon { font-size:1.5rem; }
+        .header h1 span { font-weight:500; color:var(--muted); }
+        .header h1 .logo-icon { color:inherit; }
+        .header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .header-info, .bot-status { font-size:.78rem; padding:4px 12px; border-radius:999px; border:1px solid var(--border); background:var(--pit); color:var(--muted); display:flex; align-items:center; gap:7px; }
+        .bot-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 3px rgba(255,255,255,.06); }
+
+        .main-tabs { display:flex; gap:4px; padding:0 20px; background:var(--bg2); border-bottom:1px solid var(--border); overflow-x:auto; }
+        .main-tab { background:none; color:var(--muted); border:none; border-bottom:3px solid transparent; padding:13px 16px 10px; cursor:pointer; font-weight:600; font-size:.9rem; white-space:nowrap; transition:color .15s; }
+        .main-tab:hover { color:var(--text); }
+        .main-tab.active { color:var(--text); border-bottom-color:var(--accent); }
+
+        .layout { display:grid; grid-template-columns:220px 1fr 340px; gap:14px; padding:16px; max-width:1600px; margin:0 auto; align-items:start; }
+        @media (max-width:1200px) { .layout { grid-template-columns:200px 1fr 320px; } }
+        @media (max-width:900px) { .layout { grid-template-columns:1fr; } .sidebar, .coupon-panel { position:static !important; max-height:none !important; } .sidebar { display:grid; grid-template-columns:1fr 1fr; gap:10px; } .sidebar-section { margin:0 !important; } }
+
+        .sidebar { background:var(--card); border-radius:10px; padding:12px; border:1px solid var(--border); position:relative; z-index:20; }
+        .sidebar-section { margin-bottom:16px; }
+        .sidebar-label { font-size:.78rem; color:var(--muted); margin-bottom:6px; font-weight:600; }
+        .dropdown { position:relative; }
+        .dropdown-btn { width:100%; background:var(--pit); color:var(--text); border:1px solid var(--border); padding:10px 12px; border-radius:6px; cursor:pointer; font-size:.85rem; font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:8px; transition:border-color .15s; }
+        .dropdown-btn:hover, .dropdown-btn.active { border-color:var(--accent); }
+        .dropdown-list { display:none; position:absolute; top:100%; left:0; right:0; background:var(--card2); border:1px solid var(--border); border-radius:6px; margin-top:4px; max-height:none; overflow:visible; z-index:50; box-shadow:0 10px 28px rgba(0,0,0,.55); }
+        .dropdown-list.show { display:block; }
+        .dropdown-item { padding:9px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,.05); display:flex; flex-direction:column; gap:1px; }
+        .dropdown-item:hover { background:rgba(255,182,39,.08); }
+        .dropdown-item.selected { background:rgba(255,182,39,.14); box-shadow:inset 3px 0 0 var(--accent); }
+        .dropdown-item .country { font-size:.7rem; color:var(--muted); }
+        .dropdown-item .league { font-size:.85rem; font-weight:600; }
+
+        .matches-area { min-width:0; }
+        .filter-bar { background:var(--card); border-radius:10px; padding:10px 12px; border:1px solid var(--border); margin-bottom:14px; display:flex; gap:8px; overflow-x:auto; align-items:center; flex-wrap:wrap; }
+        .filter-bar label { font-size:.8rem; color:var(--muted); font-weight:600; }
+        .filter-btn { background:var(--pit); color:var(--muted); border:1px solid var(--border); padding:5px 13px; border-radius:999px; cursor:pointer; font-size:.8rem; font-weight:600; white-space:nowrap; transition:.15s; }
+        .filter-btn:hover { border-color:var(--accent); color:var(--text); }
+        .filter-btn.active { background:var(--accent); color:var(--ink); border-color:var(--accent); }
+
+        .day-sep { display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 10px; padding:6px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; font-family:var(--display); font-size:1.3rem; font-weight:600; }
+        .day-sep small { font-family:'Barlow',sans-serif; font-size:.8rem; font-weight:500; color:var(--muted); }
+        .auto-coupon-panel { background:var(--card); border-radius:10px; padding:16px; border:1px solid var(--border); margin-bottom:14px; }
+        .auto-coupon-panel h4 { font-family:var(--display); font-size:1.25rem; font-weight:600; margin-bottom:12px; }
+        .bet-type-selector { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:6px; margin-bottom:14px; }
+        .bet-type-checkbox { display:flex; align-items:center; gap:6px; background:var(--pit); border:1px solid var(--border); padding:7px 10px; border-radius:6px; cursor:pointer; font-size:.8rem; font-weight:600; transition:.15s; user-select:none; }
+        .bet-type-checkbox:hover { border-color:var(--muted); }
+        .bet-type-checkbox.checked { background:rgba(255,182,39,.12); border-color:var(--accent); color:var(--accent); }
+        .bet-type-checkbox input { display:none; }
+        .match-count-selector { display:flex; align-items:center; gap:12px; margin-bottom:14px; padding:10px 12px; background:var(--pit); border-radius:6px; border:1px solid var(--border); }
+        .match-count-selector label { font-size:.8rem; color:var(--muted); font-weight:600; white-space:nowrap; }
+        .match-count-selector input[type="range"] { flex:1; accent-color:var(--accent); }
+        .match-count-selector .count-display { background:var(--accent); color:var(--ink); padding:2px 10px; border-radius:4px; font-family:var(--display); font-weight:700; font-size:1.15rem; min-width:46px; text-align:center; }
+        .auto-coupon-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+        @media (max-width:700px) { .auto-coupon-grid { grid-template-columns:repeat(2,1fr); } }
+        .auto-btn { padding:10px 6px; border-radius:6px; cursor:pointer; border:1px solid; transition:.15s; display:flex; flex-direction:column; align-items:center; gap:2px; background:var(--pit); }
+        .auto-btn:hover { filter:brightness(1.25); }
+        .auto-btn .emoji { font-size:1.2rem; }
+        .auto-btn .btn-title { font-family:var(--display); font-size:1.05rem; font-weight:700; letter-spacing:.03em; }
+        .auto-btn .btn-sub { font-size:.72rem; opacity:.8; }
+        .auto-banko { color:var(--green); border-color:rgba(74,222,128,.5); }
+        .auto-guvenilir { color:var(--sky); border-color:rgba(124,196,232,.5); }
+        .auto-riskli { color:var(--accent); border-color:rgba(255,182,39,.5); }
+        .auto-cilgin { color:var(--red); border-color:rgba(248,113,113,.5); }
+        .auto-karisik { color:var(--purple); border-color:rgba(185,166,240,.5); }
+
+        .match-card { background:var(--card); border-radius:10px; padding:14px 16px; margin-bottom:14px; border:1px solid var(--border); }
+        .match-card:hover { border-color:#3b5a49; }
+        .match-header { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:.78rem; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+        .match-league-tag { display:inline-block; background:var(--card2); color:var(--text); border:1px solid var(--border); padding:1px 9px; border-radius:999px; font-size:.72rem; font-weight:600; margin-right:6px; }
+        .teams-container { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; margin-bottom:14px; }
+        .team { font-family:var(--display); font-size:1.3rem; font-weight:600; display:flex; align-items:center; gap:8px; line-height:1.1; }
+        .team.home { justify-content:flex-end; text-align:right; }
+        .team.away { justify-content:flex-start; }
+        .team img { width:28px; height:28px; object-fit:contain; flex-shrink:0; }
+        .vs { width:30px; height:30px; border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.65rem; font-weight:700; }
+        .result-box { background:var(--pit); border:1px solid var(--border); padding:6px; border-radius:6px; text-align:center; font-family:var(--display); font-size:1.5rem; font-weight:700; letter-spacing:.08em; color:var(--accent); margin-bottom:6px; }
+
+        .odds-title { font-size:.78rem; color:var(--muted); margin:10px 0 5px; font-weight:600; }
+        .odds-grid { display:grid; gap:6px; }
+        .odds-grid.ms, .odds-grid.dc { grid-template-columns:repeat(3,1fr); }
+        .odds-grid.kg { grid-template-columns:repeat(2,1fr); }
+        .odd-btn { background:var(--pit); border:1px solid var(--border); border-radius:4px; padding:7px 4px; cursor:pointer; transition:.12s; display:flex; flex-direction:column; align-items:center; gap:0; color:var(--text); line-height:1.2; }
+        .odd-btn:hover { border-color:var(--accent); }
+        .odd-btn.selected { background:var(--accent); border-color:var(--accent); }
+        .odd-btn.selected .odd-label, .odd-btn.selected .odd-value, .odd-btn.selected .odd-real { color:var(--ink); }
+        .odd-label { font-size:.72rem; color:var(--muted); font-weight:500; }
+        .odd-label { order:1; } .odd-real { order:2; } .odd-value { order:3; }
+        .odd-value { font-size:.72rem; font-weight:600; color:var(--muted); }
+        .odd-real { font-family:var(--display); font-size:1.3rem; font-weight:700; color:var(--accent); line-height:1.1; }
+        .form-badges { display:flex; gap:3px; margin-top:12px; align-items:center; }
+        .form-badge { display:inline-block; width:19px; height:19px; line-height:19px; border-radius:50%; color:var(--pit); font-size:10px; font-weight:700; text-align:center; }
+        .f-G { background:var(--green); } .f-B { background:var(--yellow); } .f-M { background:var(--red); }
+
+        .detailed-toggle { background:none; border:1px solid var(--border); color:var(--muted); padding:7px 10px; border-radius:6px; cursor:pointer; font-size:.8rem; font-weight:600; margin-top:12px; width:100%; transition:.15s; }
+        .detailed-toggle:hover { color:var(--text); border-color:var(--muted); }
+        .detailed-content { display:none; margin-top:10px; background:var(--pit); border-radius:6px; padding:12px; border:1px solid var(--border); }
+        .detailed-content.show { display:block; }
+        .analysis-section { margin-bottom:10px; }
+        .analysis-section:last-child { margin-bottom:0; }
+        .analysis-title { font-size:.8rem; color:var(--accent); font-weight:700; margin-bottom:2px; }
+        .analysis-text { font-size:.82rem; color:#c5d2c9; line-height:1.5; }
+        .analysis-text .hl-green { color:var(--green); font-weight:700; } .analysis-text .hl-red { color:var(--red); font-weight:700; } .analysis-text .hl-yellow { color:var(--yellow); font-weight:700; }
+        .stats-mini { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+        .stat-mini { background:var(--card); border-radius:4px; padding:6px 8px; display:flex; justify-content:space-between; gap:6px; font-size:.78rem; }
+        .stat-mini .label { color:var(--muted); } .stat-mini .value { font-weight:700; color:var(--accent); }
+        .best-bet { background:rgba(255,182,39,.08); border-left:3px solid var(--accent); padding:8px 10px; border-radius:0 4px 4px 0; margin-top:10px; font-size:.82rem; }
+        .best-bet .title { color:var(--accent); font-weight:700; font-size:.78rem; margin-bottom:2px; }
+        .value-tag { color:var(--pink); font-weight:700; }
+
+        /* Kupon: bilet görünümü */
+        .coupon-panel { -webkit-mask:radial-gradient(circle 8px at 0 55px,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 8px at 100% 55px,#0000 97%,#000) right/51% 100% no-repeat; mask:radial-gradient(circle 8px at 0 55px,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 8px at 100% 55px,#0000 97%,#000) right/51% 100% no-repeat; background:var(--card2); border-radius:10px; padding:0 16px 16px; position:sticky; top:84px; max-height:calc(100vh - 100px); overflow-y:auto; }
+        .coupon-panel h3 { position:sticky; top:0; z-index:2; background:var(--card2); height:56px; margin:0 -16px 12px; padding:0 16px; font-family:var(--display); font-size:1.4rem; font-weight:600; border-bottom:2px dashed var(--border); display:flex; align-items:center; gap:8px; }
+        .coupon-count { background:var(--accent); color:var(--ink); padding:0 9px; border-radius:999px; font-family:var(--display); font-size:1rem; font-weight:700; }
+        .coupon-empty { text-align:center; padding:26px 12px; color:var(--muted); font-size:.85rem; border:1px dashed var(--border); border-radius:6px; }
+        .coupon-item { padding:9px 0; border-bottom:1px dashed var(--border); font-size:.8rem; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+        .coupon-item-info { flex:1; min-width:0; }
+        .coupon-item-info .match-name { font-weight:600; color:var(--text); }
+        .coupon-item-info .bet-name { color:var(--accent); font-size:.75rem; font-weight:600; }
+        .coupon-item-info .league-tag { display:inline-block; background:rgba(185,166,240,.14); color:var(--purple); padding:0 6px; border-radius:999px; font-size:.65rem; font-weight:600; margin-top:2px; }
+        .coupon-remove { background:none; color:var(--red); border:1px solid rgba(248,113,113,.5); width:22px; height:22px; border-radius:50%; cursor:pointer; font-weight:700; font-size:.75rem; flex-shrink:0; transition:.15s; }
+        .coupon-remove:hover { background:var(--red); color:var(--ink); }
+        .coupon-summary { background:var(--pit); border-radius:6px; padding:8px 12px; margin-top:12px; }
+        .summary-row { display:flex; justify-content:space-between; padding:5px 0; font-size:.82rem; border-bottom:1px dashed var(--border); }
+        .summary-row:last-child { border-bottom:none; }
+        .summary-row .label { color:var(--muted); } .summary-row .value { font-weight:700; }
+        .total-odd { font-family:var(--display); font-size:2.6rem; font-weight:700; line-height:1; color:var(--accent); text-align:center; margin:12px 0 8px; padding:12px 8px; background:var(--pit); border:1px solid var(--border); border-radius:6px; letter-spacing:.04em; }
+        .coupon-badge { text-align:center; padding:6px; border-radius:6px; font-weight:700; font-size:.85rem; border:1px solid; }
+        .badge-banko { background:rgba(74,222,128,.12); color:var(--green); border-color:var(--green); }
+        .badge-guvenilir { background:rgba(124,196,232,.12); color:var(--sky); border-color:var(--sky); }
+        .badge-orta { background:rgba(233,200,90,.12); color:var(--yellow); border-color:var(--yellow); }
+        .badge-riskli { background:rgba(251,146,60,.12); color:var(--orange); border-color:var(--orange); }
+        .badge-cokriskli { background:rgba(248,113,113,.12); color:var(--red); border-color:var(--red); }
+        .coupon-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+        .coupon-action-btn { padding:10px 8px; border-radius:6px; cursor:pointer; font-weight:700; font-size:.82rem; border:1px solid transparent; transition:.15s; }
+        .coupon-action-btn:hover { filter:brightness(1.12); }
+        .save-btn { background:var(--accent); color:var(--ink); }
+        .load-btn { background:none; color:var(--text); border-color:var(--border); }
+        .telegram-btn { grid-column:1/-1; background:#1a7fb4; color:#fff; }
+        .clear-btn { grid-column:1/-1; background:none; color:var(--red); border-color:rgba(248,113,113,.5); }
+        .clear-btn:hover { background:rgba(248,113,113,.12); }
+        .saved-badge { display:inline-block; background:rgba(185,166,240,.14); color:var(--purple); padding:0 8px; border-radius:999px; font-size:.7rem; font-weight:600; font-family:'Barlow',sans-serif; }
+
+        .saved-coupons-container, .standings-container { display:none; padding:16px; max-width:1600px; margin:0 auto; }
+        .saved-coupons-container.active, .standings-container.active { display:block; }
+        .saved-coupons-header, .standings-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+        .saved-coupons-header h2, .standings-header h2 { font-family:var(--display); font-size:1.8rem; font-weight:600; }
+        .saved-coupons-grid { display:flex; flex-direction:column; gap:8px; }
+        .saved-coupon-card { background:var(--card2); border-radius:10px; padding:14px 16px; border:1px solid var(--border); position:relative; }
+        .saved-coupon-card:hover { border-color:var(--accent); }
+        .sc-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:2px dashed var(--border); }
+        .sc-date { color:var(--muted); font-size:.78rem; }
+        .sc-count { font-weight:700; font-size:.85rem; }
+        .sc-footer { display:flex; justify-content:space-between; align-items:center; font-size:.82rem; padding-top:8px; border-top:1px dashed var(--border); }
+        .sc-odd { color:var(--accent); font-family:var(--display); font-size:1.3rem; font-weight:700; } .sc-prob { color:var(--text); font-weight:700; }
+        .sc-delete { position:absolute; top:8px; right:8px; background:var(--red); color:var(--ink); border:none; width:22px; height:22px; border-radius:50%; cursor:pointer; font-size:.8rem; font-weight:700; }
+        @media (hover:hover) { .sc-delete { opacity:0; transition:.15s; } .saved-coupon-card:hover .sc-delete, .sc-delete:focus-visible { opacity:1; } }
+        .sc-status { display:inline-block; padding:0 8px; border-radius:999px; font-size:.68rem; font-weight:600; margin-left:4px; }
+        .status-pending { background:rgba(233,200,90,.14); color:var(--yellow); }
+        .status-won { background:rgba(74,222,128,.14); color:var(--green); }
+        .status-lost { background:rgba(248,113,113,.14); color:var(--red); }
+        .empty-saved { text-align:center; padding:60px 20px; color:var(--muted); border-radius:10px; border:1px dashed var(--border); }
+        .empty-saved .emoji { font-size:3rem; margin-bottom:10px; display:block; }
+
+                .c-green { color:var(--green); } .c-red { color:var(--red); } .c-yellow { color:var(--yellow); }
+        .sc-toolbar { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px; display:grid; gap:12px; }
+        .sc-row-label { font-size:.78rem; color:var(--muted); font-weight:600; margin-bottom:6px; }
+        .sc-chips { display:flex; gap:6px; flex-wrap:wrap; max-height:112px; overflow-y:auto; }
+        .filter-btn small { margin-left:6px; opacity:.7; font-weight:700; }
+        .sc-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+        .sc-stat { background:var(--pit); border:1px solid var(--border); border-radius:6px; padding:8px 12px; }
+        .sc-stat b { display:block; font-family:var(--display); font-size:1.9rem; line-height:1.1; font-weight:700; }
+        .sc-stat span { font-size:.75rem; color:var(--muted); }
+        .sc-item { padding:0 !important; }
+        .sc-item > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:11px 14px; border-radius:10px; }
+        .sc-item > summary::-webkit-details-marker { display:none; }
+        .sc-item > summary:hover { background:rgba(255,255,255,.03); }
+        .sc-chev { width:0; height:0; border-left:7px solid var(--muted); border-top:5px solid transparent; border-bottom:5px solid transparent; transition:transform .15s; flex-shrink:0; }
+        .sc-item[open] .sc-chev { transform:rotate(90deg); }
+        .sc-main { flex:1; min-width:150px; }
+        .sc-main .sc-date { color:var(--text); font-weight:600; font-size:.88rem; }
+        .sc-sub { font-size:.75rem; color:var(--muted); }
+        .sc-counts { display:flex; gap:12px; align-items:center; font-size:.82rem; font-weight:700; flex-wrap:wrap; }
+        .sc-rate { font-family:var(--display); font-size:1.3rem; font-weight:700; }
+        .sc-body { padding:10px 14px 14px; border-top:2px dashed var(--border); }
+        .sc-body .sc-footer { margin-top:10px; }
+        .standings-table-wrapper { background:var(--card); border-radius:10px; padding:6px 10px; border:1px solid var(--border); overflow-x:auto; }
+        .standings-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+        .standings-table th { color:var(--muted); padding:10px 8px; text-align:center; font-size:.78rem; font-weight:600; border-bottom:1px solid var(--border); }
+        .standings-table td { padding:9px 8px; text-align:center; border-bottom:1px solid rgba(255,255,255,.05); }
+        .standings-table td.team-name { display:table-cell; text-align:left; font-weight:600; white-space:nowrap; }
+        .standings-table td.team-name img { width:22px; height:22px; object-fit:contain; vertical-align:middle; margin-right:8px; }
+        .standings-table tr:hover td { background:rgba(255,255,255,.03); }
+        .standings-table .pos { font-weight:700; color:var(--muted); }
+        .standings-table .pts { font-family:var(--display); font-weight:700; color:var(--accent); font-size:1.15rem; }
+        .pos-cl { border-left:3px solid var(--green); } .pos-el { border-left:3px solid var(--sky); } .pos-conf { border-left:3px solid var(--yellow); } .pos-rel { border-left:3px solid var(--red); }
+
+        .loading, .error { text-align:center; padding:30px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:10px; }
+        .error { color:var(--red); }
+        .toast { position:fixed; bottom:20px; right:20px; background:var(--card2); color:var(--text); padding:12px 18px; border-radius:6px; border-left:4px solid var(--accent); box-shadow:0 10px 28px rgba(0,0,0,.5); z-index:1000; font-size:.9rem; opacity:0; transform:translateY(16px); transition:.25s; font-weight:600; }
+        .toast.show { opacity:1; transform:none; }
+        ::-webkit-scrollbar { width:6px; height:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; } ::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+        @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+        /* ===== Kompakt görünüm: tek satırlık maçlar ===== */
+        @media (min-width:901px) { .layout { grid-template-columns:200px 1fr 300px; gap:12px; padding:12px; } }
+        .sidebar { padding:10px; }
+        .auto-coupon-panel { padding:10px 12px; margin-bottom:10px; }
+        .auto-coupon-panel h4 { font-size:1.05rem; margin-bottom:8px; }
+        .bet-type-selector { grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:4px; margin-bottom:8px; }
+        .bet-type-checkbox { padding:4px 7px; font-size:.72rem; }
+        .match-count-selector { padding:5px 10px; margin-bottom:8px; }
+        .auto-btn { padding:6px 4px; } .auto-btn .emoji { font-size:1rem; } .auto-btn .btn-title { font-size:.95rem; } .auto-btn .btn-sub { font-size:.65rem; }
+        .filter-bar { padding:8px 10px; margin-bottom:10px; }
+        #predLeagueDropdown .dropdown-btn { display:none; }
+        #predLeagueDropdown .dropdown-list { display:block; position:static; margin:0; border:none; box-shadow:none; background:transparent; }
+        .dropdown-item.lg { flex-direction:row; justify-content:space-between; align-items:center; padding:7px 8px; font-size:.82rem; font-weight:600; border-radius:6px; border-bottom:none; }
+        .dropdown-item .cnt { color:var(--accent); font-family:var(--display); font-size:1rem; }
+        .day-grp { background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+        .day-grp > summary.day-sep { list-style:none; cursor:pointer; margin:0; border:none; border-radius:0; border-bottom:1px solid var(--border); background:var(--bg2); font-size:1.05rem; padding:5px 12px; }
+        .day-grp > summary::-webkit-details-marker { display:none; }
+        .day-sep span::before { content:'▾'; display:inline-block; margin-right:8px; color:var(--muted); transition:transform .15s; }
+        .day-grp:not([open]) .day-sep span::before { transform:rotate(-90deg); }
+        .day-grp:not([open]) > summary { border-bottom:none; }
+        .mrow { border-top:1px solid var(--border); }
+        .day-grp > summary + .mrow { border-top:none; }
+        .mrow-main { display:grid; grid-template-columns:44px minmax(110px,1fr) auto 28px; gap:10px; align-items:center; padding:5px 10px; }
+        .mrow-main.fin { grid-template-columns:44px minmax(110px,1fr) auto; }
+        .mrow-main:hover { background:rgba(255,255,255,.03); }
+        .mrow-time { display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:.8rem; }
+        .mrow-time small { color:var(--muted); font-size:.68rem; }
+        .mrow-teams { min-width:0; } .mrow-teams > div { display:flex; align-items:center; gap:6px; font-size:.85rem; font-weight:600; line-height:1.35; }
+        .mrow-teams span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .mrow-teams img { width:16px; height:16px; object-fit:contain; flex-shrink:0; }
+        .mrow-score { font-family:var(--display); font-size:1.3rem; font-weight:700; color:var(--accent); letter-spacing:.06em; }
+        .mrow-odds { display:flex; gap:10px; } .og { display:flex; gap:3px; }
+        .mrow .odd-btn { width:50px; padding:2px 0 3px; }
+        .mrow .odd-label, .mrow .odd-value { font-size:.62rem; }
+        .mrow .odd-real { font-size:1.02rem; }
+        .mrow-more { width:28px; height:28px; border:1px solid var(--border); background:var(--pit); border-radius:4px; cursor:pointer; color:var(--muted); font-size:.9rem; }
+        .mrow-more::before { content:'+'; } .mrow.open .mrow-more::before { content:'–'; }
+        .mrow-more:hover { color:var(--accent); border-color:var(--accent); }
+        .mrow-detail { display:none; padding:8px 12px 12px; background:var(--pit); border-top:1px dashed var(--border); }
+        .mrow.open .mrow-detail { display:block; }
+        .mk-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:2px 14px; }
+        .mrow-detail .odd-btn { width:auto; padding:4px 2px; } .mrow-detail .odd-real { font-size:1.1rem; }
+        @media (max-width:760px) { .mrow-main { grid-template-columns:44px 1fr 28px; } .mrow-odds { grid-column:1 / -1; overflow-x:auto; padding-bottom:2px; } }
+        .table-wrap { overflow-x:auto; }
+        .st-table { width:100%; border-collapse:collapse; font-size:.78rem; margin-bottom:8px; }
+        .st-table th { color:var(--muted); font-weight:600; padding:4px 6px; text-align:center; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .st-table td { padding:4px 6px; text-align:center; border-bottom:1px solid rgba(255,255,255,.06); }
+        .st-table td:first-child { text-align:left; font-weight:600; white-space:nowrap; } .st-table small { color:var(--muted); font-weight:500; }
+        .st-last { display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:.78rem; margin:3px 0; } .st-last b { margin-right:4px; }
+        .st-g { padding:0 6px; border-radius:4px; font-weight:700; font-size:.74rem; color:var(--pit); }
+        .st-g.w { background:var(--green); } .st-g.d { background:var(--yellow); } .st-g.l { background:var(--red); }
+        .st-h2h { font-size:.78rem; margin-top:6px; } .st-h2h > div { color:#c5d2c9; }
+        /* ===== Yayın eklemeleri: reklam, değerli etiketi, geçmiş başarı, mobil ===== */
+        .ad-slot { margin:10px 0; text-align:center; overflow:hidden; }
+        .ad-label { display:block; font-size:.62rem; color:var(--muted); margin-bottom:2px; }
+        .ad-slot:has(ins[data-ad-status="unfilled"]) { display:none; }
+        .btn-hist { font-size:.62rem; color:var(--text); opacity:.9; margin-top:1px; font-weight:600; }
+        .auto-note { font-size:.72rem; color:var(--muted); margin-top:8px; line-height:1.4; }
+        .vbadge { font-size:.66rem !important; font-weight:700 !important; color:var(--ink); background:var(--accent); border-radius:999px; padding:0 8px; width:max-content; line-height:1.5 !important; }
+        .odd-btn { position:relative; }
+        .odd-btn.value { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+        .odd-btn.value::after { content:'💰'; position:absolute; top:-7px; right:-5px; font-size:.7rem; }
+        .mkt-note { grid-column:1 / -1; font-size:.74rem; color:var(--muted); margin:2px 0 6px; }
+        .site-foot { max-width:900px; margin:20px auto 90px; padding:10px 14px; font-size:.72rem; text-align:center; line-height:1.5; background:rgba(0,0,0,.4); border-radius:8px; }
+        .coupon-fab { display:none; }
+        @media (max-width:900px) {
+            .coupon-fab { display:flex; position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:90; align-items:center; gap:8px; background:var(--accent); color:var(--ink); border:none; border-radius:999px; padding:10px 18px; font-weight:700; font-size:.9rem; box-shadow:0 6px 20px rgba(0,0,0,.45); }
+            .sidebar { grid-template-columns:1fr !important; }
+            .sidebar .ad-slot { display:none; }
+            #predLeagueList { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+            #predLeagueList .dropdown-item.lg { flex:0 0 auto; white-space:nowrap; gap:8px; border:1px solid var(--border); }
+            .header { padding:10px 12px; } .header h1 { font-size:1.35rem; }
+            .main-tab { padding:11px 12px 8px; font-size:.82rem; }
+            .layout { padding:8px; }
+            .toast { bottom:70px; left:12px; right:12px; }
+            .day-sep { font-size:.95rem; }
+            .mrow .odd-btn { width:46px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span class="logo-icon">⚽</span> Futbol<span>Analiz</span></h1>
+    <div class="header-right">
+        <div class="header-info" id="headerInfo">Yükleniyor...</div>
+        <div class="bot-status" id="botStatus"><span class="bot-dot" id="botDot"></span><span id="botText">Bot Kontrol...</span></div>
+    </div>
+</div>
+
+<div class="main-tabs">
+    <button class="main-tab active" onclick="switchMainTab('matches')">📊 Maçlar</button>
+    <button class="main-tab" onclick="switchMainTab('predictions')">🔮 Tahminler</button>
+    <button class="main-tab" onclick="switchMainTab('standings')">📋 Puan Durumu</button>
+    <button class="main-tab" onclick="switchMainTab('saved')">💾 Kayıtlı Kuponlarım</button>
+</div>
+
+<div id="matchesMain" class="layout">
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Lig Seç</div>
+            <div class="dropdown" id="leagueDropdown">
+                <button class="dropdown-btn" onclick="toggleLeagueDropdown()"><span id="currentLeagueLabel">🇫🇷 Fransa Ligue 1</span><span>▼</span></button>
+                <div class="dropdown-list" id="leagueList"></div>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Hafta Seç</div>
+            <div class="dropdown" id="weekDropdown">
+                <button class="dropdown-btn" onclick="toggleWeekDropdown()"><span id="currentWeekLabel">Hafta 1</span><span>▼</span></button>
+                <div class="dropdown-list" id="weekList"></div>
+            </div>
+        </div>
+        <div class="ad-slot" data-ad="sidebar"></div>
+    </div>
+    <div class="matches-area">
+        <div class="ad-slot" data-ad="list"></div>
+        <div id="matchesContainer"><div class="loading">Veriler yükleniyor...</div></div>
+    </div>
+    <div class="coupon-panel">
+        <h3>🎫 Kupon <span class="coupon-count" id="couponCount">0</span> <span id="savedIndicator"></span></h3>
+        <div id="couponItems"><div class="coupon-empty">Henüz tahmin seçmedin.</div></div>
+        <div id="couponSummary" style="display:none;">
+            <div class="coupon-summary">
+                <div class="summary-row"><span class="label">Toplam Oran:</span><span class="value" id="totalOdd">-</span></div>
+                <div class="summary-row"><span class="label">Tutma Olasılığı:</span><span class="value" id="totalProb">-</span></div>
+            </div>
+            <div class="total-odd" id="oddDisplay">-</div>
+            <div class="coupon-badge" id="couponBadge">-</div>
+            <div class="coupon-actions">
+                <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
+                <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
+                <button class="coupon-action-btn telegram-btn" onclick="sendToTelegram()">📤 Telegram'a Gönder</button>
+                <button class="coupon-action-btn clear-btn" onclick="clearCoupon()">🗑️ Temizle</button>
+            </div>
+        </div>
+        <div class="ad-slot" data-ad="coupon"></div>
+    </div>
+</div>
+
+<div id="predictionsMain" class="layout" style="display:none;">
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Lig Filtresi</div>
+            <div class="dropdown" id="predLeagueDropdown">
+                <button class="dropdown-btn" onclick="togglePredLeagueDropdown()"><span id="currentPredLeagueLabel">🌍 Tüm Ligler</span><span>▼</span></button>
+                <div class="dropdown-list" id="predLeagueList"></div>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-label">Tarih aralığı</div>
+            <div class="dropdown" id="predWeekDropdown">
+                <button class="dropdown-btn" onclick="togglePredWeekDropdown()"><span id="currentPredWeekLabel">Önümüzdeki 7 gün</span><span>▼</span></button>
+                <div class="dropdown-list" id="predWeekList"></div>
+            </div>
+        </div>
+        <div class="ad-slot" data-ad="sidebar"></div>
+    </div>
+    <div class="matches-area">
+        <div class="filter-bar" id="dayFilterBar">
+            <label>📅 Gün:</label>
+            <div id="dayFilterButtons" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+        </div>
+        
+        <!-- OTOMATİK KUPON PANELİ -->
+        <div class="auto-coupon-panel">
+            <h4>🤖 Otomatik Kupon Oluştur</h4>
+            
+            <!-- Bahis Türü Seçici -->
+            <div style="font-size:0.7rem;color:var(--muted);font-weight:700;margin-bottom:6px;">📋 Bahis Türleri (en az 1 seç):</div>
+            <div class="bet-type-selector" id="betTypeSelector"></div>
+            
+            <!-- Maç Sayısı Seçici -->
+            <div class="match-count-selector">
+                <label>🎯 Maç Sayısı:</label>
+                <input type="range" id="matchCountRange" min="3" max="30" value="10" oninput="updateMatchCountDisplay()">
+                <div class="count-display" id="matchCountDisplay">10</div>
+            </div>
+            
+            <!-- Kategori Butonları -->
+            <div class="auto-coupon-grid">
+                <button class="auto-btn auto-banko" onclick="autoCoupon('banko')"><span class="emoji">🏆</span><span class="btn-title">BANKO</span><span class="btn-sub">%85+</span></button>
+                <button class="auto-btn auto-guvenilir" onclick="autoCoupon('guvenilir')"><span class="emoji">✅</span><span class="btn-title">GÜVENİLİR</span><span class="btn-sub">%70-85</span></button>
+                <button class="auto-btn auto-riskli" onclick="autoCoupon('riskli')"><span class="emoji">🎲</span><span class="btn-title">RİSKLİ</span><span class="btn-sub">%50-70</span></button>
+                <button class="auto-btn auto-cilgin" onclick="autoCoupon('cilgin')"><span class="emoji">💀</span><span class="btn-title">ÇILGIN</span><span class="btn-sub">%35-50</span></button>
+                <button class="auto-btn auto-karisik" onclick="autoCoupon('karisik')"><span class="emoji">🎯</span><span class="btn-title">KARIŞIK</span><span class="btn-sub">Her türden</span></button>
+            </div>
+        </div>
+        
+        <div class="ad-slot" data-ad="list"></div>
+        <div id="predictionsContainer"><div class="loading">Tahminler yükleniyor...</div></div>
+    </div>
+    <div class="coupon-panel">
+        <h3>🎫 Kupon <span class="coupon-count" id="couponCount2">0</span> <span id="savedIndicator2"></span></h3>
+        <div id="couponItems2"><div class="coupon-empty">Henüz tahmin seçmedin.</div></div>
+        <div id="couponSummary2" style="display:none;">
+            <div class="coupon-summary">
+                <div class="summary-row"><span class="label">Toplam Oran:</span><span class="value" id="totalOdd2">-</span></div>
+                <div class="summary-row"><span class="label">Tutma Olasılığı:</span><span class="value" id="totalProb2">-</span></div>
+            </div>
+            <div class="total-odd" id="oddDisplay2">-</div>
+            <div class="coupon-badge" id="couponBadge2">-</div>
+            <div class="coupon-actions">
+                <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
+                <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
+                <button class="coupon-action-btn telegram-btn" onclick="sendToTelegram()">📤 Telegram'a Gönder</button>
+                <button class="coupon-action-btn clear-btn" onclick="clearCoupon()">🗑️ Temizle</button>
+            </div>
+        </div>
+        <div class="ad-slot" data-ad="coupon"></div>
+    </div>
+</div>
+
+<div id="standingsMain" class="standings-container">
+    <div class="standings-header">
+        <h2>📋 Puan Durumu</h2>
+        <div id="standingsLeagueLabel" style="color:var(--muted);font-size:0.85rem;"></div>
+    </div>
+    <div id="standingsContainer" class="standings-table-wrapper"><div class="loading">Puan durumu yükleniyor...</div></div>
+</div>
+
+<div id="savedMain" class="saved-coupons-container">
+    <div class="saved-coupons-header">
+        <h2>💾 Kayıtlı Kuponlarım</h2>
+        <button class="coupon-action-btn clear-btn" style="width:auto;padding:8px 16px;" onclick="clearAllSavedCoupons()">🗑️ Tümünü Sil</button>
+    </div>
+    <div id="savedToolbar"></div>
+    <div id="savedCouponsGrid" class="saved-coupons-grid"></div>
+</div>
+
+<footer class="site-foot">⚠️ Bu sitedeki tahminler istatistiksel bir modele dayanır; kazanç garantisi vermez ve bahis tavsiyesi değildir. Bahis bağımlılık yapabilir, 18 yaş altı kullanamaz. Kaybetmeyi göze alabileceğin tutardan fazlasını oynama.</footer>
+<button id="couponFab" class="coupon-fab" onclick="scrollToCoupon()">🎫 Kupon <b id="fabCount">0</b> <span id="fabOdd"></span></button>
+<div id="toast" class="toast"></div>
+
+<script>
+const API_URL = location.protocol === 'file:' ? 'http://localhost:3000/api' : location.origin + '/api';
+const CONN_MSG = 'Bağlantı hatası, lütfen tekrar deneyin.';
+
+// API isteği: 45 sn zaman aşımı + 1 yeniden deneme (ücretsiz sunucu uyanırken ilk istek yavaş olabilir)
+async function apiFetch(url, opts) {
+    let lastMsg = CONN_MSG;
+    for (let i = 0; i < 2; i++) {
+        const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 45000);
+        try {
+            const res = await fetch(url, { ...opts, signal: ctl.signal });
+            clearTimeout(timer);
+            if (res.ok) return res;
+            const data = await res.json().catch(() => ({}));
+            lastMsg = data.error || CONN_MSG;
+            if (res.status < 500 && res.status !== 429) break;
+        } catch (e) { clearTimeout(timer); lastMsg = CONN_MSG; }
+        if (i === 0) await new Promise(r => setTimeout(r, 1500));
+    }
+    throw new Error(lastMsg);
+}
+function errHtml(e) { return `<div class="error">⚠️ ${e && e.message ? e.message : CONN_MSG}<br><button class="filter-btn" style="margin-top:10px" onclick="retryCurrent()">🔄 Tekrar dene</button></div>`; }
+function retryCurrent() {
+    if (document.getElementById('predictionsMain').style.display === 'grid') loadPredictions();
+    else if (document.getElementById('standingsMain').classList.contains('active')) loadStandings();
+    else loadLeague();
+}
+
+// Geçmiş test sonuçları (tek maç başına tutma %). null bırakılan kategori için yazı gösterilmez.
+const BACKTEST_STATS = { banko: 86, guvenilir: 79.9, riskli: null, cilgin: null };
+function renderBacktestBadges() {
+    Object.entries(BACKTEST_STATS).forEach(([k, v]) => {
+        const el = document.querySelector('.auto-' + k);
+        if (v != null && el && !el.querySelector('.btn-hist')) el.insertAdjacentHTML('beforeend', `<span class="btn-hist">Geçmişte %${v} tuttu</span>`);
+    });
+    const b = BACKTEST_STATS.banko, grid = document.querySelector('.auto-coupon-grid');
+    if (grid && b != null && !document.getElementById('autoNote'))
+        grid.insertAdjacentHTML('afterend', `<div class="auto-note" id="autoNote">ℹ️ "Geçmişte tuttu" yüzdeleri geçmiş sezonlarda <b>tek maç başına</b> tutma oranıdır. Kuponun tamamının tutması için tüm maçların tutması gerekir (10 maçlık banko kuponda yaklaşık %${Math.round(Math.pow(b / 100, 10) * 100)}). Gelecek için garanti değildir.</div>`);
+}
+
+// Reklam alanları (AdSense): sadece görünür olan alan bir kez yüklenir
+function mountAds() {
+    if (location.protocol === 'file:') return;
+    document.querySelectorAll('.ad-slot:not([data-done])').forEach(el => {
+        if (!el.offsetParent || el.offsetWidth < 120) return;
+        el.dataset.done = '1';
+        el.innerHTML = '<small class="ad-label">Reklam</small><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8868735664160445" data-ad-slot="6515819686" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+        try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+    });
+}
+function scrollToCoupon() {
+    const p = [...document.querySelectorAll('.coupon-panel')].find(x => x.offsetParent);
+    if (p) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+const BOOKMAKER_MARGIN = 0.06; // bahis şirketi kesintisi (%6)
+const SAVED_COUPONS_KEY = 'futbol_analiz_saved_coupons_list';
+
+const LEAGUES = [
+    { code: '2015', country: 'Fransa', name: 'Ligue 1', flag: '🇫🇷' },
+    { code: '2021', country: 'İngiltere', name: 'Premier League', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { code: '2014', country: 'İspanya', name: 'La Liga', flag: '🇪🇸' },
+    { code: '2002', country: 'Almanya', name: 'Bundesliga', flag: '🇩🇪' },
+    { code: '2019', country: 'İtalya', name: 'Serie A', flag: '🇮🇹' },
+    { code: '2001', country: 'Avrupa', name: 'Şampiyonlar Ligi', flag: '🇪🇺' },
+    { code: '2003', country: 'Hollanda', name: 'Eredivisie', flag: '🇳🇱' },
+    { code: '2017', country: 'Portekiz', name: 'Primeira Liga', flag: '🇵🇹' }
+];
+
+// Seçilebilir bahis türleri
+// ========== KOMBİNASYON BAHİSLER (MS/ÇŞ + Alt/Üst, MS + KG) ==========
+const COMBO_DEFS = (() => {
+    const RL = { ms1: 'MS 1', ms2: 'MS 2', dc1x: '1X', dcx2: 'X2', dc12: '12' };
+    const RS = { ms1: '1', ms2: '2', dc1x: '1X', dcx2: 'X2', dc12: '12' };
+    const CL = { o15: '1.5 Üst', o25: '2.5 Üst', u35: '3.5 Alt', kg: 'KG Var', kgyok: 'KG Yok' };
+    const CS = { o15: '1.5Ü', o25: '2.5Ü', u35: '3.5A', kg: 'KG+', kgyok: 'KG-' };
+    return [['ms1','o15'],['ms1','o25'],['ms1','u35'],['ms2','o15'],['ms2','o25'],['ms2','u35'],['dc1x','o15'],['dcx2','o15'],['dc12','o15'],['ms1','kg'],['ms1','kgyok'],['ms2','kg'],['ms2','kgyok']]
+        .map(([r, c]) => ({ key: (r + '_' + c).toUpperCase(), pk: r + '_' + c, r, c, label: RL[r] + ' & ' + CL[c], short: RS[r] + ' & ' + CS[c] }));
+})();
+
+function betWon(type, hs, as) {
+    const t = hs + as;
+    switch (type) {
+        case 'MS1': return hs > as;
+        case 'MSX': return hs === as;
+        case 'MS2': return as > hs;
+        case 'DC1X': return hs >= as;
+        case 'DC12': return hs !== as;
+        case 'DCX2': return as >= hs;
+        case 'OVER15': return t > 1.5;  case 'UNDER15': return t < 1.5;
+        case 'OVER25': return t > 2.5;  case 'UNDER25': return t < 2.5;
+        case 'OVER35': return t > 3.5;  case 'UNDER35': return t < 3.5;
+        case 'OVER45': return t > 4.5;  case 'UNDER45': return t < 4.5;
+        case 'KG': return hs > 0 && as > 0;
+        case 'KG_YOK': return hs === 0 || as === 0;
+    }
+    const d = COMBO_DEFS.find(x => x.key === type);
+    if (!d) return false;
+    const resOk = { ms1: hs > as, ms2: as > hs, dc1x: hs >= as, dcx2: as >= hs, dc12: hs !== as }[d.r];
+    const condOk = { o15: t > 1.5, o25: t > 2.5, u35: t < 3.5, kg: hs > 0 && as > 0, kgyok: hs === 0 || as === 0 }[d.c];
+    return resOk && condOk;
+}
+
+// Takım istatistik tablosu (sunucudan gelen p.stats)
+function renderStatsBlock(m, p) {
+    const s = p.stats; if (!s) return '';
+    const pc = (a, n) => n ? Math.round(a / n * 100) + '%' : '–';
+    const avg = (a, n) => n ? (a / n).toFixed(2) : '–';
+    const row = (name, part, label) => `<tr><td>${name} <small>${label}</small></td><td>${part.n}</td><td>${part.w}-${part.d}-${part.l}</td><td>${avg(part.gf, part.n)} / ${avg(part.ga, part.n)}</td><td>${pc(part.o25, part.n)}</td><td>${pc(part.btts, part.n)}</td><td>${pc(part.cs, part.n)}</td></tr>`;
+    const last = (name, t) => t.last5.length ? `<div class="st-last"><b>${name}</b>${t.last5.map(g => `<span class="st-g ${g.gf > g.ga ? 'w' : g.gf < g.ga ? 'l' : 'd'}" title="${g.home ? 'Ev' : 'Dep'}: ${g.opp}">${g.gf}-${g.ga}</span>`).join('')}</div>` : '';
+    const h = m.homeTeam.shortName, a = m.awayTeam.shortName;
+    const h2h = s.h2h.length ? s.h2h.map(x => `<div>${x.h} <b>${x.hs}-${x.as}</b> ${x.a}</div>`).join('') : '<small>Bu sezon aralarında oynanmış maç yok.</small>';
+    return `<div class="analysis-section"><div class="analysis-title">📊 İstatistikler (bu sezon)</div>
+        <div class="table-wrap"><table class="st-table"><thead><tr><th></th><th>Maç</th><th>G-B-M</th><th>Gol at/ye</th><th>2.5 Üst</th><th>KG Var</th><th>Gol yemeden</th></tr></thead><tbody>${row(h, s.home.home, 'evde')}${row(h, s.home.all, 'genel')}${row(a, s.away.away, 'deplasmanda')}${row(a, s.away.all, 'genel')}</tbody></table></div>
+        ${last(h, s.home)}${last(a, s.away)}<div class="st-h2h"><b>Aynı sezon karşılaşmaları</b>${h2h}</div></div>`;
+}
+
+const ALL_BET_TYPES = [
+    { key: 'MS1', label: 'MS 1', category: 'ms' },
+    { key: 'MSX', label: 'MS X', category: 'ms' },
+    { key: 'MS2', label: 'MS 2', category: 'ms' },
+    { key: 'DC1X', label: 'ÇŞ 1X', category: 'dc' },
+    { key: 'DC12', label: 'ÇŞ 12', category: 'dc' },
+    { key: 'DCX2', label: 'ÇŞ X2', category: 'dc' },
+    { key: 'OVER15', label: '1.5 Üst', category: 'goals' },
+    { key: 'UNDER15', label: '1.5 Alt', category: 'goals' },
+    { key: 'OVER25', label: '2.5 Üst', category: 'goals' },
+    { key: 'UNDER25', label: '2.5 Alt', category: 'goals' },
+    { key: 'OVER35', label: '3.5 Üst', category: 'goals' },
+    { key: 'UNDER35', label: '3.5 Alt', category: 'goals' },
+    { key: 'OVER45', label: '4.5 Üst', category: 'goals' },
+    { key: 'UNDER45', label: '4.5 Alt', category: 'goals' },
+    { key: 'KG', label: 'KG Var', category: 'kg' },
+    { key: 'KG_YOK', label: 'KG Yok', category: 'kg' }
+];
+
+ALL_BET_TYPES.push(...COMBO_DEFS.map(d => ({ key: d.key, label: d.label, category: 'combo' })));
+let selectedBetTypes = new Set(['MS1', 'MSX', 'MS2', 'OVER15', 'OVER25', 'KG']); // Varsayılan
+
+let allMatches = [];
+let currentLeagueCode = '2015';
+let selectedWeek = 1;
+let coupon = [];
+let allLeaguesCache = {};
+let allLeaguesLoaded = false;
+let predLeagueCode = 'all';
+let predRange = 7; // gün sayısı (0 = kalan tüm maçlar)
+let predPool = [];
+let selectedDays = new Set(); // Tahminler sekmesinde seçili günler (boşsa hepsi)
+let dayGroups = {};
+
+// ========== BAHİS TÜRÜ SEÇİCİ ==========
+function renderBetTypeSelector() {
+    const container = document.getElementById('betTypeSelector');
+    container.innerHTML = ALL_BET_TYPES.map(bt => `
+        <label class="bet-type-checkbox ${selectedBetTypes.has(bt.key) ? 'checked' : ''}" onclick="toggleBetType('${bt.key}')">
+            <span>${selectedBetTypes.has(bt.key) ? '☑️' : '⬜'}</span>
+            <span>${bt.label}</span>
+        </label>
+    `).join('');
+}
+
+function toggleBetType(key) {
+    if (selectedBetTypes.has(key)) {
+        if (selectedBetTypes.size === 1) { showToast('⚠️ En az 1 bahis türü seçili olmalı!'); return; }
+        selectedBetTypes.delete(key);
+    } else {
+        selectedBetTypes.add(key);
+    }
+    renderBetTypeSelector();
+}
+
+function updateMatchCountDisplay() {
+    const val = document.getElementById('matchCountRange').value;
+    document.getElementById('matchCountDisplay').textContent = val;
+}
+
+// ========== DROPDOWN FONKSİYONLARI ==========
+function toggleLeagueDropdown() {
+    const list = document.getElementById('leagueList');
+    const btn = document.querySelector('#leagueDropdown .dropdown-btn');
+    list.classList.toggle('show');
+    btn.classList.toggle('active');
+    if (list.classList.contains('show')) renderLeagueList();
+}
+
+function renderLeagueList() {
+    const list = document.getElementById('leagueList');
+    list.innerHTML = LEAGUES.map(l => `
+        <div class="dropdown-item ${l.code === currentLeagueCode ? 'selected' : ''}" onclick="selectLeague('${l.code}')">
+            <span class="country">${l.flag} ${l.country}</span>
+            <span class="league">${l.name}</span>
+        </div>
+    `).join('');
+}
+
+function selectLeague(code) {
+    currentLeagueCode = code;
+    const league = LEAGUES.find(l => l.code === code);
+    document.getElementById('currentLeagueLabel').textContent = `${league.flag} ${league.country} ${league.name}`;
+    document.getElementById('leagueList').classList.remove('show');
+    document.querySelector('#leagueDropdown .dropdown-btn').classList.remove('active');
+    loadLeague();
+    if (document.getElementById('standingsMain').classList.contains('active')) loadStandings();
+}
+
+function toggleWeekDropdown() {
+    const list = document.getElementById('weekList');
+    const btn = document.querySelector('#weekDropdown .dropdown-btn');
+    list.classList.toggle('show');
+    btn.classList.toggle('active');
+    if (list.classList.contains('show')) renderWeekList();
+}
+
+function renderWeekList() {
+    const list = document.getElementById('weekList');
+    if (allMatches.length === 0) { list.innerHTML = '<div class="dropdown-item">Maç yok</div>'; return; }
+    const maxWeek = Math.max(...allMatches.map(m => m.matchday));
+    let html = '';
+    for (let i = 1; i <= maxWeek; i++) {
+        html += `<div class="dropdown-item ${i === selectedWeek ? 'selected' : ''}" onclick="selectWeek(${i})"><span class="league">Hafta ${i}</span></div>`;
+    }
+    list.innerHTML = html;
+}
+
+function selectWeek(w) {
+    selectedWeek = w;
+    document.getElementById('currentWeekLabel').textContent = `Hafta ${w}`;
+    document.getElementById('weekList').classList.remove('show');
+    document.querySelector('#weekDropdown .dropdown-btn').classList.remove('active');
+    renderMatches();
+}
+
+function togglePredLeagueDropdown() {
+    const list = document.getElementById('predLeagueList');
+    const btn = document.querySelector('#predLeagueDropdown .dropdown-btn');
+    list.classList.toggle('show');
+    btn.classList.toggle('active');
+    if (list.classList.contains('show')) renderPredLeagueList();
+}
+
+function renderPredLeagueList() {
+    const list = document.getElementById('predLeagueList');
+    const cnt = codes => codes.some(c => allLeaguesCache[c]) ? getPredictionPool(codes).length : '';
+    const item = (code, label, codes) => `<div class="dropdown-item lg ${predLeagueCode === code ? 'selected' : ''}" onclick="selectPredLeague('${code}')"><span>${label}</span><b class="cnt">${cnt(codes)}</b></div>`;
+    list.innerHTML = LEAGUES.map(l => item(l.code, `${l.flag} ${l.name}`, [l.code])).join('') + item('all', '🌍 Tüm Ligler', Object.keys(allLeaguesCache));
+}
+
+function selectPredLeague(code) {
+    predLeagueCode = code;
+    const label = code === 'all' ? '🌍 Tüm Ligler' : (() => { const l = LEAGUES.find(x => x.code === code); return `${l.flag} ${l.country} ${l.name}`; })();
+    document.getElementById('currentPredLeagueLabel').textContent = label;
+    document.getElementById('predLeagueList').classList.remove('show');
+    document.querySelector('#predLeagueDropdown .dropdown-btn').classList.remove('active');
+    loadPredictions();
+}
+
+function togglePredWeekDropdown() {
+    const list = document.getElementById('predWeekList');
+    const btn = document.querySelector('#predWeekDropdown .dropdown-btn');
+    list.classList.toggle('show');
+    btn.classList.toggle('active');
+    if (list.classList.contains('show')) renderPredWeekList();
+}
+
+const PRED_RANGES = [
+    { days: 1, label: 'Bugün' },
+    { days: 2, label: 'Bugün + yarın' },
+    { days: 3, label: 'Önümüzdeki 3 gün' },
+    { days: 7, label: 'Önümüzdeki 7 gün' },
+    { days: 14, label: 'Önümüzdeki 14 gün' },
+    { days: 0, label: 'Kalan tüm maçlar' }
+];
+
+function renderPredWeekList() {
+    const list = document.getElementById('predWeekList');
+    list.innerHTML = PRED_RANGES.map(r => `<div class="dropdown-item ${r.days === predRange ? 'selected' : ''}" onclick="selectPredRange(${r.days})"><span class="league">${r.label}</span></div>`).join('');
+}
+
+function selectPredRange(days) {
+    predRange = days;
+    selectedDays.clear();
+    document.getElementById('currentPredWeekLabel').textContent = PRED_RANGES.find(r => r.days === days).label;
+    document.getElementById('predWeekList').classList.remove('show');
+    document.querySelector('#predWeekDropdown .dropdown-btn').classList.remove('active');
+    loadPredictions();
+}
+
+// ========== ANA SEKME ==========
+function switchMainTab(tab) {
+    document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('matchesMain').style.display = 'none';
+    document.getElementById('predictionsMain').style.display = 'none';
+    document.getElementById('standingsMain').classList.remove('active');
+    document.getElementById('savedMain').classList.remove('active');
+    
+    if (tab === 'matches') document.getElementById('matchesMain').style.display = 'grid';
+    else if (tab === 'predictions') { document.getElementById('predictionsMain').style.display = 'grid'; loadPredictions(); }
+    else if (tab === 'standings') { document.getElementById('standingsMain').classList.add('active'); loadStandings(); }
+    else if (tab === 'saved') { document.getElementById('savedMain').classList.add('active'); renderSavedCoupons(); }
+    setTimeout(mountAds, 400);
+}
+
+function calculateBookmakerOdd(realProb) {
+    // Kesinti tüm seçeneklere orantılı uygulanır: oran = 1 / (olasılık x (1 + kesinti))
+    const p = Math.min(99, Math.max(1, realProb)) / 100;
+    return parseFloat(Math.max(1.01, 1 / (p * (1 + BOOKMAKER_MARGIN))).toFixed(2));
+}
+
+function isValueBet(realProb, bookmakerOdd) {
+    const impliedProb = (1 / bookmakerOdd) * 100;
+    return realProb > impliedProb + 2;
+}
+
+async function checkBotStatus() {
+    if (window.botDisabled) return;
+    const dot = document.getElementById('botDot');
+    const text = document.getElementById('botText');
+    try {
+        const res = await fetch(`${API_URL}/telegram/test`);
+        const data = await res.json();
+        if (data.disabled) { window.botDisabled = true; document.querySelector('.bot-status').style.display = 'none'; document.querySelectorAll('.telegram-btn').forEach(b => b.style.display = 'none'); return; }
+        if (data.ok) { dot.style.background = '#4ade80'; text.textContent = `Bot Aktif`; text.style.color = '#4ade80'; }
+        else { dot.style.background = '#f87171'; text.textContent = 'Bot Offline'; text.style.color = '#f87171'; }
+    } catch (e) { dot.style.background = '#f87171'; text.textContent = 'Bağlantı Yok'; text.style.color = '#f87171'; }
+}
+
+async function loadLeague() {
+    const container = document.getElementById('matchesContainer');
+    container.innerHTML = '<div class="loading">Veriler yükleniyor...</div>';
+    try {
+        const res = await apiFetch(`${API_URL}/matches/${currentLeagueCode}`);
+        const data = await res.json();
+        allMatches = data.matches;
+        if (!allMatches || allMatches.length === 0) { container.innerHTML = '<div class="error">Bu lig için maç verisi bulunamadı.</div>'; return; }
+        const league = LEAGUES.find(l => l.code === currentLeagueCode);
+        document.getElementById('headerInfo').textContent = `${league.flag} ${league.country} | ${data.resultSet?.played || 0} maç`;
+        const finishedMatches = allMatches.filter(m => m.status === 'FINISHED');
+        selectedWeek = finishedMatches.length > 0 ? Math.max(...finishedMatches.map(m => m.matchday)) : 1;
+        document.getElementById('currentWeekLabel').textContent = `Hafta ${selectedWeek}`;
+        renderMatches();
+    } catch (error) { container.innerHTML = errHtml(error); }
+}
+
+function renderMatches() {
+    const container = document.getElementById('matchesContainer');
+    let filtered = allMatches.filter(m => m.matchday === selectedWeek);
+    if (filtered.length === 0) { container.innerHTML = '<div class="loading">Bu hafta için maç bulunamadı.</div>'; return; }
+    container.innerHTML = renderDayGroups(filtered);
+    restoreSelectedButtons();
+}
+
+// Seçili lig(ler) ve tarih aralığındaki, henüz oynanmamış tüm maçlar (tarihe göre sıralı)
+function getPredictionPool(onlyCodes) {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    let end = null;
+    if (predRange > 0) { end = new Date(start); end.setDate(end.getDate() + predRange); }
+    const codes = onlyCodes || (predLeagueCode === 'all' ? Object.keys(allLeaguesCache) : [predLeagueCode]);
+    const out = [];
+    codes.forEach(code => {
+        const league = LEAGUES.find(l => l.code === code);
+        (allLeaguesCache[code] || []).forEach(m => {
+            if (m.status === 'FINISHED' || !m.prediction) return;
+            const d = new Date(m.utcDate);
+            if (d < start || (end && d >= end)) return;
+            out.push({ ...m, _leagueName: league ? league.name : '', _leagueFlag: league ? league.flag : '' });
+        });
+    });
+    return out.sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+}
+
+async function loadPredictions() {
+    const container = document.getElementById('predictionsContainer');
+    container.innerHTML = '<div class="loading">Tahminler yükleniyor...</div>';
+    try {
+        if (predLeagueCode === 'all') {
+            if (!allLeaguesLoaded) {
+                container.innerHTML = '<div class="loading">Tüm ligler taranıyor, lütfen bekleyin...</div>';
+                await loadAllLeagues();
+            }
+        } else if (!allLeaguesCache[predLeagueCode]) {
+            const res = await apiFetch(`${API_URL}/matches/${predLeagueCode}`);
+            const data = await res.json();
+            allLeaguesCache[predLeagueCode] = data.matches;
+        }
+        renderPredictionMatches(getPredictionPool());
+        renderPredLeagueList();
+    } catch (error) { container.innerHTML = errHtml(error); }
+}
+
+async function loadAllLeagues() {
+    let ok = 0;
+    for (const league of LEAGUES) {
+        try {
+            const res = await apiFetch(`${API_URL}/matches/${league.code}`);
+            const data = await res.json();
+            allLeaguesCache[league.code] = data.matches;
+            ok++;
+        } catch (e) { if (!ok) throw e; }   // ilk lig bile gelmediyse bağlantı sorunu vardır
+    }
+    allLeaguesLoaded = true;
+}
+
+function predDayKey(iso) { const d = new Date(iso); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function predDayLabel(key, short) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('tr-TR', short ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function renderPredictionMatches(matches) {
+    predPool = matches;
+    const container = document.getElementById('predictionsContainer');
+    dayGroups = {};
+    matches.forEach(m => { const k = predDayKey(m.utcDate); (dayGroups[k] = dayGroups[k] || []).push(m); });
+    const sortedDays = Object.keys(dayGroups).sort();
+    [...selectedDays].forEach(k => { if (!dayGroups[k]) selectedDays.delete(k); });
+    renderDayFilter(sortedDays, matches.length);
+    if (matches.length === 0) { container.innerHTML = '<div class="loading">Bu tarih aralığında tahmin edilecek maç yok. Tarih aralığını genişletmeyi dene.</div>'; return; }
+    container.innerHTML = renderDayGroups(selectedDays.size ? matches.filter(m => selectedDays.has(predDayKey(m.utcDate))) : matches);
+    restoreSelectedButtons();
+}
+
+function renderDayFilter(sortedDays, total) {
+    const box = document.getElementById('dayFilterButtons');
+    box.innerHTML = '';
+    if (!sortedDays || sortedDays.length === 0) return;
+    const add = (label, active, onclick) => {
+        const b = document.createElement('button');
+        b.className = 'filter-btn' + (active ? ' active' : '');
+        b.textContent = label;
+        b.onclick = onclick;
+        box.appendChild(b);
+    };
+    add(`Tümü (${total})`, selectedDays.size === 0, () => { selectedDays.clear(); renderPredictionMatches(predPool); });
+    sortedDays.forEach(k => add(`${predDayLabel(k, true)} (${dayGroups[k].length})`, selectedDays.has(k), () => {
+        if (selectedDays.has(k)) selectedDays.delete(k); else selectedDays.add(k);
+        renderPredictionMatches(predPool);
+    }));
+    const picked = selectedDays.size ? sortedDays.filter(k => selectedDays.has(k)).reduce((n, k) => n + dayGroups[k].length, 0) : total;
+    const info = document.createElement('span');
+    info.style.cssText = 'font-size:.78rem;color:var(--muted);align-self:center;margin-left:4px;';
+    info.textContent = selectedDays.size ? `${selectedDays.size} gün seçili · kupon bu ${picked} maçtan yapılır` : 'Birden fazla gün seçebilirsin';
+    box.appendChild(info);
+}
+
+function renderDayGroups(list) {
+    const groups = {};
+    list.forEach(m => { const k = predDayKey(m.utcDate); (groups[k] = groups[k] || []).push(m); });
+    return Object.keys(groups).sort().map(k =>
+        `<details class="day-grp" open><summary class="day-sep"><span>${predDayLabel(k, false)}</span><small>${groups[k].length} maç</small></summary>${groups[k].map(m => renderMatchCard(m)).join('')}</details>`
+    ).join('');
+}
+
+// Tek satırlık maç: saat | takımlar | MS 1-X-2 | 2.5 Alt/Üst | KG | [+] tüm bahisler
+function renderMatchCard(m) {
+    const d = new Date(m.utcDate);
+    const time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const lg = LEAGUES.find(l => l.code === currentLeagueCode);
+    const leagueName = m._leagueName || (lg ? lg.name : '');
+    const crest = u => u ? `<img src="${u}" alt="">` : '';
+    const teams = `<div class="mrow-teams"><div>${crest(m.homeTeam.crest)}<span>${m.homeTeam.shortName}</span></div><div>${crest(m.awayTeam.crest)}<span>${m.awayTeam.shortName}</span></div></div>`;
+    const lgTag = m._leagueFlag ? `<small title="${leagueName}">${m._leagueFlag}</small>` : `<small>H${m.matchday}</small>`;
+    const timeBox = `<div class="mrow-time"><b>${time}</b>${lgTag}</div>`;
+    if (m.status === 'FINISHED') return `<div class="mrow"><div class="mrow-main fin">${timeBox}${teams}<div class="mrow-score">${m.result}</div></div></div>`;
+    if (!m.prediction) return `<div class="mrow"><div class="mrow-main fin">${timeBox}${teams}<div></div></div></div>`;
+
+    const p = m.prediction, mid = m.id;
+    const val = {}; (p.value || []).forEach(v => val[v.key] = v);
+    const mname = `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`.replace(/['"]/g, '');
+    const homePick = m.homeTeam.shortName.replace(/['"]/g, '');
+    const awayPick = m.awayTeam.shortName.replace(/['"]/g, '');
+    const o = {};
+    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k]));
+    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk]); } });
+    const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value">%${p[key]}</span></button>`;
+    const MS = [B('MS1', homePick, 'MS 1', 'ms1', '1'), B('MSX', 'Beraberlik', 'MS X', 'msX', 'X'), B('MS2', awayPick, 'MS 2', 'ms2', '2')];
+    const DC = [B('DC1X', '1X', '1X', 'doubleChance1X'), B('DC12', '12', '12', 'doubleChance12'), B('DCX2', 'X2', 'X2', 'doubleChanceX2')];
+    const OU = n => [B('OVER' + n, 'Üst', (n / 10) + ' Üst', 'over' + n), B('UNDER' + n, 'Alt', (n / 10) + ' Alt', 'under' + n)];
+    const KG = [B('KG', 'KG Var', 'KG Var', 'kgVar'), B('KG_YOK', 'KG Yok', 'KG Yok', 'kgYok')];
+    const quick = `<div class="mrow-odds"><div class="og">${MS.join('')}</div><div class="og">${B('OVER25', 'Üst', '2.5 Üst', 'over25', '2.5 Ü')}${B('UNDER25', 'Alt', '2.5 Alt', 'under25', '2.5 A')}</div><div class="og">${B('KG', 'KG Var', 'KG Var', 'kgVar', 'KG +')}${B('KG_YOK', 'KG Yok', 'KG Yok', 'kgYok', 'KG -')}</div></div>`;
+    const vb = (p.value || []).map(v => v.key === 'over25' ? '2.5 Üst' : '2.5 Alt').join(' · ');
+    const teams2 = vb ? teams.replace(/<\/div>$/, `<div class="vbadge">💰 Değerli: ${vb}</div></div>`) : teams;
+    const mk = (title, btns, cls) => btns.length ? `<div class="mk"><div class="odds-title">${title}</div><div class="odds-grid ${cls || (btns.length === 3 ? 'ms' : 'kg')}">${btns.join('')}</div></div>` : '';
+    const CB = rs => COMBO_DEFS.filter(d => rs.includes(d.pk) && p['c_' + d.pk] !== undefined).map(d => B(d.key, d.label.replace('MS 1', homePick).replace('MS 2', awayPick), d.label, 'c_' + d.pk, d.short));
+    const fb = f => (f || '').split('').map(x => `<span class="form-badge f-${x}">${x}</span>`).join('');
+
+    return `<div class="mrow"><div class="mrow-main">${timeBox}${teams2}${quick}<button class="mrow-more" aria-label="Tüm bahisler ve analiz" onclick="this.closest('.mrow').classList.toggle('open')"></button></div>
+        <div class="mrow-detail"><div class="mk-grid">${mk('Maç Sonucu', MS)}${mk('Çifte Şans', DC)}${mk('1.5 Gol', OU(15))}${mk('2.5 Gol', OU(25))}${p.market ? `<div class="mkt-note">Piyasa ort. (${p.market.books} site): 2.5 Üst ${p.market.over25} · 2.5 Alt ${p.market.under25}</div>` : ''}${mk('3.5 Gol', OU(35))}${mk('4.5 Gol', OU(45))}${mk('Karşılıklı Gol', KG)}${mk('MS & Alt/Üst', CB(['ms1_o15','ms1_o25','ms1_u35','ms2_o15','ms2_o25','ms2_u35']), 'ms')}${mk('Çifte Şans & 1.5 Üst', CB(['dc1x_o15','dc12_o15','dcx2_o15']), 'ms')}${mk('MS & Karşılıklı Gol', CB(['ms1_kg','ms1_kgyok','ms2_kg','ms2_kgyok']), 'ms')}</div>
+        ${renderStatsBlock(m, p)}
+        <div class="form-badges"><span style="font-size:0.7rem;color:var(--muted);">Form:</span>${fb(p.homeForm)}<span style="color:var(--muted);margin:0 4px;font-size:0.7rem;">vs</span>${fb(p.awayForm)}</div>
+        <button class="detailed-toggle" onclick="toggleDetailed(this)">🧠 Detaylı Analiz</button>
+        <div class="detailed-content">${generateDetailedAnalysis(m, p)}</div></div></div>`;
+}
+
+function toggleDetailed(btn) {
+    const content = btn.nextElementSibling;
+    content.classList.toggle('show');
+    btn.textContent = content.classList.contains('show') ? '🧠 Detaylı Analizi Kapat' : '🧠 Detaylı Analiz';
+}
+
+function generateDetailedAnalysis(m, p) {
+    const home = m.homeTeam.shortName;
+    const away = m.awayTeam.shortName;
+    const calcFormScore = (form) => { if (!form) return 0; return form.split('').reduce((s, f) => s + (f === 'G' ? 3 : f === 'B' ? 1 : 0), 0); };
+    const homeFormScore = calcFormScore(p.homeForm);
+    const awayFormScore = calcFormScore(p.awayForm);
+    let formText = homeFormScore > awayFormScore + 3 ? `<span class="hl-green">${home}</span> formda (${homeFormScore} p) - ${away} (${awayFormScore} p).` : awayFormScore > homeFormScore + 3 ? `<span class="hl-green">${away}</span> formda (${awayFormScore} p) - ${home} (${homeFormScore} p).` : `Dengeli: ${home} ${homeFormScore} p - ${away} ${awayFormScore} p.`;
+    const totalGoals = parseFloat(p.expectedHomeGoals) + parseFloat(p.expectedAwayGoals);
+    let goalText = totalGoals >= 3 ? `Beklenen gol: <span class="hl-green">${totalGoals.toFixed(1)}</span> - Yüksek.` : totalGoals >= 2 ? `Beklenen gol: <span class="hl-yellow">${totalGoals.toFixed(1)}</span> - Orta.` : `Beklenen gol: <span class="hl-red">${totalGoals.toFixed(1)}</span> - Düşük.`;
+    let favText = p.ms1 > p.ms2 + 15 ? `<span class="hl-green">${home}</span> favori (%${p.ms1}).` : p.ms2 > p.ms1 + 15 ? `<span class="hl-green">${away}</span> favori (%${p.ms2}).` : p.msX > Math.max(p.ms1, p.ms2) ? `Beraberlik yakın (%${p.msX}).` : `Dengeli.`;
+    
+    const bets = [
+        { name: 'MS 1', prob: p.ms1, odd: calculateBookmakerOdd(p.ms1) }, { name: 'MS X', prob: p.msX, odd: calculateBookmakerOdd(p.msX) }, { name: 'MS 2', prob: p.ms2, odd: calculateBookmakerOdd(p.ms2) },
+        { name: '1X', prob: p.doubleChance1X, odd: calculateBookmakerOdd(p.doubleChance1X) }, { name: '12', prob: p.doubleChance12, odd: calculateBookmakerOdd(p.doubleChance12) }, { name: 'X2', prob: p.doubleChanceX2, odd: calculateBookmakerOdd(p.doubleChanceX2) },
+        { name: '1.5 Üst', prob: p.over15, odd: calculateBookmakerOdd(p.over15) }, { name: '1.5 Alt', prob: p.under15, odd: calculateBookmakerOdd(p.under15) },
+        { name: '2.5 Üst', prob: p.over25, odd: calculateBookmakerOdd(p.over25) }, { name: '2.5 Alt', prob: p.under25, odd: calculateBookmakerOdd(p.under25) },
+        { name: '3.5 Üst', prob: p.over35, odd: calculateBookmakerOdd(p.over35) }, { name: '3.5 Alt', prob: p.under35, odd: calculateBookmakerOdd(p.under35) },
+        { name: '4.5 Üst', prob: p.over45, odd: calculateBookmakerOdd(p.over45) }, { name: '4.5 Alt', prob: p.under45, odd: calculateBookmakerOdd(p.under45) },
+        { name: 'KG Var', prob: p.kgVar, odd: calculateBookmakerOdd(p.kgVar) }, { name: 'KG Yok', prob: p.kgYok, odd: calculateBookmakerOdd(p.kgYok) }
+    ];
+    bets.sort((a, b) => b.prob - a.prob);
+    const bestBet = bets[0], secondBet = bets[1];
+    const bestValue = isValueBet(bestBet.prob, bestBet.odd);
+    return `<div class="stats-mini"><div class="stat-mini"><span class="label">${home} Form</span><span class="value">${homeFormScore} P</span></div><div class="stat-mini"><span class="label">${away} Form</span><span class="value">${awayFormScore} P</span></div><div class="stat-mini"><span class="label">Bek. Skor</span><span class="value">${p.expectedHomeGoals}-${p.expectedAwayGoals}</span></div><div class="stat-mini"><span class="label">Toplam Gol</span><span class="value">${totalGoals.toFixed(1)}</span></div></div>
+    <div class="analysis-section"><div class="analysis-title">📊 Form</div><div class="analysis-text">${formText}</div></div>
+    <div class="analysis-section"><div class="analysis-title">⚽ Gol</div><div class="analysis-text">${goalText}</div></div>
+    <div class="analysis-section"><div class="analysis-title">🎯 Favori</div><div class="analysis-text">${favText}</div></div>
+    <div class="best-bet"><div class="title">💡 En Mantıklı Bahis</div><strong>${bestBet.name}</strong> (%${bestBet.prob}, @${bestBet.odd}) ${bestValue ? '<span class="value-tag">🎯 DEĞER!</span>' : ''}<br><span style="font-size:0.65rem;color:var(--muted);">Alternatif: ${secondBet.name} (%${secondBet.prob}, @${secondBet.odd})</span></div>`;
+}
+
+async function loadStandings() {
+    const container = document.getElementById('standingsContainer');
+    const label = document.getElementById('standingsLeagueLabel');
+    const league = LEAGUES.find(l => l.code === currentLeagueCode);
+    label.textContent = `${league.flag} ${league.country} ${league.name}`;
+    container.innerHTML = '<div class="loading">Puan durumu yükleniyor...</div>';
+    try {
+        const res = await apiFetch(`${API_URL}/standings/${currentLeagueCode}`);
+        const data = await res.json();
+        if (!data.standings || !data.standings[0] || !data.standings[0].table) { container.innerHTML = '<div class="error">Puan durumu verisi bulunamadı.</div>'; return; }
+        const table = data.standings[0].table;
+        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>AV</th><th>P</th></tr></thead><tbody>`;
+        table.forEach(row => {
+            let cls = '';
+            if (row.position <= 4) cls = 'pos-cl';
+            else if (row.position === 5) cls = 'pos-el';
+            else if (row.position === 6) cls = 'pos-conf';
+            else if (row.position >= table.length - 2) cls = 'pos-rel';
+            html += `<tr><td class="pos ${cls}">${row.position}</td><td class="team-name"><img src="${row.team.crest}" alt=""> ${row.team.shortName}</td><td>${row.playedGames}</td><td>${row.won}</td><td>${row.draw}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? '+' : ''}${row.goalDifference}</td><td class="pts">${row.points}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    } catch (error) { container.innerHTML = errHtml(error); }
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.odd-btn')) {
+        const btn = e.target.closest('.odd-btn');
+        toggleCoupon(parseInt(btn.dataset.matchid), btn.dataset.mname, btn.dataset.bettype, btn.dataset.label, parseInt(btn.dataset.prob), btn.dataset.pick, btn.dataset.league, parseFloat(btn.dataset.odd));
+    }
+});
+
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateCouponUI() {
+    const n = coupon.length;
+    const totalOdd = coupon.reduce((a, c) => a * c.odd, 1);
+    const totalProb = coupon.reduce((a, c) => a * (c.realProbability || c.probability), 1) * 100;
+    // Tüm kuponun tutma olasılığına göre risk etiketi
+    let badgeClass = 'badge-cokriskli', badgeText = '💀 ÇOK RİSKLİ';
+    if (totalProb >= 50) { badgeClass = 'badge-banko'; badgeText = '🏆 BANKO'; }
+    else if (totalProb >= 25) { badgeClass = 'badge-guvenilir'; badgeText = '✅ GÜVENİLİR'; }
+    else if (totalProb >= 10) { badgeClass = 'badge-orta'; badgeText = '⚖️ ORTA RİSK'; }
+    else if (totalProb >= 3) { badgeClass = 'badge-riskli'; badgeText = '🎲 RİSKLİ'; }
+
+    ['', '2'].forEach(sfx => {
+        document.getElementById('couponCount' + sfx).textContent = n;
+        const items = document.getElementById('couponItems' + sfx);
+        const summary = document.getElementById('couponSummary' + sfx);
+        if (n === 0) {
+            items.innerHTML = '<div class="coupon-empty">Henüz tahmin seçmedin.</div>';
+            summary.style.display = 'none';
+            return;
+        }
+        items.innerHTML = coupon.map(c => `<div class="coupon-item"><div class="coupon-item-info"><div class="match-name">${c.matchName}</div><div class="bet-name">${c.betLabel} → ${c.pickName} (@${c.odd})</div>${c.leagueName ? `<span class="league-tag">${c.leagueName}</span>` : ''}</div><button class="coupon-remove" aria-label="Kupondan çıkar" onclick="removeFromCoupon(${c.matchId}, '${c.betType}')">×</button></div>`).join('');
+        summary.style.display = 'block';
+        document.getElementById('totalOdd' + sfx).textContent = totalOdd.toFixed(2);
+        document.getElementById('totalProb' + sfx).textContent = '%' + totalProb.toFixed(1);
+        document.getElementById('oddDisplay' + sfx).textContent = totalOdd.toFixed(2);
+        const badge = document.getElementById('couponBadge' + sfx);
+        badge.className = 'coupon-badge ' + badgeClass;
+        badge.textContent = badgeText;
+    });
+    const fc = document.getElementById('fabCount');
+    if (fc) { fc.textContent = n; document.getElementById('fabOdd').textContent = n ? '@' + totalOdd.toFixed(2) : ''; }
+    restoreSelectedButtons();
+}
+
+function toggleCoupon(matchId, matchName, betType, betLabel, probability, pickName, leagueName, realOdd) {
+    const existingIdx = coupon.findIndex(c => c.matchId === matchId && c.betType === betType);
+    if (existingIdx !== -1) { coupon.splice(existingIdx, 1); updateCouponUI(); return; }
+    const sameMatchIdx = coupon.findIndex(c => c.matchId === matchId);
+    if (sameMatchIdx !== -1) coupon.splice(sameMatchIdx, 1);
+    coupon.push({ matchId, matchName, betType, betLabel, pickName, probability: probability / 100, odd: realOdd, realProbability: probability / 100, leagueName, resultStatus: null });
+    updateCouponUI();
+}
+
+function removeFromCoupon(matchId, betType) {
+    const idx = coupon.findIndex(c => c.matchId === matchId && c.betType === betType);
+    if (idx !== -1) { coupon.splice(idx, 1); updateCouponUI(); }
+}
+
+function clearCoupon() {
+    if (confirm('Kupon temizlensin mi?')) { coupon = []; updateCouponUI(); showToast('🗑️ Temizlendi.'); }
+}
+
+function restoreSelectedButtons() {
+    document.querySelectorAll('.odd-btn').forEach(btn => btn.classList.remove('selected'));
+    coupon.forEach(c => {
+        const btn = document.querySelectorAll(`.odd-btn[data-matchid="${c.matchId}"][data-bettype="${c.betType}"]`);
+        btn.forEach(b => b.classList.add('selected'));
+    });
+}
+
+function saveCouponToSaved() {
+    if (coupon.length === 0) { showToast('⚠️ Kupon boş!'); return; }
+    const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    const newCoupon = { id: Date.now(), matches: [...coupon], savedAt: new Date().toISOString(), totalOdd: coupon.reduce((acc, c) => acc * c.odd, 1), totalProb: coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100, status: 'pending' };
+    savedList.unshift(newCoupon);
+    localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(savedList));
+    showToast(`💾 Kaydedildi! (${coupon.length} maç)`);
+    updateSavedIndicator();
+}
+
+function loadLastCoupon() {
+    const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    if (savedList.length === 0) { showToast('📂 Kayıt yok!'); return; }
+    const lastCoupon = savedList[0];
+    if (confirm(`Son kupon yüklenecek:\n\n• ${lastCoupon.matches.length} maç\n• Oran: ${lastCoupon.totalOdd.toFixed(2)}\n• Tutma: %${lastCoupon.totalProb.toFixed(1)}\n\nDevam?`)) {
+        coupon = [...lastCoupon.matches];
+        updateCouponUI();
+        showToast(`📂 Yüklendi!`);
+    }
+}
+
+function updateSavedIndicator() {
+    const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    const badge = savedList.length > 0 ? `<span class="saved-badge">💾 ${savedList.length}</span>` : '';
+    document.querySelectorAll('[id^="savedIndicator"]').forEach(el => el.innerHTML = badge);
+}
+
+let savedDateFilter = 'all', savedStatusFilter = 'all';
+const savedOpenIds = new Set();
+function scDateKey(iso) { const d = new Date(iso); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function scDateLabel(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }); }
+function scInfo(sc) {
+    const won = sc.matches.filter(m => m.resultStatus === 'won').length;
+    const lost = sc.matches.filter(m => m.resultStatus === 'lost').length;
+    const pending = sc.matches.length - won - lost;
+    const state = lost > 0 ? 'lost' : (pending === 0 && won > 0 ? 'won' : 'pending');
+    return { won, lost, pending, state };
+}
+function pct(a, b) { return b > 0 ? Math.round(a / b * 100) : null; }
+function setSavedDate(k) { savedDateFilter = k; renderSavedCoupons(); }
+function setSavedStatus(k) { savedStatusFilter = k; renderSavedCoupons(); }
+function toggleSavedOpen(id, open) { if (open) savedOpenIds.add(id); else savedOpenIds.delete(id); }
+
+function renderSavedCoupons() {
+    const container = document.getElementById('savedCouponsGrid');
+    const toolbar = document.getElementById('savedToolbar');
+    const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    if (savedList.length === 0) { toolbar.innerHTML = ''; container.innerHTML = `<div class="empty-saved"><span class="emoji">📭</span><h3 style="color:var(--text);margin-bottom:8px;">Henüz kayıtlı kuponun yok</h3><p style="font-size:0.85rem;">Tahminler sekmesinden kupon oluşturup "Kaydet" butonuna bas.</p></div>`; return; }
+
+    const dateCounts = {};
+    savedList.forEach(sc => { const k = scDateKey(sc.savedAt); dateCounts[k] = (dateCounts[k] || 0) + 1; });
+    const dateKeys = Object.keys(dateCounts).sort().reverse();
+    if (savedDateFilter !== 'all' && !dateCounts[savedDateFilter]) savedDateFilter = 'all';
+    const byDate = savedDateFilter === 'all' ? savedList : savedList.filter(sc => scDateKey(sc.savedAt) === savedDateFilter);
+
+    let cWon = 0, cLost = 0, cPend = 0, mWon = 0, mLost = 0;
+    byDate.forEach(sc => { const i = scInfo(sc); if (i.state === 'won') cWon++; else if (i.state === 'lost') cLost++; else cPend++; mWon += i.won; mLost += i.lost; });
+    const cRate = pct(cWon, cWon + cLost), mRate = pct(mWon, mWon + mLost);
+    const rateColor = r => r === null ? '' : (r >= 50 ? 'c-green' : 'c-red');
+    const dateBtn = (k, label, n) => `<button class="filter-btn ${savedDateFilter === k ? 'active' : ''}" onclick="setSavedDate('${k}')">${label}<small>${n}</small></button>`;
+    const statusBtn = (k, label, n) => `<button class="filter-btn ${savedStatusFilter === k ? 'active' : ''}" onclick="setSavedStatus('${k}')">${label}<small>${n}</small></button>`;
+
+    toolbar.innerHTML = `<div class="sc-toolbar">
+        <div><div class="sc-row-label">Kayıt tarihi</div><div class="sc-chips">${dateBtn('all', 'Tüm tarihler', savedList.length)}${dateKeys.map(k => dateBtn(k, scDateLabel(k), dateCounts[k])).join('')}</div></div>
+        <div><div class="sc-row-label">Durum</div><div class="sc-chips">${statusBtn('all', 'Tümü', byDate.length)}${statusBtn('won', '✅ Kazanan', cWon)}${statusBtn('lost', '❌ Kaybeden', cLost)}${statusBtn('pending', '⏳ Bekleyen', cPend)}</div></div>
+        <div class="sc-stats">
+            <div class="sc-stat"><b class="c-green">${cWon}</b><span>Tutan kupon</span></div>
+            <div class="sc-stat"><b class="c-red">${cLost}</b><span>Kayıp kupon</span></div>
+            <div class="sc-stat"><b class="${rateColor(cRate)}">${cRate === null ? '–' : '%' + cRate}</b><span>Kupon tutma · ${cWon}/${cWon + cLost} sonuçlanan</span></div>
+            <div class="sc-stat"><b class="${rateColor(mRate)}">${mRate === null ? '–' : '%' + mRate}</b><span>Maç tutma · ${mWon} tuttu, ${mLost} yattı</span></div>
+        </div></div>`;
+
+    const shown = savedStatusFilter === 'all' ? byDate : byDate.filter(sc => scInfo(sc).state === savedStatusFilter);
+    if (shown.length === 0) { container.innerHTML = `<div class="empty-saved"><h3 style="color:var(--text);margin-bottom:6px;">Bu filtrede kupon yok</h3><p style="font-size:0.85rem;">Başka bir tarih veya durum seç.</p></div>`; return; }
+
+    container.innerHTML = shown.map(sc => {
+        const info = scInfo(sc);
+        const dt = new Date(sc.savedAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const stText = { won: '✅ Kazandı', lost: '❌ Kaybetti', pending: '⏳ Bekliyor' }[info.state];
+        const rate = pct(info.won, info.won + info.lost);
+        const rateHtml = rate === null ? '' : `<span class="sc-rate ${rateColor(rate)}">%${rate}</span>`;
+        const matchesHtml = sc.matches.map((m, i) => {
+            let matchStatus = '⏳', statusColor = 'var(--yellow)', statusLabel = 'Bekliyor';
+            if (m.resultStatus === 'won') { matchStatus = '✅'; statusColor = 'var(--green)'; statusLabel = 'Tuttu'; }
+            else if (m.resultStatus === 'lost') { matchStatus = '❌'; statusColor = 'var(--red)'; statusLabel = 'Yattı'; }
+            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:0.82rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. ${m.matchName}</div><div style="font-size:0.75rem;color:var(--accent);margin-top:1px;">${m.betLabel} → ${m.pickName} (@${m.odd})</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-size:0.95rem;">${matchStatus}</div><div style="font-size:0.68rem;color:${statusColor};font-weight:700;">${statusLabel}</div></div></div>`;
+        }).join('');
+        return `<details class="saved-coupon-card sc-item" ${savedOpenIds.has(sc.id) ? 'open' : ''} ontoggle="toggleSavedOpen(${sc.id}, this.open)">
+            <summary><span class="sc-chev"></span>
+                <div class="sc-main"><div class="sc-date">📅 ${dt}</div><div class="sc-sub">${sc.matches.length} maç</div></div>
+                <div class="sc-counts"><span class="c-green">✅ ${info.won} tuttu</span><span class="c-red">❌ ${info.lost} yattı</span><span class="c-yellow">⏳ ${info.pending}</span>${rateHtml}</div>
+                <span class="sc-odd">${sc.totalOdd.toFixed(2)}</span>
+                <span class="sc-status status-${info.state}">${stText}</span>
+                <button class="coupon-remove" aria-label="Kuponu sil" onclick="event.preventDefault(); event.stopPropagation(); deleteSavedCoupon(${sc.id})">×</button>
+            </summary>
+            <div class="sc-body">${matchesHtml}
+                <div class="sc-footer"><span class="sc-prob">Tutma olasılığı: %${sc.totalProb.toFixed(1)}</span><button class="coupon-action-btn save-btn" style="padding:7px 12px;" onclick="checkCouponResults(${sc.id})">🔍 Sonuçları kontrol et</button></div>
+            </div></details>`;
+    }).join('');
+}
+
+async function checkCouponResults(couponId) {
+    const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    const idx = savedList.findIndex(c => c.id === couponId);
+    if (idx === -1) return;
+    const sc = savedList[idx];
+    const matchIds = sc.matches.map(m => m.matchId);
+    showToast('🔍 Kontrol ediliyor...');
+    try {
+        const res = await apiFetch(`${API_URL}/check-results`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ matchIds }) });
+        const data = await res.json();
+        const results = data.results || {};
+        let wonCount = 0, lostCount = 0, pendingCount = 0;
+        sc.matches.forEach(m => {
+            const result = results[m.matchId];
+            if (!result || result.status !== 'FINISHED') { m.resultStatus = 'pending'; pendingCount++; return; }
+            const homeScore = result.homeScore, awayScore = result.awayScore;
+            const isCorrect = betWon(m.betType, homeScore, awayScore);
+            m.resultStatus = isCorrect ? 'won' : 'lost';
+            if (isCorrect) wonCount++; else lostCount++;
+        });
+        if (lostCount > 0) sc.status = 'lost'; else if (pendingCount > 0) sc.status = 'partial'; else if (wonCount === sc.matches.length) sc.status = 'won';
+        savedList[idx] = sc;
+        localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(savedList));
+        renderSavedCoupons();
+        showToast(`✅ ${wonCount} tutu | ❌ ${lostCount} yattı | ⏳ ${pendingCount} bekliyor`);
+    } catch (e) { showToast('❌ ' + (e.message || CONN_MSG)); }
+}
+
+function deleteSavedCoupon(id) {
+    if (!confirm('Silinsin mi?')) return;
+    let list = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    list = list.filter(c => c.id !== id);
+    localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(list));
+    renderSavedCoupons();
+    updateSavedIndicator();
+    showToast('🗑️ Silindi.');
+}
+
+function clearAllSavedCoupons() {
+    if (!confirm('TÜM kuponlar silinecek! Emin misin?')) return;
+    localStorage.removeItem(SAVED_COUPONS_KEY);
+    renderSavedCoupons();
+    updateSavedIndicator();
+    showToast('🗑️ Tümü silindi.');
+}
+
+async function sendToTelegram() {
+    if (coupon.length === 0) { showToast('⚠️ Kupon boş!'); return; }
+    const totalOdd = coupon.reduce((acc, c) => acc * c.odd, 1);
+    const totalProb = coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100;
+    let message = `🎫 <b>YENİ KUPON</b>\n━━━━━━━━━━━━━━━━━\n\n`;
+    coupon.forEach((c, i) => { message += `${i+1}. <b>${c.matchName}</b>\n   ${c.betLabel} → ${c.pickName} (@${c.odd})\n\n`; });
+    message += `━━━━━━━━━━━━━━━━━\n📊 <b>Toplam Oran:</b> ${totalOdd.toFixed(2)}\n🎯 <b>Tutma:</b> %${totalProb.toFixed(1)}\n\n<i>⚽ Futbol Analiz</i>`;
+    try {
+        showToast('📤 Gönderiliyor...');
+        const res = await fetch(`${API_URL}/telegram/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+        const data = await res.json();
+        if (data.success) showToast('✅ Gönderildi!'); else showToast('❌ Hata: ' + data.error);
+    } catch (e) { showToast('❌ Bağlantı hatası!'); }
+}
+
+// ========== OTOMATİK KUPON (YENİ) ==========
+async function autoCoupon(type) {
+    // 1. Kaynak maçlar: seçili lig + tarih aralığındaki TÜM maçlar (üstte gün seçtiysen sadece o günler)
+    if (predLeagueCode !== 'all' && !allLeaguesCache[predLeagueCode]) {
+        try {
+            const res = await apiFetch(`${API_URL}/matches/${predLeagueCode}`);
+            const data = await res.json();
+            allLeaguesCache[predLeagueCode] = data.matches;
+        } catch (e) { showToast('⚠️ ' + e.message); return; }
+    }
+    let sourceMatches = getPredictionPool();
+    if (selectedDays.size) sourceMatches = sourceMatches.filter(m => selectedDays.has(predDayKey(m.utcDate)));
+    if (sourceMatches.length === 0) { showToast('⚠️ Maç bulunamadı!'); return; }
+    
+    // 2. Seçili bahis türlerine göre tüm olasılıkları topla
+    const allPredictions = [];
+    sourceMatches.forEach(m => {
+        if (!m.prediction) return;
+        const p = m.prediction;
+        const mname = `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`.replace(/['"]/g, '');
+        const leagueName = m._leagueName || '';
+        const homePick = m.homeTeam.shortName.replace(/['"]/g, '');
+        const awayPick = m.awayTeam.shortName.replace(/['"]/g, '');
+        
+        // TÜM olasılıkları topla
+        const allBets = {
+            MS1: { label: 'MS 1', pick: homePick, prob: p.ms1 },
+            MSX: { label: 'MS X', pick: 'Beraberlik', prob: p.msX },
+            MS2: { label: 'MS 2', pick: awayPick, prob: p.ms2 },
+            DC1X: { label: '1X', pick: '1X', prob: p.doubleChance1X },
+            DC12: { label: '12', pick: '12', prob: p.doubleChance12 },
+            DCX2: { label: 'X2', pick: 'X2', prob: p.doubleChanceX2 },
+            OVER15: { label: '1.5 Üst', pick: 'Üst', prob: p.over15 },
+            UNDER15: { label: '1.5 Alt', pick: 'Alt', prob: p.under15 },
+            OVER25: { label: '2.5 Üst', pick: 'Üst', prob: p.over25 },
+            UNDER25: { label: '2.5 Alt', pick: 'Alt', prob: p.under25 },
+            OVER35: { label: '3.5 Üst', pick: 'Üst', prob: p.over35 },
+            UNDER35: { label: '3.5 Alt', pick: 'Alt', prob: p.under35 },
+            OVER45: { label: '4.5 Üst', pick: 'Üst', prob: p.over45 },
+            UNDER45: { label: '4.5 Alt', pick: 'Alt', prob: p.under45 },
+            KG: { label: 'KG Var', pick: 'KG Var', prob: p.kgVar },
+            KG_YOK: { label: 'KG Yok', pick: 'KG Yok', prob: p.kgYok }
+        };
+        if (p.combos) COMBO_DEFS.forEach(d => { if (p.combos[d.pk] !== undefined) allBets[d.key] = { label: d.label, pick: d.label.replace('MS 1', homePick).replace('MS 2', awayPick), prob: p.combos[d.pk] }; });
+        
+        // Sadece SEÇİLİ bahis türlerini al
+        const filteredBets = Object.keys(allBets).filter(key => selectedBetTypes.has(key)).map(key => ({
+            betType: key,
+            ...allBets[key]
+        }));
+        
+        if (filteredBets.length === 0) return;
+        
+        // Kategori aralığı: maç için sadece bu aralığa uyan bahisler aday olur
+        const RANGES = { banko: [85, 101], guvenilir: [70, 85], riskli: [50, 70], cilgin: [35, 50] };
+        const candidates = RANGES[type] ? filteredBets.filter(b => b.prob >= RANGES[type][0] && b.prob < RANGES[type][1]) : filteredBets;
+        if (candidates.length === 0) return;
+        candidates.sort((a, b) => b.prob - a.prob);
+        const best = candidates[0];
+        
+        allPredictions.push({
+            matchId: m.id, matchName: mname,
+            betType: best.betType, betLabel: best.label, pickName: best.pick,
+            probability: best.prob,
+            leagueName
+        });
+    });
+    
+    if (allPredictions.length === 0) { showToast('⚠️ Seçili bahis türlerinde bu kritere uyan maç yok, kupon değişmedi.'); return; }
+    
+    // 3. Kategoriye göre filtrele
+    let filtered = [];
+    let categoryName = '';
+    if (type === 'banko') {
+        filtered = allPredictions.filter(p => p.probability >= 85);
+        categoryName = 'BANKO (%85+)';
+    } else if (type === 'guvenilir') {
+        filtered = allPredictions.filter(p => p.probability >= 70 && p.probability < 85);
+        categoryName = 'GÜVENİLİR (%70-85)';
+    } else if (type === 'riskli') {
+        filtered = allPredictions.filter(p => p.probability >= 50 && p.probability < 70);
+        categoryName = 'RİSKLİ (%50-70)';
+    } else if (type === 'cilgin') {
+        filtered = allPredictions.filter(p => p.probability >= 35 && p.probability < 50);
+        categoryName = 'ÇILGIN (%35-50)';
+    } else if (type === 'karisik') {
+        // Her bahis türünden en iyisini al (karışık)
+        const grouped = {};
+        allPredictions.forEach(p => {
+            if (!grouped[p.betType]) grouped[p.betType] = [];
+            grouped[p.betType].push(p);
+        });
+        Object.keys(grouped).forEach(bt => {
+            grouped[bt].sort((a, b) => b.probability - a.probability);
+            filtered.push(grouped[bt][0]);
+        });
+        categoryName = 'KARIŞIK (Her türden en iyi)';
+    }
+    
+    // 4. Sadece kritere uyanlar eklenir (doldurma yok): en yüksek olasılıktan başlayıp istenen sayıyı geçmez
+    const targetCount = parseInt(document.getElementById('matchCountRange').value);
+    if (filtered.length === 0) { showToast(`⚠️ ${categoryName} kriterine uyan maç yok, kupon değişmedi.`); return; }
+    filtered.sort((a, b) => b.probability - a.probability);
+    const found = filtered.length;
+    filtered = filtered.slice(0, targetCount);
+    
+    // 5. Kupona ekle
+    coupon = filtered.map(p => ({
+        matchId: p.matchId, matchName: p.matchName,
+        betType: p.betType, betLabel: p.betLabel, pickName: p.pickName,
+        probability: p.probability / 100, realProbability: p.probability / 100,
+        odd: calculateBookmakerOdd(p.probability),
+        leagueName: p.leagueName, resultStatus: null
+    }));
+    
+    updateCouponUI();
+    showToast(found < targetCount ? `✅ ${categoryName}: kriterde ${found} maç var, ${coupon.length} maç eklendi (istenen ${targetCount}).` : `✅ ${categoryName}: ${coupon.length} maç eklendi!`);
+}
+
+// ========== BAŞLAT ==========
+renderBetTypeSelector();
+renderLeagueList();
+selectLeague('2015');
+updateSavedIndicator();
+setTimeout(checkBotStatus, 1000);
+renderBacktestBadges();
+setTimeout(mountAds, 800);
+setInterval(checkBotStatus, 30000);
+</script>
+</body>
+</html>
