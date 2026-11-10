@@ -115,6 +115,8 @@
         .odd-value.pc-guvenilir { color:var(--sky); font-weight:800; }
         .odd-value.pc-riskli { color:var(--accent); font-weight:800; }
         .odd-value.pc-cilgin { color:var(--red); font-weight:800; }
+        .odd-mkt { order:4; font-size:.6rem; font-weight:600; color:var(--muted); opacity:.9; margin-top:1px; white-space:nowrap; }
+        .mrow-odds .odd-mkt { display:none; }
         .pc-legend { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:.75rem; font-weight:600; color:var(--muted); margin:0 0 10px; padding:7px 12px; background:var(--pit); border:1px solid var(--border); border-radius:6px; }
         .pc-legend b { font-weight:800; }
         .odd-real { font-family:var(--display); font-size:1.3rem; font-weight:700; color:var(--accent); line-height:1.1; }
@@ -979,7 +981,8 @@ function renderMatchCard(m) {
     ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k]));
     COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk]); } });
     const pcCls = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
-    const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value${pcCls(p[key])}">%${p[key]}</span></button>`;
+    const mktPct = key => { const m = p.market; if (!m) return null; const v = { ms1: m.pms1, msX: m.pmsX, ms2: m.pms2, over25: m.po25, under25: m.pu25 }[key]; return v == null ? null : v; };
+    const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value${pcCls(p[key])}">%${p[key]}</span>${mktPct(key) != null ? `<span class="odd-mkt" title="Bahis şirketlerinin ortalaması (marj çıkarılmış). Model ile karşılaştır.">Piyasa %${mktPct(key)}</span>` : ''}</button>`;
     const MS = [B('MS1', homePick, 'MS 1', 'ms1', '1'), B('MSX', 'Beraberlik', 'MS X', 'msX', 'X'), B('MS2', awayPick, 'MS 2', 'ms2', '2')];
     const DC = [B('DC1X', '1X', '1X', 'doubleChance1X'), B('DC12', '12', '12', 'doubleChance12'), B('DCX2', 'X2', 'X2', 'doubleChanceX2')];
     const OU = n => [B('OVER' + n, 'Üst', (n / 10) + ' Üst', 'over' + n), B('UNDER' + n, 'Alt', (n / 10) + ' Alt', 'under' + n)];

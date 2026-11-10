@@ -78,18 +78,25 @@ const jac = (a, b) => { const i = [...a].filter(x => b.has(x)).length, u = new S
 const nameScore = (team, oddsName) => Math.max(...[team.name, team.shortName].filter(Boolean).map(n => jac(toks(n), toks(oddsName))), 0);
 
 async function fetchOdds(code) {
-    const url = `https://api.the-odds-api.com/v4/sports/${ODDS_SPORTS[code]}/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=totals&oddsFormat=decimal`;
+    const url = `https://api.the-odds-api.com/v4/sports/${ODDS_SPORTS[code]}/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h,totals&oddsFormat=decimal`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const events = await r.json();
     return events.map(ev => {
-        const over = [], under = [];
-        (ev.bookmakers || []).forEach(b => (b.markets || []).filter(m => m.key === 'totals').forEach(m => {
-            const o = m.outcomes.find(x => x.name === 'Over' && x.point === 2.5), u = m.outcomes.find(x => x.name === 'Under' && x.point === 2.5);
-            if (o && u) { over.push(o.price); under.push(u.price); }
+        const over = [], under = [], pOver = [], h2h = [];
+        (ev.bookmakers || []).forEach(b => (b.markets || []).forEach(m => {
+            if (m.key === 'totals') {
+                const o = m.outcomes.find(x => x.name === 'Over' && x.point === 2.5), u = m.outcomes.find(x => x.name === 'Under' && x.point === 2.5);
+                if (o && u) { over.push(o.price); under.push(u.price); pOver.push((1 / o.price) / (1 / o.price + 1 / u.price)); }   // marj (vig) çıkarılmış olasılık
+            } else if (m.key === 'h2h') {
+                const h = m.outcomes.find(x => x.name === ev.home_team), a = m.outcomes.find(x => x.name === ev.away_team), d = m.outcomes.find(x => x.name === 'Draw');
+                if (h && a && d) { const t = 1 / h.price + 1 / d.price + 1 / a.price; h2h.push([1 / h.price / t, 1 / d.price / t, 1 / a.price / t]); }
+            }
         }));
         const avg = a => a.reduce((s, x) => s + x, 0) / a.length;
-        return { home: ev.home_team, away: ev.away_team, time: new Date(ev.commence_time).getTime(), books: over.length, over: over.length ? avg(over) : null, under: under.length ? avg(under) : null };
+        const avgH = i => avg(h2h.map(x => x[i]));
+        return { home: ev.home_team, away: ev.away_team, time: new Date(ev.commence_time).getTime(), books: over.length, over: over.length ? avg(over) : null, under: under.length ? avg(under) : null,
+            pOver: pOver.length ? avg(pOver) : null, ms: h2h.length >= 3 ? [avgH(0), avgH(1), avgH(2)] : null };
     }).filter(e => e.books >= 3);
 }
 
@@ -113,7 +120,10 @@ async function attachMarket(code, matches) {
             const edge = p[k] / 100 * odd - 1;
             if (edge >= VALUE_EDGE && edge <= 0.30) value.push({ key: k, odd: +odd.toFixed(2), edge: Math.round(edge * 100) });   // %30 üstü genelde model/eşleşme hatasıdır
         });
-        return { ...m, prediction: { ...p, market: { over25: +best.over.toFixed(2), under25: +best.under.toFixed(2), books: best.books }, value } };
+        return { ...m, prediction: { ...p, market: { over25: +best.over.toFixed(2), under25: +best.under.toFixed(2), books: best.books,
+            // Bahis şirketlerinin marjsız ortalama olasılığı (%), sitede "Piyasa %" olarak gösterilir
+            po25: best.pOver != null ? Math.round(best.pOver * 100) : null, pu25: best.pOver != null ? 100 - Math.round(best.pOver * 100) : null,
+            pms1: best.ms ? Math.round(best.ms[0] * 100) : null, pmsX: best.ms ? Math.round(best.ms[1] * 100) : null, pms2: best.ms ? Math.round(best.ms[2] * 100) : null }, value } };
     });
 }
 
@@ -279,9 +289,11 @@ function predictMatch(home, away, league, homeStats, awayStats, adj) {
 
     let ms1 = clampP(pct(pH)), msX = clampP(pct(pD)), ms2 = 100 - ms1 - msX;
     if (ms2 < 1) { ms2 = 1; ms1 = 100 - msX - 1; }
-    const over15 = clampP(pct(over(1.5))), over25 = clampP(pct(over(2.5)));
-    const over35 = clampP(pct(over(3.5))), over45 = clampP(pct(over(4.5)));
-    const kgVar = clampP(pct(pBtts));
+    // Kalibrasyon düzeltmesi (8.567 maçlık backtest'e göre): model uçlarda fazla iddialıydı, olasılıklar 50'ye doğru çekilir.
+    const shr = (x, k) => clampP(Math.round(50 + k * (pct(x) - 50)));
+    const over15 = shr(over(1.5), 0.9), over25 = shr(over(2.5), 0.9);
+    const over35 = shr(over(3.5), 0.9), over45 = shr(over(4.5), 0.9);
+    const kgVar = shr(pBtts, 0.45);
 
     let fav;
     if (ms1 > ms2 + 15) fav = `${home} (MS 1)`;
