@@ -111,14 +111,6 @@
         .odd-label { font-size:.72rem; color:var(--muted); font-weight:500; }
         .odd-label { order:1; } .odd-real { order:2; } .odd-value { order:3; }
         .odd-value { font-size:.72rem; font-weight:600; color:var(--muted); }
-        .odd-value.pc-banko { color:var(--green); font-weight:800; }
-        .odd-value.pc-guvenilir { color:var(--sky); font-weight:800; }
-        .odd-value.pc-riskli { color:var(--accent); font-weight:800; }
-        .odd-value.pc-cilgin { color:var(--red); font-weight:800; }
-        .odd-mkt { order:4; font-size:.6rem; font-weight:600; color:var(--muted); opacity:.9; margin-top:1px; white-space:nowrap; }
-        .mrow-odds .odd-mkt { display:none; }
-        .pc-legend { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:.75rem; font-weight:600; color:var(--muted); margin:0 0 10px; padding:7px 12px; background:var(--pit); border:1px solid var(--border); border-radius:6px; }
-        .pc-legend b { font-weight:800; }
         .odd-real { font-family:var(--display); font-size:1.3rem; font-weight:700; color:var(--accent); line-height:1.1; }
         .form-badges { display:flex; gap:3px; margin-top:12px; align-items:center; }
         .form-badge { display:inline-block; width:19px; height:19px; line-height:19px; border-radius:50%; color:var(--pit); font-size:10px; font-weight:700; text-align:center; }
@@ -173,41 +165,6 @@
         .clear-btn:hover { background:rgba(248,113,113,.12); }
         .saved-badge { display:inline-block; background:rgba(185,166,240,.14); color:var(--purple); padding:0 8px; border-radius:999px; font-size:.7rem; font-weight:600; font-family:'Barlow',sans-serif; }
 
-        .ideal-container { display:none; padding:16px; max-width:1200px; margin:0 auto; }
-        .ideal-container.active { display:block; }
-        .ideal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-        .ideal-head h2 { margin:0; font-size:1.2rem; }
-        .ideal-modes { display:flex; gap:6px; }
-        .ideal-mode { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; }
-        .ideal-mode.active { background:var(--accent); color:var(--ink); border-color:var(--accent); }
-        .ideal-note { background:var(--pit); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:.8rem; color:var(--muted); margin-bottom:14px; line-height:1.5; }
-        .kasa-form { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:12px; }
-        .kasa-form label { display:flex; flex-direction:column; gap:4px; font-size:.75rem; color:var(--muted); font-weight:600; }
-        .kasa-form input, .kasa-form select { background:var(--pit); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:.9rem; }
-        .kasa-table { width:100%; border-collapse:collapse; font-size:.8rem; margin-top:8px; }
-        .kasa-table th, .kasa-table td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
-        .kasa-table th:first-child, .kasa-table td:first-child { text-align:left; }
-        .kasa-table th { color:var(--muted); font-weight:700; }
-        .kasa-bad { color:var(--red); font-weight:700; } .kasa-ok { color:var(--green); font-weight:700; }
-        .ideal-sec { font-size:1rem; font-weight:800; margin:18px 0 8px; color:var(--accent); }
-        .ideal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; }
-        .ideal-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
-        .ideal-card h3 { margin:0; font-size:1rem; }
-        .ideal-card .sub { color:var(--muted); font-size:.75rem; margin-bottom:8px; }
-        .ideal-stats { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
-        .ideal-stat { background:var(--pit); border:1px solid var(--border); border-radius:6px; padding:5px 9px; font-size:.72rem; color:var(--muted); }
-        .ideal-stat b { display:block; font-size:1rem; color:var(--accent); }
-        .ideal-leg { border-top:1px solid var(--border); padding:8px 0; }
-        .ideal-leg-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
-        .ideal-leg-name { font-weight:700; font-size:.88rem; }
-        .ideal-leg-pick { font-size:.8rem; color:var(--muted); }
-        .ideal-leg-odd { font-weight:800; color:var(--accent); font-size:1rem; white-space:nowrap; }
-        .ideal-leg-odd small { font-weight:700; margin-left:4px; }
-        .ideal-why { margin:4px 0 0; padding:0; list-style:none; font-size:.73rem; color:var(--muted); line-height:1.45; }
-        .ideal-why li { padding-left:12px; position:relative; }
-        .ideal-why li::before { content:'•'; position:absolute; left:0; color:var(--accent); }
-        .ideal-actions { display:flex; gap:8px; margin-top:8px; }
-        .ideal-empty { color:var(--muted); font-size:.82rem; padding:8px 0; }
         .saved-coupons-container, .standings-container { display:none; padding:16px; max-width:1600px; margin:0 auto; }
         .saved-coupons-container.active, .standings-container.active { display:block; }
         .saved-coupons-header, .standings-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
@@ -350,6 +307,46 @@
         .mrow.live { background:rgba(248,113,113,.07); }
         .vbadge.adj { background:var(--card2); color:var(--text); border:1px solid var(--accent); white-space:normal; width:auto; max-width:100%; }
         .inj-row { font-size:.78rem; margin:2px 0; }
+        /* ===== Editörün seçimi + parlayan öne çıkan bahisler ===== */
+        .editor-card { background:linear-gradient(135deg,var(--card2),var(--card)); border:1px solid var(--accent); border-radius:10px; padding:10px 12px 12px; margin-bottom:12px; box-shadow:0 0 18px rgba(255,182,39,.25); }
+        .editor-head { position:relative; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; font-family:var(--display); font-size:1.3rem; margin-bottom:6px; }
+        .editor-head small { font-family:'Barlow',sans-serif; font-size:.74rem; font-weight:500; color:var(--muted); }
+        .ed-row { display:grid; grid-template-columns:96px 1fr auto 44px 48px; gap:8px; align-items:center; padding:5px 0; border-top:1px dashed var(--border); font-size:.82rem; }
+        .ed-when { color:var(--muted); font-size:.72rem; }
+        .ed-match { font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ed-bet small { color:var(--muted); } .ed-bet.hot { color:var(--accent); font-weight:700; }
+        .ed-prob { color:var(--green); font-weight:700; text-align:right; }
+        .ed-odd { font-family:var(--display); color:var(--accent); font-size:1.1rem; font-weight:700; text-align:right; }
+        .ed-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border-top:2px dashed var(--border); padding-top:8px; margin-top:4px; font-size:.82rem; }
+        .ed-total { font-family:var(--display); font-size:1.5rem; color:var(--accent); }
+        .ed-note { font-size:.7rem; color:var(--muted); margin-top:6px; line-height:1.4; }
+        .fw { position:absolute; left:104px; top:12px; width:5px; height:5px; border-radius:50%; background:var(--accent); opacity:0; pointer-events:none; animation:fwburst 1.8s ease-out infinite; animation-delay:var(--d); }
+        .fw:nth-child(even) { background:var(--green); } .fw:nth-child(3n) { background:var(--pink); }
+        @keyframes fwburst { 0% { transform:translate(0,0) scale(.2); opacity:1; } 70% { opacity:1; } 100% { transform:translate(var(--dx),var(--dy)) scale(1.1); opacity:0; } }
+        @keyframes glow { 0%,100% { box-shadow:0 0 0 1px var(--accent), 0 0 5px rgba(255,182,39,.45); } 50% { box-shadow:0 0 0 1px var(--accent), 0 0 15px rgba(255,182,39,.95); } }
+        @keyframes twinkle { 0%,100% { transform:scale(1) rotate(0); opacity:1; } 50% { transform:scale(1.3) rotate(18deg); opacity:.75; } }
+        @keyframes shine { to { background-position:-200% 0; } }
+        .odd-btn.star { border-color:var(--accent); animation:glow 1.6s ease-in-out infinite; }
+        .odd-btn.star::before { content:'⭐'; position:absolute; top:-9px; left:-6px; font-size:.75rem; z-index:2; animation:twinkle 1.2s ease-in-out infinite; }
+        .vbadge.star-chip { background:linear-gradient(90deg,var(--accent),#ffe9a8,var(--accent)); background-size:200% 100%; animation:shine 2.4s linear infinite; }
+        @media (max-width:560px) { .ed-row { grid-template-columns:1fr auto auto; } .ed-when { grid-column:1 / -1; } .ed-match { white-space:normal; } }
+        @media (prefers-reduced-motion:reduce) { .fw, .odd-btn.star, .odd-btn.star::before, .vbadge.star-chip { animation:none !important; } }
+        /* ===== Kasa ve hedef ===== */
+        .bk-pill { background:var(--pit); color:var(--text); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; font-size:.78rem; font-weight:700; cursor:pointer; }
+        .bk-panel { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px; }
+        .bk-title { font-family:var(--display); font-size:1.3rem; font-weight:600; margin-bottom:8px; }
+        .bk-inputs { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:10px; }
+        .bk-inputs label { font-size:.74rem; color:var(--muted); font-weight:600; display:flex; flex-direction:column; gap:3px; }
+        .bk-inputs input, .stake-box input { background:var(--pit); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:7px 8px; font-size:.9rem; width:100%; font-family:inherit; }
+        .bk-bar { height:8px; background:var(--pit); border-radius:999px; overflow:hidden; margin:10px 0 8px; } .bk-bar i { display:block; height:100%; background:var(--accent); min-width:2px; }
+        .bk-note { font-size:.78rem; color:#c5d2c9; line-height:1.5; }
+        .bk-warn { background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.5); border-radius:6px; padding:7px 10px; margin-top:8px; font-size:.76rem; line-height:1.45; }
+        .stake-box { margin-top:10px; background:var(--pit); border-radius:6px; padding:6px 10px; }
+        .stake-box:empty { display:none; }
+        .sb-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; font-size:.78rem; border-bottom:1px dashed var(--border); } .sb-row:last-child { border-bottom:none; }
+        .sb-row input { width:110px; padding:4px 6px; text-align:right; }
+        .target-card { border-color:var(--red); box-shadow:0 0 14px rgba(248,113,113,.2); }
+        .ed-row.tg { grid-template-columns:1fr auto 44px 48px; }
     </style>
 </head>
 <body>
@@ -357,6 +354,7 @@
 <div class="header">
     <h1><span class="logo-icon">⚽</span> Futbol<span>Analiz</span></h1>
     <div class="header-right">
+        <button class="bk-pill" id="bkPill" onclick="switchMainTab('saved')" title="Kasa ve hedef">💰 Kasa</button>
         <div class="header-info" id="headerInfo">Yükleniyor...</div>
         <div class="bot-status" id="botStatus"><span class="bot-dot" id="botDot"></span><span id="botText">Bot Kontrol...</span></div>
     </div>
@@ -365,8 +363,6 @@
 <div class="main-tabs">
     <button class="main-tab active" onclick="switchMainTab('matches')">📊 Maçlar</button>
     <button class="main-tab" onclick="switchMainTab('predictions')">🔮 Tahminler</button>
-    <button class="main-tab" onclick="switchMainTab('ideal')">⭐ İdeal Kuponlar</button>
-    <button class="main-tab" onclick="switchMainTab('kasa')">🧮 Kasa Testi</button>
     <button class="main-tab" onclick="switchMainTab('standings')">📋 Puan Durumu</button>
     <button class="main-tab" onclick="switchMainTab('saved')">💾 Kayıtlı Kuponlarım</button>
 </div>
@@ -403,6 +399,7 @@
             </div>
             <div class="total-odd" id="oddDisplay">-</div>
             <div class="coupon-badge" id="couponBadge">-</div>
+            <div class="stake-box" id="stakeBox"></div>
             <div class="coupon-actions">
                 <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
                 <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
@@ -439,6 +436,8 @@
         </div>
         
         <!-- OTOMATİK KUPON PANELİ -->
+        <div id="editorCard"></div>
+        <div id="targetCard"></div>
         <div class="auto-coupon-panel">
             <h4>🤖 Otomatik Kupon Oluştur</h4>
             
@@ -463,7 +462,6 @@
             </div>
         </div>
         
-        <div class="pc-legend">Maçlardaki yüzde renkleri: <span><b style="color:var(--green)">●</b> %85+ Banko</span><span><b style="color:var(--sky)">●</b> %70-85 Güvenilir</span><span><b style="color:var(--accent)">●</b> %50-70 Riskli</span><span><b style="color:var(--red)">●</b> %35-50 Çılgın</span><span>● %35 altı renksiz</span></div>
         <div class="ad-slot" data-ad="list"></div>
         <div id="predictionsContainer"><div class="loading">Tahminler yükleniyor...</div></div>
     </div>
@@ -477,6 +475,7 @@
             </div>
             <div class="total-odd" id="oddDisplay2">-</div>
             <div class="coupon-badge" id="couponBadge2">-</div>
+            <div class="stake-box" id="stakeBox2"></div>
             <div class="coupon-actions">
                 <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
                 <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
@@ -486,39 +485,6 @@
         </div>
         <div class="ad-slot" data-ad="coupon"></div>
     </div>
-</div>
-
-<div id="kasaMain" class="ideal-container">
-    <div class="ideal-head"><h2>🧮 Kasa Testi</h2></div>
-    <div class="ideal-note">Bu bir <b>matematik gösterimidir, kazanç yöntemi değil</b>. Bahis şirketinin kesintisi her maçta oranın içinde olduğu için, hangi kupon türünü seçersen seç ortalama sonuç zarardır. Aşağıdaki test, "kasa nasıl erir, hangi tür daha yavaş eritir" sorusunu rastgele deneylerle (Monte Carlo) gösterir. Her maçın tutma ihtimali, oranın tersinden kesinti çıkarılarak hesaplanır: bahis şirketi gerçek ihtimali doğru fiyatlıyorsa sonuç budur.</div>
-    <div class="kasa-form">
-        <label>Başlangıç kasası (TL)<input id="kStart" type="number" value="1000" min="10"></label>
-        <label>Kupon başı bahis<input id="kStake" type="number" value="100" min="1"></label>
-        <label>Bahis türü<select id="kMode"><option value="flat">Sabit TL</option><option value="pct">Kasanın yüzdesi (%)</option></select></label>
-        <label>Maç başı oran<input id="kOdd" type="number" value="1.40" step="0.05" min="1.05"></label>
-        <label>Kesinti (%)<input id="kMargin" type="number" value="7.6" step="0.1" min="0"></label>
-        <label>Kaç kupon oynanacak<input id="kN" type="number" value="100" min="5" max="500"></label>
-        <label>Hedef (kaç kat)<input id="kTarget" type="number" value="2" step="0.5" min="1.5"></label>
-        <label>Sistem için maç sayısı<input id="kSysN" type="number" value="5" min="3" max="8"></label>
-    </div>
-    <div class="ideal-actions" style="flex-wrap:wrap">
-        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('legs')">1-10 maçlık kupon karşılaştır</button>
-        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('sys')">Sistem kuponları (5/4, 5/3...)</button>
-        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('big')">1000 kat hedefi</button>
-    </div>
-    <div id="kasaOut" style="margin-top:14px"></div>
-</div>
-
-<div id="idealMain" class="ideal-container">
-    <div class="ideal-head">
-        <h2>⭐ İdeal Kuponlar</h2>
-        <div class="ideal-modes">
-            <button id="idealModeDengeli" class="ideal-mode active" onclick="setIdealMode('dengeli')">🛡️ Dengeli</button>
-            <button id="idealModeYuksek" class="ideal-mode" onclick="setIdealMode('yuksek')">🚀 Yüksek oran</button>
-        </div>
-    </div>
-    <div class="ideal-note">Her maç için modelin olasılığı, (varsa) bahis şirketlerinin ortalaması ve takımların bu sezonki ev/deplasman istatistiği birlikte aranır. Üçü de aynı yönü göstermeyen bahis kupona girmez. <b>Oran yükseldikçe tutma ihtimali hızla düşer</b>, aşağıdaki "tutma ihtimali" bunu açıkça gösterir. Kazanç garantisi yoktur.</div>
-    <div id="idealContainer"><div class="loading">İdeal kuponlar hazırlanıyor...</div></div>
 </div>
 
 <div id="standingsMain" class="standings-container">
@@ -534,6 +500,7 @@
         <h2>💾 Kayıtlı Kuponlarım</h2>
         <button class="coupon-action-btn clear-btn" style="width:auto;padding:8px 16px;" onclick="clearAllSavedCoupons()">🗑️ Tümünü Sil</button>
     </div>
+    <div id="bankrollPanel"></div>
     <div id="savedToolbar"></div>
     <div id="savedCouponsGrid" class="saved-coupons-grid"></div>
 </div>
@@ -571,8 +538,13 @@ function retryCurrent() {
 }
 
 // Geçmiş test sonuçları (tek maç başına tutma %). null bırakılan kategori için yazı gösterilmez.
-const BACKTEST_STATS = { banko: 83.6, guvenilir: 76.9, riskli: 62.1, cilgin: 46.9 };
+const BACKTEST_STATS = { banko: 86, guvenilir: 79.9, riskli: null, cilgin: null };
+function addTargetButton() {
+    const grid = document.querySelector('.auto-coupon-grid');
+    if (grid && !document.getElementById('targetBtn')) grid.insertAdjacentHTML('afterend', '<button id="targetBtn" class="coupon-action-btn save-btn" style="margin-top:8px;width:100%" onclick="targetCoupon()">🎯 Hedef oranlı kupon oluştur (ayarları Kayıtlı Kuponlarım > Kasa ve Hedef bölümünde)</button>');
+}
 function renderBacktestBadges() {
+    addTargetButton();
     Object.entries(BACKTEST_STATS).forEach(([k, v]) => {
         const el = document.querySelector('.auto-' + k);
         if (v != null && el && !el.querySelector('.btn-hist')) el.insertAdjacentHTML('beforeend', `<span class="btn-hist">Geçmişte %${v} tuttu</span>`);
@@ -618,11 +590,7 @@ function scrollToCoupon() {
 }
 
 
-// Bahis şirketi kesintisi (marj). Ekran görüntülerinden 8 maçlık ölçüm: 1-X-2 toplamı ~%9.1, Alt/Üst ve benzeri iki seçenekli bahisler ~%7.6.
-// Kombo ve çifte şans için ölçüm yok, 1-X-2 değeri kullanılır. Değerleri buradan değiştirebilirsin.
-const MARGIN_1X2 = 0.091, MARGIN_2WAY = 0.076, MARGIN_OTHER = 0.091;
-const MARGIN_1X2_KEYS = new Set(['ms1', 'msX', 'ms2']);
-const MARGIN_2WAY_KEYS = new Set(['over15', 'under15', 'over25', 'under25', 'over35', 'under35', 'over45', 'under45', 'kgVar', 'kgYok']);
+const BOOKMAKER_MARGIN = 0.06; // bahis şirketi kesintisi (%6)
 const SAVED_COUPONS_KEY = 'futbol_analiz_saved_coupons_list';
 
 const LEAGUES = [
@@ -744,6 +712,7 @@ function toggleBetType(key) {
         selectedBetTypes.add(key);
     }
     renderBetTypeSelector();
+    if (document.getElementById('predictionsMain').style.display === 'grid' && predPool.length) renderPredictionMatches(predPool);
 }
 
 function updateMatchCountDisplay() {
@@ -865,31 +834,24 @@ function selectPredRange(days) {
 // ========== ANA SEKME ==========
 function switchMainTab(tab) {
     document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    const tabBtn = document.querySelectorAll('.main-tab')[{ matches: 0, predictions: 1, standings: 2, saved: 3 }[tab]];
+    if (tabBtn) tabBtn.classList.add('active');
     document.getElementById('matchesMain').style.display = 'none';
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    document.getElementById('idealMain').classList.remove('active');
-    document.getElementById('kasaMain').classList.remove('active');
     
     if (tab === 'matches') document.getElementById('matchesMain').style.display = 'grid';
     else if (tab === 'predictions') { document.getElementById('predictionsMain').style.display = 'grid'; loadPredictions(); }
     else if (tab === 'standings') { document.getElementById('standingsMain').classList.add('active'); loadStandings(); }
     else if (tab === 'saved') { document.getElementById('savedMain').classList.add('active'); renderSavedCoupons(); }
-    else if (tab === 'kasa') { document.getElementById('kasaMain').classList.add('active'); }
-    else if (tab === 'ideal') { document.getElementById('idealMain').classList.add('active'); loadIdeal(); }
     setTimeout(mountAds, 400);
 }
 
-// Gerçek bahis şirketleri çok düşük oran vermez: toplam gol/KG/kombo gibi bahislerde alt sınır 1.10,
-// sadece büyük favori (MS 1, MS 2, çifte şans) için 1.03. Değerleri buradan değiştirebilirsin.
-const MIN_ODD = 1.10, MIN_ODD_FAV = 1.03;
-const FAV_ODD_KEYS = new Set(['ms1', 'ms2', 'doubleChance1X', 'doubleChance12', 'doubleChanceX2']);
-function calculateBookmakerOdd(realProb, key) {
+function calculateBookmakerOdd(realProb) {
     // Kesinti tüm seçeneklere orantılı uygulanır: oran = 1 / (olasılık x (1 + kesinti))
     const p = Math.min(99, Math.max(1, realProb)) / 100;
-    return parseFloat(Math.max(FAV_ODD_KEYS.has(key) ? MIN_ODD_FAV : MIN_ODD, 1 / (p * (1 + (MARGIN_1X2_KEYS.has(key) ? MARGIN_1X2 : MARGIN_2WAY_KEYS.has(key) ? MARGIN_2WAY : MARGIN_OTHER)))).toFixed(2));
+    return parseFloat(Math.max(1.01, 1 / (p * (1 + BOOKMAKER_MARGIN))).toFixed(2));
 }
 
 function isValueBet(realProb, bookmakerOdd) {
@@ -1000,8 +962,10 @@ function renderPredictionMatches(matches) {
     const sortedDays = Object.keys(dayGroups).sort();
     [...selectedDays].forEach(k => { if (!dayGroups[k]) selectedDays.delete(k); });
     renderDayFilter(sortedDays, matches.length);
-    if (matches.length === 0) { container.innerHTML = '<div class="loading">Bu tarih aralığında tahmin edilecek maç yok. Tarih aralığını genişletmeyi dene.</div>'; return; }
-    container.innerHTML = renderDayGroups(selectedDays.size ? matches.filter(m => selectedDays.has(predDayKey(m.utcDate))) : matches);
+    if (matches.length === 0) { const ec = document.getElementById('editorCard'); if (ec) ec.innerHTML = ''; container.innerHTML = '<div class="loading">Bu tarih aralığında tahmin edilecek maç yok. Tarih aralığını genişletmeyi dene.</div>'; return; }
+    const shown = selectedDays.size ? matches.filter(m => selectedDays.has(predDayKey(m.utcDate))) : matches;
+    renderEditorCard(shown);
+    container.innerHTML = renderDayGroups(shown);
     restoreSelectedButtons();
 }
 
@@ -1026,6 +990,144 @@ function renderDayFilter(sortedDays, total) {
     info.style.cssText = 'font-size:.78rem;color:var(--muted);align-self:center;margin-left:4px;';
     info.textContent = selectedDays.size ? `${selectedDays.size} gün seçili · kupon bu ${picked} maçtan yapılır` : 'Birden fazla gün seçebilirsin';
     box.appendChild(info);
+}
+
+// ========== EDİTÖRÜN SEÇİMİ + ÖNE ÇIKAN (YILDIZLI) BAHİSLER ==========
+const STAR_MIN = 80, EDITOR_MIN = 70, EDITOR_COUNT = 5;
+const escH = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function allBetsFor(m) {
+    const p = m.prediction, h = m.homeTeam.shortName.replace(/['"]/g, ''), a = m.awayTeam.shortName.replace(/['"]/g, '');
+    const b = {
+        MS1: ['MS 1', h, p.ms1], MSX: ['MS X', 'Beraberlik', p.msX], MS2: ['MS 2', a, p.ms2],
+        DC1X: ['1X', '1X', p.doubleChance1X], DC12: ['12', '12', p.doubleChance12], DCX2: ['X2', 'X2', p.doubleChanceX2],
+        KG: ['KG Var', 'KG Var', p.kgVar], KG_YOK: ['KG Yok', 'KG Yok', p.kgYok]
+    };
+    [15, 25, 35, 45].forEach(n => { b['OVER' + n] = [(n / 10) + ' Üst', 'Üst', p['over' + n]]; b['UNDER' + n] = [(n / 10) + ' Alt', 'Alt', p['under' + n]]; });
+    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) b[d.key] = [d.label, d.label.replace('MS 1', h).replace('MS 2', a), p.combos[d.pk]]; });
+    return b;
+}
+// Seçili bahis türleri içinde bu maçın en yüksek olasılıklı bahsi
+function bestBetFor(m) {
+    const all = allBetsFor(m); let best = null;
+    selectedBetTypes.forEach(k => { const x = all[k]; if (x && x[2] !== undefined && (!best || x[2] > best.prob)) best = { key: k, label: x[0], pick: x[1], prob: x[2] }; });
+    return best;
+}
+function starFor(m) { const b = bestBetFor(m); return b && b.prob >= STAR_MIN ? b : null; }
+
+function renderEditorCard(list) {
+    const box = document.getElementById('editorCard'); if (!box) return;
+    const cands = list.filter(m => m.prediction && !isLiveSt(m.status)).map(m => ({ m, b: bestBetFor(m) }))
+        .filter(x => x.b && x.b.prob >= EDITOR_MIN).sort((x, y) => y.b.prob - x.b.prob).slice(0, EDITOR_COUNT);
+    window.__editorPicks = [];
+    if (!cands.length) {
+        const hasAny = list.some(m => m.prediction && !isLiveSt(m.status));
+        box.innerHTML = `<div class="editor-card"><div class="editor-head"><b>⭐ Editörün Seçimi</b><small>Otomatik</small></div><div class="ed-note">${hasAny ? `Seçili günlerde, seçili bahis türleri içinde %${EDITOR_MIN} ve üzeri bahis yok. Yukarıdan <b>1.5 Üst</b>, <b>çifte şans</b> gibi türleri işaretle ya da gün/lig ekle.` : 'Seçili aralıkta oynanmamış maç yok. Tarih aralığını genişlet.'}</div></div>`;
+        return;
+    }
+    const picks = cands.map(({ m, b }) => ({ matchId: m.id, matchName: `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`.replace(/['"]/g, ''), key: b.key, label: b.label, pick: b.pick, prob: b.prob, odd: calculateBookmakerOdd(b.prob), leagueName: m._leagueName || '', t: m.utcDate }));
+    window.__editorPicks = picks;
+    const totalOdd = picks.reduce((a, x) => a * x.odd, 1), allProb = picks.reduce((a, x) => a * x.prob / 100, 1) * 100;
+    const hist = Math.min(...picks.map(x => x.prob)) >= 85 ? BACKTEST_STATS.banko : BACKTEST_STATS.guvenilir;
+    const rows = picks.map(x => {
+        const d = new Date(x.t), when = d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        return `<div class="ed-row"><span class="ed-when">${when}</span><span class="ed-match">${escH(x.matchName)}</span><span class="ed-bet${x.prob >= STAR_MIN ? ' hot' : ''}">${x.prob >= STAR_MIN ? '⭐ ' : ''}${escH(x.label)} <small>→ ${escH(x.pick)}</small></span><span class="ed-prob">%${x.prob}</span><span class="ed-odd">${x.odd}</span></div>`;
+    }).join('');
+    const fw = ['-34px,-16px', '30px,-18px', '-18px,-26px', '22px,-28px', '-42px,6px', '40px,8px'].map((v, i) => `<i class="fw" style="--dx:${v.split(',')[0]};--dy:${v.split(',')[1]};--d:${(i * 0.3).toFixed(1)}s"></i>`).join('');
+    box.innerHTML = `<div class="editor-card"><div class="editor-head">${fw}<b>⭐ Editörün Seçimi</b><small>Otomatik · ${list.length} maç içinden</small></div>${rows}
+        <div class="ed-foot"><div>Toplam oran <b class="ed-total">${totalOdd.toFixed(2)}</b> · Hepsinin tutma ihtimali <b>≈ %${allProb.toFixed(0)}</b></div><button class="coupon-action-btn save-btn" onclick="addEditorPicks()">🎫 Kupona ekle</button></div>
+        <div class="ed-note">Seçili günlerdeki maçlardan, seçili bahis türleri içinde en yüksek olasılıklıları model otomatik seçer. İnsan editör değildir, garanti vermez.${hist != null ? ` Bu güven aralığındaki tekli bahisler geçmişte %${hist} tutmuş; kuponun tamamının tutması için ise tüm maçların tutması gerekir.` : ''}</div></div>`;
+}
+function addEditorPicks() {
+    const picks = window.__editorPicks || [];
+    if (!picks.length) return;
+    picks.forEach(x => {
+        coupon = coupon.filter(c => c.matchId !== x.matchId);
+        coupon.push({ matchId: x.matchId, matchName: x.matchName, betType: x.key, betLabel: x.label, pickName: x.pick, probability: x.prob / 100, realProbability: x.prob / 100, odd: x.odd, leagueName: x.leagueName, resultStatus: null });
+    });
+    updateCouponUI();
+    showToast(`⭐ Editörün seçimi kupona eklendi (${picks.length} maç).`);
+}
+
+// ========== KASA DURUMU + HEDEF ORAN ==========
+const BK_KEY = 'futbolKasa';
+let BK = { start: 0, target: 5000000, targetOdd: 1000, stake: 0 };
+try { Object.assign(BK, JSON.parse(localStorage.getItem(BK_KEY) || '{}')); } catch (e) {}
+const money = x => '₺' + Math.round(x).toLocaleString('tr-TR');
+function setBK(k, v) {
+    BK[k] = Math.max(0, parseFloat(String(v).replace(',', '.')) || 0);
+    try { localStorage.setItem(BK_KEY, JSON.stringify(BK)); } catch (e) {}
+    setTimeout(() => { renderBankroll(); updateCouponUI(); }, 0);   // giriş kutusu değişim olayı bitince yenile
+}
+// Kasa = başlangıç + kapanmış kuponların kâr/zararı (bahis tutarı girilerek kaydedilenler)
+function bankrollStats() {
+    const list = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    let pnl = 0, open = 0, n = 0, won = 0, lost = 0;
+    list.forEach(sc => {
+        if (!(sc.stake > 0)) return;
+        const st = scInfo(sc).state; n++;
+        if (st === 'won') { pnl += sc.stake * (sc.totalOdd - 1); won++; } else if (st === 'lost') { pnl -= sc.stake; lost++; } else open += sc.stake;
+    });
+    return { pnl, open, n, won, lost, kasa: BK.start + pnl };
+}
+function renderBankroll() {
+    const s = bankrollStats(), kasa = s.kasa, T = BK.targetOdd > 1 ? BK.targetOdd : 1000;
+    const pill = document.getElementById('bkPill');
+    if (pill) pill.textContent = BK.start > 0 || s.n ? `💰 ${money(kasa)} / ${money(BK.target)}` : '💰 Kasa';
+    const box = document.getElementById('bankrollPanel'); if (!box) return;
+    const prog = kasa > 0 && BK.target > 0 ? Math.min(100, kasa / BK.target * 100) : 0;
+    const need = kasa > 0 && BK.target > kasa ? (BK.target - kasa) / (T - 1) : 0;
+    const needPct = kasa > 0 ? need / kasa * 100 : 0, stakePct = kasa > 0 && BK.stake ? BK.stake / kasa * 100 : 0;
+    const inp = (label, key, ph) => `<label>${label}<input type="number" min="0" step="any" value="${BK[key] || ''}" placeholder="${ph}" onchange="setBK('${key}', this.value)"></label>`;
+    const tile = (v, l, cls) => `<div class="sc-stat"><b class="${cls || ''}">${v}</b><span>${l}</span></div>`;
+    let note = '';
+    if (kasa <= 0) note = 'Başlangıç kasanı gir; kayıtlı kuponlarda bahis tutarı varsa kasa kâr/zarara göre kendiliğinden güncellenir.';
+    else {
+        note = `Hedef kasaya <b>×${(BK.target / kasa).toFixed(0)}</b> gerekiyor. ${T} oranlı tek kuponla ulaşmak için ≈ <b>${money(need)}</b> yatırman gerekir (kasanın %${needPct.toFixed(0)}'i). `
+            + `Adil oranlarla ${T} oranlı bir kupon yaklaşık ${T} denemede 1 tutar; bahis şirketi kesintisi ve model hatası bunu daha da azaltır, yani <b>uzun vadede beklenen sonuç zarardır</b>. Böyle kuponlara kasanın en fazla %1'ini koy.`;
+        if (stakePct > 2) note += `<div class="bk-warn">⚠️ Bahis tutarı kasanın %${stakePct.toFixed(1)}'i. ${T} oranlı kupon için bu fazla; kasanın %1'inin altında tut.</div>`;
+    }
+    box.innerHTML = `<div class="bk-panel"><div class="bk-title">💰 Kasa ve Hedef</div>
+        <div class="bk-inputs">${inp('Başlangıç kasası (₺)', 'start', '0')}${inp('Hedef kasa (₺)', 'target', '5000000')}${inp('Hedef oran', 'targetOdd', '1000')}${inp('Kupon başı bahis (₺)', 'stake', '0')}</div>
+        <div class="sc-stats">${tile(money(kasa), 'Güncel kasa')}${tile((s.pnl >= 0 ? '+' : '') + money(s.pnl), `Net kâr/zarar (${s.won} tuttu, ${s.lost} yattı)`, s.pnl >= 0 ? 'c-green' : 'c-red')}${tile('%' + prog.toFixed(2), 'Hedefe ilerleme')}${tile(money(s.open), 'Açıkta bekleyen bahis')}</div>
+        <div class="bk-bar"><i style="width:${prog}%"></i></div><div class="bk-note">${note}</div></div>`;
+}
+function stakeBoxHtml(totalOdd, totalProb) {
+    const ev = totalProb / 100 * totalOdd - 1, T = BK.targetOdd > 1 ? BK.targetOdd : 1000;
+    const prog = Math.min(100, Math.log(totalOdd) / Math.log(T) * 100);
+    return `<div class="sb-row"><span>Bahis tutarı (₺)</span><input type="number" min="0" step="any" value="${BK.stake || ''}" onchange="setBK('stake', this.value)"></div>`
+        + (BK.stake ? `<div class="sb-row"><span>Olası kazanç</span><b>${money(BK.stake * totalOdd)}</b></div>` : '')
+        + `<div class="sb-row"><span>${T} orana ilerleme</span><b>%${prog.toFixed(0)}</b></div><div class="sb-row"><span>Beklenen sonuç (model)</span><b class="${ev >= 0 ? 'c-green' : 'c-red'}">${ev >= 0 ? '+' : ''}%${(ev * 100).toFixed(0)}</b></div>`;
+}
+
+// Hedef oranlı kupon: seçili günlerdeki maçlardan, toplam oran hedefe ulaşana kadar bacak ekler
+function targetCoupon() {
+    const T = BK.targetOdd > 1 ? BK.targetOdd : 1000;
+    let pool = getPredictionPool().filter(m => m.prediction && !isLiveSt(m.status));
+    if (selectedDays.size) pool = pool.filter(m => selectedDays.has(predDayKey(m.utcDate)));
+    const legs = [];
+    pool.forEach(m => {
+        const all = allBetsFor(m); let best = null;
+        selectedBetTypes.forEach(k => { const x = all[k]; if (!x) return; const odd = calculateBookmakerOdd(x[2]); if (x[2] < 40 || odd < 1.8) return; if (!best || x[2] > best.prob) best = { key: k, label: x[0], pick: x[1], prob: x[2], odd }; });
+        if (best) legs.push({ m, ...best });
+    });
+    legs.sort((a, b) => b.prob - a.prob);
+    const picks = []; let prod = 1;
+    for (const l of legs) { if (prod >= T) break; picks.push(l); prod *= l.odd; }
+    const box = document.getElementById('targetCard'); if (!box) return;
+    if (!picks.length) { box.innerHTML = `<div class="editor-card target-card"><div class="editor-head"><b>🎯 Hedef oran ${T}</b></div><div class="ed-note">Seçili günlerde bu hedef için uygun bahis bulunamadı. Gün/lig ve bahis türlerini artır.</div></div>`; window.__targetPicks = []; return; }
+    window.__targetPicks = picks.map(l => ({ matchId: l.m.id, matchName: `${l.m.homeTeam.shortName} - ${l.m.awayTeam.shortName}`.replace(/['"]/g, ''), key: l.key, label: l.label, pick: l.pick, prob: l.prob, odd: l.odd, leagueName: l.m._leagueName || '' }));
+    const hit = picks.reduce((a, l) => a * l.prob / 100, 1), ev = hit * prod - 1, reached = prod >= T;
+    const rows = picks.map(l => `<div class="ed-row tg"><span class="ed-match">${escH(l.m.homeTeam.shortName)} - ${escH(l.m.awayTeam.shortName)}</span><span class="ed-bet">${escH(l.label)} <small>→ ${escH(l.pick)}</small></span><span class="ed-prob">%${l.prob}</span><span class="ed-odd">${l.odd}</span></div>`).join('');
+    box.innerHTML = `<div class="editor-card target-card"><div class="editor-head"><b>🎯 Hedef oran ${T} kuponu</b><small>${picks.length} maç · ${legs.length} uygun maç içinden</small></div>${rows}
+        <div class="ed-foot"><div>Toplam oran <b class="ed-total">${prod.toFixed(0)}</b>${reached ? '' : ` <span class="c-red">(hedefe ulaşamadı)</span>`}</div><button class="coupon-action-btn save-btn" onclick="addTargetPicks()">🎫 Kuponu bununla değiştir</button></div>
+        <div class="bk-warn">⚠️ Modele göre bu kuponun tutma ihtimali ≈ <b>%${(hit * 100).toFixed(3)}</b> (yaklaşık ${Math.round(1 / hit).toLocaleString('tr-TR')} denemede 1). Beklenen sonuç: her 100₺ için ortalama <b>${ev >= 0 ? '+' : ''}${(ev * 100).toFixed(0)}₺</b>. Bu bir piyango biletidir; hedef orana ulaşmak için maç sayısı arttıkça bahis şirketi kesintisi de katlanır.${BK.stake ? ` Tutarsa ${money(BK.stake * prod)} kazanırsın, tutmazsa ${money(BK.stake)} kaybedersin.` : ''}</div>
+        ${reached ? '' : '<div class="ed-note">Seçili günlerdeki uygun maç sayısı hedef orana yetmedi. Daha fazla gün ya da lig seç.</div>'}</div>`;
+}
+function addTargetPicks() {
+    const picks = window.__targetPicks || []; if (!picks.length) return;
+    coupon = picks.map(x => ({ matchId: x.matchId, matchName: x.matchName, betType: x.key, betLabel: x.label, pickName: x.pick, probability: x.prob / 100, realProbability: x.prob / 100, odd: x.odd, leagueName: x.leagueName, resultStatus: null }));
+    updateCouponUI(); showToast(`🎯 Hedef oran kuponu kupona yüklendi (${picks.length} maç).`);
 }
 
 function renderDayGroups(list) {
@@ -1056,15 +1158,14 @@ function renderMatchCard(m) {
 
     const p = m.prediction, mid = m.id;
     const val = {}; (p.value || []).forEach(v => val[v.key] = v);
+    const star = starFor(m);
     const mname = `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`.replace(/['"]/g, '');
     const homePick = m.homeTeam.shortName.replace(/['"]/g, '');
     const awayPick = m.awayTeam.shortName.replace(/['"]/g, '');
     const o = {};
-    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k], k));
-    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk], 'combo'); } });
-    const pcCls = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
-    const mktPct = key => { const m = p.market; if (!m) return null; const v = { ms1: m.pms1, msX: m.pmsX, ms2: m.pms2, over25: m.po25, under25: m.pu25 }[key]; return v == null ? null : v; };
-    const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value${pcCls(p[key])}">%${p[key]}</span>${mktPct(key) != null ? `<span class="odd-mkt" title="Bahis şirketlerinin ortalaması (marj çıkarılmış). Model ile karşılaştır.">Piyasa %${mktPct(key)}</span>` : ''}</button>`;
+    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k]));
+    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk]); } });
+    const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}${star && star.key === type ? ' star' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value">%${p[key]}</span></button>`;
     const MS = [B('MS1', homePick, 'MS 1', 'ms1', '1'), B('MSX', 'Beraberlik', 'MS X', 'msX', 'X'), B('MS2', awayPick, 'MS 2', 'ms2', '2')];
     const DC = [B('DC1X', '1X', '1X', 'doubleChance1X'), B('DC12', '12', '12', 'doubleChance12'), B('DCX2', 'X2', 'X2', 'doubleChanceX2')];
     const OU = n => [B('OVER' + n, 'Üst', (n / 10) + ' Üst', 'over' + n), B('UNDER' + n, 'Alt', (n / 10) + ' Alt', 'under' + n)];
@@ -1072,7 +1173,7 @@ function renderMatchCard(m) {
     const quick = `<div class="mrow-odds"><div class="og">${MS.join('')}</div><div class="og">${B('OVER25', 'Üst', '2.5 Üst', 'over25', '2.5 Ü')}${B('UNDER25', 'Alt', '2.5 Alt', 'under25', '2.5 A')}</div><div class="og">${B('KG', 'KG Var', 'KG Var', 'kgVar', 'KG +')}${B('KG_YOK', 'KG Yok', 'KG Yok', 'kgYok', 'KG -')}</div></div>`;
     const vb = (p.value || []).map(v => v.key === 'over25' ? '2.5 Üst' : '2.5 Alt').join(' · ');
     const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const badges = (vb ? `<div class="vbadge">💰 Değerli: ${vb}</div>` : '') + ((p.adjust || []).length ? `<div class="vbadge adj" title="Elle girilen haber/kadro düzeltmesi uygulandı">⚠️ ${esc(p.adjust.join(' · '))}</div>` : '');
+    const badges = (star ? `<div class="vbadge star-chip" title="Seçili bahis türleri içinde bu maçın en yüksek olasılıklı bahsi">⭐ Öne çıkan: ${esc(star.label)} %${star.prob}</div>` : '') + (vb ? `<div class="vbadge">💰 Değerli: ${vb}</div>` : '') + ((p.adjust || []).length ? `<div class="vbadge adj" title="Elle girilen haber/kadro düzeltmesi uygulandı">⚠️ ${esc(p.adjust.join(' · '))}</div>` : '');
     const teams2 = badges ? teams.replace(/<\/div>$/, badges + '</div>') : teams;
     const mk = (title, btns, cls) => btns.length ? `<div class="mk"><div class="odds-title">${title}</div><div class="odds-grid ${cls || (btns.length === 3 ? 'ms' : 'kg')}">${btns.join('')}</div></div>` : '';
     const CB = rs => COMBO_DEFS.filter(d => rs.includes(d.pk) && p['c_' + d.pk] !== undefined).map(d => B(d.key, d.label.replace('MS 1', homePick).replace('MS 2', awayPick), d.label, 'c_' + d.pk, d.short));
@@ -1104,13 +1205,13 @@ function generateDetailedAnalysis(m, p) {
     let favText = p.ms1 > p.ms2 + 15 ? `<span class="hl-green">${home}</span> favori (%${p.ms1}).` : p.ms2 > p.ms1 + 15 ? `<span class="hl-green">${away}</span> favori (%${p.ms2}).` : p.msX > Math.max(p.ms1, p.ms2) ? `Beraberlik yakın (%${p.msX}).` : `Dengeli.`;
     
     const bets = [
-        { name: 'MS 1', prob: p.ms1, odd: calculateBookmakerOdd(p.ms1, 'ms1') }, { name: 'MS X', prob: p.msX, odd: calculateBookmakerOdd(p.msX, 'msX') }, { name: 'MS 2', prob: p.ms2, odd: calculateBookmakerOdd(p.ms2, 'ms2') },
-        { name: '1X', prob: p.doubleChance1X, odd: calculateBookmakerOdd(p.doubleChance1X, 'doubleChance1X') }, { name: '12', prob: p.doubleChance12, odd: calculateBookmakerOdd(p.doubleChance12, 'doubleChance12') }, { name: 'X2', prob: p.doubleChanceX2, odd: calculateBookmakerOdd(p.doubleChanceX2, 'doubleChanceX2') },
-        { name: '1.5 Üst', prob: p.over15, odd: calculateBookmakerOdd(p.over15, 'over15') }, { name: '1.5 Alt', prob: p.under15, odd: calculateBookmakerOdd(p.under15, 'under15') },
-        { name: '2.5 Üst', prob: p.over25, odd: calculateBookmakerOdd(p.over25, 'over25') }, { name: '2.5 Alt', prob: p.under25, odd: calculateBookmakerOdd(p.under25, 'under25') },
-        { name: '3.5 Üst', prob: p.over35, odd: calculateBookmakerOdd(p.over35, 'over35') }, { name: '3.5 Alt', prob: p.under35, odd: calculateBookmakerOdd(p.under35, 'under35') },
-        { name: '4.5 Üst', prob: p.over45, odd: calculateBookmakerOdd(p.over45, 'over45') }, { name: '4.5 Alt', prob: p.under45, odd: calculateBookmakerOdd(p.under45, 'under45') },
-        { name: 'KG Var', prob: p.kgVar, odd: calculateBookmakerOdd(p.kgVar, 'kgVar') }, { name: 'KG Yok', prob: p.kgYok, odd: calculateBookmakerOdd(p.kgYok, 'kgYok') }
+        { name: 'MS 1', prob: p.ms1, odd: calculateBookmakerOdd(p.ms1) }, { name: 'MS X', prob: p.msX, odd: calculateBookmakerOdd(p.msX) }, { name: 'MS 2', prob: p.ms2, odd: calculateBookmakerOdd(p.ms2) },
+        { name: '1X', prob: p.doubleChance1X, odd: calculateBookmakerOdd(p.doubleChance1X) }, { name: '12', prob: p.doubleChance12, odd: calculateBookmakerOdd(p.doubleChance12) }, { name: 'X2', prob: p.doubleChanceX2, odd: calculateBookmakerOdd(p.doubleChanceX2) },
+        { name: '1.5 Üst', prob: p.over15, odd: calculateBookmakerOdd(p.over15) }, { name: '1.5 Alt', prob: p.under15, odd: calculateBookmakerOdd(p.under15) },
+        { name: '2.5 Üst', prob: p.over25, odd: calculateBookmakerOdd(p.over25) }, { name: '2.5 Alt', prob: p.under25, odd: calculateBookmakerOdd(p.under25) },
+        { name: '3.5 Üst', prob: p.over35, odd: calculateBookmakerOdd(p.over35) }, { name: '3.5 Alt', prob: p.under35, odd: calculateBookmakerOdd(p.under35) },
+        { name: '4.5 Üst', prob: p.over45, odd: calculateBookmakerOdd(p.over45) }, { name: '4.5 Alt', prob: p.under45, odd: calculateBookmakerOdd(p.under45) },
+        { name: 'KG Var', prob: p.kgVar, odd: calculateBookmakerOdd(p.kgVar) }, { name: 'KG Yok', prob: p.kgYok, odd: calculateBookmakerOdd(p.kgYok) }
     ];
     bets.sort((a, b) => b.prob - a.prob);
     const bestBet = bets[0], secondBet = bets[1];
@@ -1192,6 +1293,7 @@ function updateCouponUI() {
         badge.className = 'coupon-badge ' + badgeClass;
         badge.textContent = badgeText;
     });
+    ['', '2'].forEach(sfx => { const sb = document.getElementById('stakeBox' + sfx); if (sb) sb.innerHTML = n ? stakeBoxHtml(totalOdd, totalProb) : ''; });
     const fc = document.getElementById('fabCount');
     if (fc) { fc.textContent = n; document.getElementById('fabOdd').textContent = n ? '@' + totalOdd.toFixed(2) : ''; }
     restoreSelectedButtons();
@@ -1227,6 +1329,7 @@ function saveCouponToSaved() {
     if (coupon.length === 0) { showToast('⚠️ Kupon boş!'); return; }
     const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
     const newCoupon = { id: Date.now(), matches: [...coupon], savedAt: new Date().toISOString(), totalOdd: coupon.reduce((acc, c) => acc * c.odd, 1), totalProb: coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100, status: 'pending' };
+    newCoupon.stake = BK.stake || 0;
     savedList.unshift(newCoupon);
     localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(savedList));
     showToast(`💾 Kaydedildi! (${coupon.length} maç)`);
@@ -1267,6 +1370,7 @@ function setSavedStatus(k) { savedStatusFilter = k; renderSavedCoupons(); }
 function toggleSavedOpen(id, open) { if (open) savedOpenIds.add(id); else savedOpenIds.delete(id); }
 
 function renderSavedCoupons() {
+    renderBankroll();
     const container = document.getElementById('savedCouponsGrid');
     const toolbar = document.getElementById('savedToolbar');
     const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
@@ -1312,7 +1416,7 @@ function renderSavedCoupons() {
         }).join('');
         return `<details class="saved-coupon-card sc-item" ${savedOpenIds.has(sc.id) ? 'open' : ''} ontoggle="toggleSavedOpen(${sc.id}, this.open)">
             <summary><span class="sc-chev"></span>
-                <div class="sc-main"><div class="sc-date">📅 ${dt}</div><div class="sc-sub">${sc.matches.length} maç</div></div>
+                <div class="sc-main"><div class="sc-date">📅 ${dt}</div><div class="sc-sub">${sc.matches.length} maç${sc.stake ? ' · ' + money(sc.stake) : ''}</div></div>
                 <div class="sc-counts"><span class="c-green">✅ ${info.won} tuttu</span><span class="c-red">❌ ${info.lost} yattı</span><span class="c-yellow">⏳ ${info.pending}</span>${rateHtml}</div>
                 <span class="sc-odd">${sc.totalOdd.toFixed(2)}</span>
                 <span class="sc-status status-${info.state}">${stText}</span>
@@ -1504,126 +1608,6 @@ async function autoCoupon(type) {
     showToast(found < targetCount ? `✅ ${categoryName}: kriterde ${found} maç var, ${coupon.length} maç eklendi (istenen ${targetCount}).` : `✅ ${categoryName}: ${coupon.length} maç eklendi!`);
 }
 
-
-// ========== İDEAL KUPONLAR SEKMESİ ==========
-// Kuponları sunucu üretir (/api/ideal), burada sadece gösterilir. Oranlar sunucuda sitedeki oran formülüyle hesaplanır.
-// Backtest raporunun 6. bölümünden (1.925 lig-günü kuponu, 7 lig, 5 sezon). Yeni backtest sonrası burayı güncelle.
-const IDEAL_BACKTEST = { dengeli: { n: 1925, hit: 29.2, odd: 2.89, roi: -22.1 }, yuksek: { n: 1929, hit: 13.6, odd: 8.35, roi: -11.6 } };
-let idealMode = 'dengeli';
-const idealPc = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
-const idealData = {};
-const escH = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function setIdealMode(m) {
-    idealMode = m;
-    document.getElementById('idealModeDengeli').classList.toggle('active', m === 'dengeli');
-    document.getElementById('idealModeYuksek').classList.toggle('active', m === 'yuksek');
-    loadIdeal();
-}
-async function loadIdeal() {
-    const box = document.getElementById('idealContainer');
-    if (idealData[idealMode] && Date.now() - idealData[idealMode].t < 5 * 60e3) { renderIdeal(idealData[idealMode].d); return; }
-    box.innerHTML = '<div class="loading">İdeal kuponlar hazırlanıyor... (ilk açılışta 10-20 saniye sürebilir)</div>';
-    try {
-        const res = await apiFetch(`${API_URL}/ideal?mode=${idealMode}`);
-        const d = await res.json();
-        if (d.error) throw new Error(d.error);
-        idealData[idealMode] = { t: Date.now(), d };
-        renderIdeal(d);
-    } catch (e) { box.innerHTML = `<div class="ideal-empty">⚠️ ${escH(e.message)}</div>`; }
-}
-const idealDayLabel = day => new Date(day + 'T12:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
-function idealCard(c) {
-    const when = iso => new Date(iso).toLocaleString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    const title = c.scope === 'day' ? '📅 ' + idealDayLabel(c.day) : c.scope === 'league' ? `${c.leagueFlag} ${escH(c.leagueName)}` : '🌍 ' + escH(c.title);
-    const legs = c.legs.map(l => `<div class="ideal-leg">
-        <div class="ideal-leg-top"><div><div class="ideal-leg-name">${escH(l.matchName)}</div><div class="ideal-leg-pick">${l.leagueFlag} ${escH(l.leagueName)} · ${when(l.utcDate)}</div>
-        <div class="ideal-leg-pick" style="color:var(--text)"><b>${escH(l.betLabel)}</b></div></div>
-        <div class="ideal-leg-odd">${l.odd.toFixed(2)}<small class="odd-value${idealPc(l.prob)}">%${l.prob}</small></div></div>
-        <ul class="ideal-why">${l.reasons.map(r => `<li>${escH(r)}</li>`).join('')}</ul></div>`).join('');
-    const risk = c.jointModel >= 30 ? 'Düşük risk' : c.jointModel >= 12 ? 'Orta risk' : c.jointModel >= 4 ? 'Yüksek risk' : 'Çok yüksek risk';
-    return `<div class="ideal-card"><h3>${title}</h3><div class="sub">${escH(c.sub || '')}</div>
-        <div class="ideal-stats"><div class="ideal-stat">Toplam oran<b>${c.totalOdd.toFixed(2)}</b></div>
-        <div class="ideal-stat">Tutma ihtimali<b>%${c.jointModel}</b></div><div class="ideal-stat">Maç<b>${c.legs.length}</b></div><div class="ideal-stat">Risk<b style="font-size:.85rem">${risk}</b></div></div>
-        ${legs}<div class="ideal-actions"><button class="coupon-action-btn" style="background:var(--accent);color:var(--ink);flex:1" onclick="loadIdealCoupon('${c.id}')">🎫 Kuponuma yükle</button></div></div>`;
-}
-function renderIdeal(d) {
-    const box = document.getElementById('idealContainer');
-    const by = s => d.coupons.filter(c => c.scope === s);
-    const sec = (t, list, empty) => `<div class="ideal-sec">${t}</div>` + (list.length ? `<div class="ideal-grid">${list.map(idealCard).join('')}</div>` : `<div class="ideal-empty">${empty}</div>`);
-    const bt = IDEAL_BACKTEST[idealMode];
-    const btNote = bt ? `<div class="ideal-note" style="margin-top:0"><b>Geçmiş test (${bt.n} kupon):</b> bu moddaki kuponların %${bt.hit}'i tuttu, ortalama oran ${bt.odd}. Bahis şirketi kesintisi her maçta birikir; testte 1 birimlik kupon başına ortalama sonuç yaklaşık %${Math.abs(bt.roi)} zarardı. Bu mod para kazandırdı demek değildir.</div>` : '';
-    box.innerHTML = btNote + `<div class="ideal-note" style="margin-top:0">Oluşturulma: ${new Date(d.generated).toLocaleString('tr-TR')} · Taranan maç: ${d.pickCount} seçim bulundu. Her kupon önümüzdeki 7 günün maçlarından üretilir, oranlar sitedeki tahmini oranlardır (gerçek oranı kuponu oynamadan önce kontrol et).</div>`
-        + sec('🌍 Karma (tüm ligler, 7 gün)', by('week'), 'Bu modda tüm liglerde yeterince güçlü seçim yok.')
-        + sec('📅 Günlük karma kuponlar', by('day'), 'Önümüzdeki günlerde kupon kuracak kadar seçim yok.')
-        + sec('🏟️ Lig kuponları', by('league'), 'Hiçbir ligde kupon kuracak kadar güçlü seçim bulunamadı.')
-        + (d.empty.length ? `<div class="ideal-empty" style="margin-top:10px">Yeterli seçim bulunamayan ligler: ${d.empty.map(x => x.leagueFlag + ' ' + escH(x.leagueName)).join(', ')}</div>` : '');
-}
-function loadIdealCoupon(id) {
-    const d = idealData[idealMode] && idealData[idealMode].d; if (!d) return;
-    const c = d.coupons.find(x => x.id === id); if (!c) return;
-    coupon = c.legs.map(l => {
-        const def = COMBO_DEFS.find(x => x.key === l.betType);
-        const pickName = def ? def.label.replace('MS 1', l.matchName.split(' - ')[0]).replace('MS 2', l.matchName.split(' - ')[1] || 'MS 2') : l.pickName;
-        return { matchId: l.matchId, matchName: l.matchName, betType: l.betType, betLabel: l.betLabel, pickName, probability: l.prob / 100, realProbability: l.prob / 100, odd: l.odd, leagueName: l.leagueName, resultStatus: null };
-    });
-    updateCouponUI();
-    showToast(`✅ ${coupon.length} maçlık kupon yüklendi. Tahminler sekmesinde kuponunu görüp kaydedebilirsin.`);
-}
-
-
-// ========== KASA TESTİ (Monte Carlo) ==========
-// Her maçın tutma ihtimali = 1 / (oran x (1 + kesinti)). Kupon: tüm maçlar tutarsa oranlar çarpılır. Sistem n/m: n maçtan her m'lik kombinasyon ayrı satır, bahis satırlara eşit bölünür.
-function kasaComb(n, k) { if (k > n) return 0; let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); }
-function kasaSim(o) {
-    const p = Math.min(0.999, 1 / (o.odd * (1 + o.margin)));
-    const L = o.sys ? o.sys[0] : o.legs, m = o.sys ? o.sys[1] : o.legs, lines = o.sys ? kasaComb(o.sys[0], o.sys[1]) : 1;
-    const finals = []; let ruin = 0, reach = 0, hitC = 0, totC = 0, sumStake = 0, sumRet = 0;
-    for (let s = 0; s < o.nSims; s++) {
-        let bank = o.start, dead = false, hitT = false;
-        for (let c = 0; c < o.nCoupons; c++) {
-            const stake = o.stakeMode === 'pct' ? Math.max(1, bank * o.stakeVal / 100) : o.stakeVal;
-            if (bank < stake - 1e-9) { dead = true; break; }
-            let w = 0; for (let i = 0; i < L; i++) if (Math.random() < p) w++;
-            const ret = !o.sys ? (w === L ? stake * Math.pow(o.odd, L) : 0) : kasaComb(w, m) * (stake / lines) * Math.pow(o.odd, m);
-            bank += ret - stake; sumStake += stake; sumRet += ret; totC++; if (ret > 0) hitC++;
-            if (bank >= o.start * o.target) hitT = true;
-        }
-        if (dead) ruin++; if (hitT) reach++; finals.push(bank);
-    }
-    finals.sort((a, b) => a - b);
-    const q = f => finals[Math.min(finals.length - 1, Math.floor(finals.length * f))];
-    return { totalOdd: Math.pow(o.odd, m), lines, hitRate: hitC / totC, roi: sumRet / sumStake - 1, ruin: ruin / o.nSims, reach: reach / o.nSims, median: q(0.5), p10: q(0.1), p90: q(0.9) };
-}
-function runKasa(kind) {
-    const g = id => parseFloat(document.getElementById(id).value);
-    const base = { start: g('kStart') || 1000, stakeMode: document.getElementById('kMode').value, stakeVal: g('kStake') || 100, odd: Math.max(1.05, g('kOdd') || 1.4), margin: Math.max(0, (g('kMargin') || 0) / 100), nCoupons: Math.min(500, Math.max(5, g('kN') || 100)), nSims: 2500, target: g('kTarget') || 2 };
-    const out = document.getElementById('kasaOut'), TL = x => Math.round(x).toLocaleString('tr-TR'), P = x => (x * 100).toFixed(1) + '%';
-    const cls = x => x < -0.0001 ? 'kasa-bad' : 'kasa-ok', sg = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
-    const head = `<div class="ideal-stats"><div class="ideal-stat">Maç tutma ihtimali<b>%${(100 / (base.odd * (1 + base.margin))).toFixed(1)}</b></div><div class="ideal-stat">Başlangıç kasası<b>${TL(base.start)} TL</b></div><div class="ideal-stat">Bahis<b>${base.stakeMode === 'pct' ? '%' + base.stakeVal + ' kasa' : TL(base.stakeVal) + ' TL'}</b></div><div class="ideal-stat">Kupon sayısı<b>${base.nCoupons}</b></div></div>`;
-    const note = `<div class="ideal-note" style="margin-top:10px">"Kasa bitme": kasa, bahis tutarının altına düştü ve oynayamaz hale geldi. "Hedefe ulaşma": kasa bir ara ${base.target} katına çıktı (sonra erimiş olabilir). Tablo ${base.nSims} rastgele deneyin sonucu, her çalıştırmada küçük farklar olur. Gerçek sonuçlar, tek tek maçlarda çok daha oynak olur.</div>`;
-    const table = (cols, rows) => `<div class="table-wrap"><table class="kasa-table"><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
-    if (kind === 'legs') {
-        const rows = []; let best = null;
-        for (let k = 1; k <= 10; k++) { const r = kasaSim({ ...base, legs: k }); if (!best || r.roi > best.r.roi) best = { k, r };
-            rows.push(`<tr><td>${k} maç</td><td>${r.totalOdd.toFixed(2)}</td><td>${P(r.hitRate)}</td><td class="${cls(r.roi)}">${sg(r.roi)}</td><td>${P(r.ruin)}</td><td>${P(r.reach)}</td><td>${TL(r.median)}</td><td>${TL(r.p10)} - ${TL(r.p90)}</td></tr>`); }
-        out.innerHTML = head + `<div class="ideal-sec">1-10 maçlık kupon karşılaştırması (maç başı oran ${base.odd.toFixed(2)})</div>` + table(['Kupon', 'Toplam oran', 'Kupon tutma', 'Ort. sonuç (bahse göre)', 'Kasa bitme', 'Hedefe ulaşma', 'Son kasa (medyan)', 'Son kasa (%10-%90)'], rows)
-            + `<div class="ideal-note" style="margin-top:10px">En az kaybettiren: <b>${best.k} maçlık kupon</b> (ortalama ${sg(best.r.roi)}). Her ek maç, kesintiyi bir kez daha öder. Bu yüzden maç sayısı arttıkça ortalama kayıp büyür.</div>` + note;
-    } else if (kind === 'sys') {
-        const n = Math.min(8, Math.max(3, g('kSysN') || 5)), rows = [];
-        const one = (lab, o) => { const r = kasaSim({ ...base, ...o }); rows.push(`<tr><td>${lab}</td><td>${r.lines}</td><td>${r.totalOdd.toFixed(2)}</td><td>${P(r.hitRate)}</td><td class="${cls(r.roi)}">${sg(r.roi)}</td><td>${P(r.ruin)}</td><td>${TL(r.median)}</td><td>${TL(r.p10)} - ${TL(r.p90)}</td></tr>`); };
-        one(`${n} maçlık tek kupon`, { legs: n });
-        for (let m = n - 1; m >= 1; m--) one(`${n}/${m}`, { sys: [n, m] });
-        out.innerHTML = head + `<div class="ideal-sec">${n} maç, sistem kuponları (maç başı oran ${base.odd.toFixed(2)}, toplam bahis satırlara eşit bölünür)</div>` + table(['Tür', 'Satır', 'Satır oranı', 'En az bir satır tutma', 'Ort. sonuç', 'Kasa bitme', 'Son kasa (medyan)', 'Son kasa (%10-%90)'], rows)
-            + `<div class="ideal-note" style="margin-top:10px">Sistem, "bir maç yatarsa her şey gitmesin" diye bir şey geri getirme ihtimalini artırır (sütun "en az bir satır tutma"). Ama <b>ortalama sonuç</b>, sistemin her satırındaki maç sayısına göre belirlenir: 5/2'nin ortalaması 2'li kuponunki gibi, 5/4'ün 4'lü kuponunki gibi. Yani sistem kaybı küçük adımlara böler, ortalamada kaybı azaltmaz.</div>` + note;
-    } else {
-        const rows = [], T = 1000;
-        [1.2, 1.4, 1.6, 2, 3, 5, 10, 31.6].forEach(o => { const L = Math.ceil(Math.log(T) / Math.log(o)), pr = Math.pow(1 / (o * (1 + base.margin)), L);
-            rows.push(`<tr><td>${o}</td><td>${L}</td><td>${Math.pow(o, L).toFixed(0)}</td><td>%${(pr * 100).toFixed(4)}</td><td>yaklaşık ${Math.round(1 / pr).toLocaleString('tr-TR')} denemede 1</td></tr>`); });
-        out.innerHTML = `<div class="ideal-sec">Kasayı 1000 katına çıkarma ihtimali (kesinti %${(base.margin * 100).toFixed(1)})</div>` + table(['Maç başı oran', 'Gereken maç', 'Toplam oran', '1000 kat olma ihtimali', 'Sıklık'], rows)
-            + `<div class="ideal-note" style="margin-top:10px"><b>İki plan aynı şeyi yapar:</b> tek kuponda 1000 oranı bulmak ile "her gün 1.4 oyna, kazancı sürekli yatır" aynı olasılık çarpımıdır: her seferinde bir tane kaybedersen her şey biter. Fark sadece kesintiyi kaç kez ödediğindedir. Sürekli 1.4 oynamak 21 maç gerektirir ve ~5.500 denemede 1 tutar. Daha az maçla yüksek oran (ör. 3 maç x 10 oran) matematiksel olarak daha iyidir ama bu oranlar gerçekte nadir bulunur ve oranı yüksek bahislerde şirketlerin kesintisi genelde daha da yüksek olur. Hiçbir planda 1000 kat "mantıklı" bir hedef değildir: en iyi durumda binde bir civarındadır.</div>`;
-    }
-}
-
 // ========== BAŞLAT ==========
 renderBetTypeSelector();
 renderLeagueList();
@@ -1631,6 +1615,7 @@ selectLeague('2015');
 updateSavedIndicator();
 setTimeout(checkBotStatus, 1000);
 renderBacktestBadges();
+renderBankroll();
 setTimeout(mountAds, 800);
 setInterval(checkBotStatus, 30000);
 </script>
