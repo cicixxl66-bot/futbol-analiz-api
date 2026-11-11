@@ -1475,6 +1475,8 @@ async function autoCoupon(type) {
 
 // ========== İDEAL KUPONLAR SEKMESİ ==========
 // Kuponları sunucu üretir (/api/ideal), burada sadece gösterilir. Oranlar sunucuda sitedeki oran formülüyle hesaplanır.
+// Backtest raporunun 6. bölümünden (1.925 lig-günü kuponu, 7 lig, 5 sezon). Yeni backtest sonrası burayı güncelle.
+const IDEAL_BACKTEST = { dengeli: { n: 1925, hit: 29.2, odd: 2.89, roi: -22.1 }, yuksek: { n: 1929, hit: 13.6, odd: 8.35, roi: -11.6 } };
 let idealMode = 'dengeli';
 const idealPc = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
 const idealData = {};
@@ -1516,7 +1518,9 @@ function renderIdeal(d) {
     const box = document.getElementById('idealContainer');
     const by = s => d.coupons.filter(c => c.scope === s);
     const sec = (t, list, empty) => `<div class="ideal-sec">${t}</div>` + (list.length ? `<div class="ideal-grid">${list.map(idealCard).join('')}</div>` : `<div class="ideal-empty">${empty}</div>`);
-    box.innerHTML = `<div class="ideal-note" style="margin-top:0">Oluşturulma: ${new Date(d.generated).toLocaleString('tr-TR')} · Taranan maç: ${d.pickCount} seçim bulundu. Her kupon önümüzdeki 7 günün maçlarından üretilir, oranlar sitedeki tahmini oranlardır (gerçek oranı kuponu oynamadan önce kontrol et).</div>`
+    const bt = IDEAL_BACKTEST[idealMode];
+    const btNote = bt ? `<div class="ideal-note" style="margin-top:0"><b>Geçmiş test (${bt.n} kupon):</b> bu moddaki kuponların %${bt.hit}'i tuttu, ortalama oran ${bt.odd}. Bahis şirketi kesintisi her maçta birikir; testte 1 birimlik kupon başına ortalama sonuç yaklaşık %${Math.abs(bt.roi)} zarardı. Bu mod para kazandırdı demek değildir.</div>` : '';
+    box.innerHTML = btNote + `<div class="ideal-note" style="margin-top:0">Oluşturulma: ${new Date(d.generated).toLocaleString('tr-TR')} · Taranan maç: ${d.pickCount} seçim bulundu. Her kupon önümüzdeki 7 günün maçlarından üretilir, oranlar sitedeki tahmini oranlardır (gerçek oranı kuponu oynamadan önce kontrol et).</div>`
         + sec('🌍 Karma (tüm ligler, 7 gün)', by('week'), 'Bu modda tüm liglerde yeterince güçlü seçim yok.')
         + sec('📅 Günlük karma kuponlar', by('day'), 'Önümüzdeki günlerde kupon kuracak kadar seçim yok.')
         + sec('🏟️ Lig kuponları', by('league'), 'Hiçbir ligde kupon kuracak kadar güçlü seçim bulunamadı.')
