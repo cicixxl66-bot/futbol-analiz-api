@@ -181,6 +181,14 @@
         .ideal-mode { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; }
         .ideal-mode.active { background:var(--accent); color:var(--ink); border-color:var(--accent); }
         .ideal-note { background:var(--pit); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:.8rem; color:var(--muted); margin-bottom:14px; line-height:1.5; }
+        .kasa-form { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:12px; }
+        .kasa-form label { display:flex; flex-direction:column; gap:4px; font-size:.75rem; color:var(--muted); font-weight:600; }
+        .kasa-form input, .kasa-form select { background:var(--pit); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:.9rem; }
+        .kasa-table { width:100%; border-collapse:collapse; font-size:.8rem; margin-top:8px; }
+        .kasa-table th, .kasa-table td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .kasa-table th:first-child, .kasa-table td:first-child { text-align:left; }
+        .kasa-table th { color:var(--muted); font-weight:700; }
+        .kasa-bad { color:var(--red); font-weight:700; } .kasa-ok { color:var(--green); font-weight:700; }
         .ideal-sec { font-size:1rem; font-weight:800; margin:18px 0 8px; color:var(--accent); }
         .ideal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; }
         .ideal-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
@@ -358,6 +366,7 @@
     <button class="main-tab active" onclick="switchMainTab('matches')">📊 Maçlar</button>
     <button class="main-tab" onclick="switchMainTab('predictions')">🔮 Tahminler</button>
     <button class="main-tab" onclick="switchMainTab('ideal')">⭐ İdeal Kuponlar</button>
+    <button class="main-tab" onclick="switchMainTab('kasa')">🧮 Kasa Testi</button>
     <button class="main-tab" onclick="switchMainTab('standings')">📋 Puan Durumu</button>
     <button class="main-tab" onclick="switchMainTab('saved')">💾 Kayıtlı Kuponlarım</button>
 </div>
@@ -477,6 +486,27 @@
         </div>
         <div class="ad-slot" data-ad="coupon"></div>
     </div>
+</div>
+
+<div id="kasaMain" class="ideal-container">
+    <div class="ideal-head"><h2>🧮 Kasa Testi</h2></div>
+    <div class="ideal-note">Bu bir <b>matematik gösterimidir, kazanç yöntemi değil</b>. Bahis şirketinin kesintisi her maçta oranın içinde olduğu için, hangi kupon türünü seçersen seç ortalama sonuç zarardır. Aşağıdaki test, "kasa nasıl erir, hangi tür daha yavaş eritir" sorusunu rastgele deneylerle (Monte Carlo) gösterir. Her maçın tutma ihtimali, oranın tersinden kesinti çıkarılarak hesaplanır: bahis şirketi gerçek ihtimali doğru fiyatlıyorsa sonuç budur.</div>
+    <div class="kasa-form">
+        <label>Başlangıç kasası (TL)<input id="kStart" type="number" value="1000" min="10"></label>
+        <label>Kupon başı bahis<input id="kStake" type="number" value="100" min="1"></label>
+        <label>Bahis türü<select id="kMode"><option value="flat">Sabit TL</option><option value="pct">Kasanın yüzdesi (%)</option></select></label>
+        <label>Maç başı oran<input id="kOdd" type="number" value="1.40" step="0.05" min="1.05"></label>
+        <label>Kesinti (%)<input id="kMargin" type="number" value="7.6" step="0.1" min="0"></label>
+        <label>Kaç kupon oynanacak<input id="kN" type="number" value="100" min="5" max="500"></label>
+        <label>Hedef (kaç kat)<input id="kTarget" type="number" value="2" step="0.5" min="1.5"></label>
+        <label>Sistem için maç sayısı<input id="kSysN" type="number" value="5" min="3" max="8"></label>
+    </div>
+    <div class="ideal-actions" style="flex-wrap:wrap">
+        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('legs')">1-10 maçlık kupon karşılaştır</button>
+        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('sys')">Sistem kuponları (5/4, 5/3...)</button>
+        <button class="coupon-action-btn" style="background:var(--accent);color:var(--ink)" onclick="runKasa('big')">1000 kat hedefi</button>
+    </div>
+    <div id="kasaOut" style="margin-top:14px"></div>
 </div>
 
 <div id="idealMain" class="ideal-container">
@@ -841,11 +871,13 @@ function switchMainTab(tab) {
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
     document.getElementById('idealMain').classList.remove('active');
+    document.getElementById('kasaMain').classList.remove('active');
     
     if (tab === 'matches') document.getElementById('matchesMain').style.display = 'grid';
     else if (tab === 'predictions') { document.getElementById('predictionsMain').style.display = 'grid'; loadPredictions(); }
     else if (tab === 'standings') { document.getElementById('standingsMain').classList.add('active'); loadStandings(); }
     else if (tab === 'saved') { document.getElementById('savedMain').classList.add('active'); renderSavedCoupons(); }
+    else if (tab === 'kasa') { document.getElementById('kasaMain').classList.add('active'); }
     else if (tab === 'ideal') { document.getElementById('idealMain').classList.add('active'); loadIdeal(); }
     setTimeout(mountAds, 400);
 }
@@ -1536,6 +1568,60 @@ function loadIdealCoupon(id) {
     });
     updateCouponUI();
     showToast(`✅ ${coupon.length} maçlık kupon yüklendi. Tahminler sekmesinde kuponunu görüp kaydedebilirsin.`);
+}
+
+
+// ========== KASA TESTİ (Monte Carlo) ==========
+// Her maçın tutma ihtimali = 1 / (oran x (1 + kesinti)). Kupon: tüm maçlar tutarsa oranlar çarpılır. Sistem n/m: n maçtan her m'lik kombinasyon ayrı satır, bahis satırlara eşit bölünür.
+function kasaComb(n, k) { if (k > n) return 0; let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); }
+function kasaSim(o) {
+    const p = Math.min(0.999, 1 / (o.odd * (1 + o.margin)));
+    const L = o.sys ? o.sys[0] : o.legs, m = o.sys ? o.sys[1] : o.legs, lines = o.sys ? kasaComb(o.sys[0], o.sys[1]) : 1;
+    const finals = []; let ruin = 0, reach = 0, hitC = 0, totC = 0, sumStake = 0, sumRet = 0;
+    for (let s = 0; s < o.nSims; s++) {
+        let bank = o.start, dead = false, hitT = false;
+        for (let c = 0; c < o.nCoupons; c++) {
+            const stake = o.stakeMode === 'pct' ? Math.max(1, bank * o.stakeVal / 100) : o.stakeVal;
+            if (bank < stake - 1e-9) { dead = true; break; }
+            let w = 0; for (let i = 0; i < L; i++) if (Math.random() < p) w++;
+            const ret = !o.sys ? (w === L ? stake * Math.pow(o.odd, L) : 0) : kasaComb(w, m) * (stake / lines) * Math.pow(o.odd, m);
+            bank += ret - stake; sumStake += stake; sumRet += ret; totC++; if (ret > 0) hitC++;
+            if (bank >= o.start * o.target) hitT = true;
+        }
+        if (dead) ruin++; if (hitT) reach++; finals.push(bank);
+    }
+    finals.sort((a, b) => a - b);
+    const q = f => finals[Math.min(finals.length - 1, Math.floor(finals.length * f))];
+    return { totalOdd: Math.pow(o.odd, m), lines, hitRate: hitC / totC, roi: sumRet / sumStake - 1, ruin: ruin / o.nSims, reach: reach / o.nSims, median: q(0.5), p10: q(0.1), p90: q(0.9) };
+}
+function runKasa(kind) {
+    const g = id => parseFloat(document.getElementById(id).value);
+    const base = { start: g('kStart') || 1000, stakeMode: document.getElementById('kMode').value, stakeVal: g('kStake') || 100, odd: Math.max(1.05, g('kOdd') || 1.4), margin: Math.max(0, (g('kMargin') || 0) / 100), nCoupons: Math.min(500, Math.max(5, g('kN') || 100)), nSims: 2500, target: g('kTarget') || 2 };
+    const out = document.getElementById('kasaOut'), TL = x => Math.round(x).toLocaleString('tr-TR'), P = x => (x * 100).toFixed(1) + '%';
+    const cls = x => x < -0.0001 ? 'kasa-bad' : 'kasa-ok', sg = x => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+    const head = `<div class="ideal-stats"><div class="ideal-stat">Maç tutma ihtimali<b>%${(100 / (base.odd * (1 + base.margin))).toFixed(1)}</b></div><div class="ideal-stat">Başlangıç kasası<b>${TL(base.start)} TL</b></div><div class="ideal-stat">Bahis<b>${base.stakeMode === 'pct' ? '%' + base.stakeVal + ' kasa' : TL(base.stakeVal) + ' TL'}</b></div><div class="ideal-stat">Kupon sayısı<b>${base.nCoupons}</b></div></div>`;
+    const note = `<div class="ideal-note" style="margin-top:10px">"Kasa bitme": kasa, bahis tutarının altına düştü ve oynayamaz hale geldi. "Hedefe ulaşma": kasa bir ara ${base.target} katına çıktı (sonra erimiş olabilir). Tablo ${base.nSims} rastgele deneyin sonucu, her çalıştırmada küçük farklar olur. Gerçek sonuçlar, tek tek maçlarda çok daha oynak olur.</div>`;
+    const table = (cols, rows) => `<div class="table-wrap"><table class="kasa-table"><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+    if (kind === 'legs') {
+        const rows = []; let best = null;
+        for (let k = 1; k <= 10; k++) { const r = kasaSim({ ...base, legs: k }); if (!best || r.roi > best.r.roi) best = { k, r };
+            rows.push(`<tr><td>${k} maç</td><td>${r.totalOdd.toFixed(2)}</td><td>${P(r.hitRate)}</td><td class="${cls(r.roi)}">${sg(r.roi)}</td><td>${P(r.ruin)}</td><td>${P(r.reach)}</td><td>${TL(r.median)}</td><td>${TL(r.p10)} - ${TL(r.p90)}</td></tr>`); }
+        out.innerHTML = head + `<div class="ideal-sec">1-10 maçlık kupon karşılaştırması (maç başı oran ${base.odd.toFixed(2)})</div>` + table(['Kupon', 'Toplam oran', 'Kupon tutma', 'Ort. sonuç (bahse göre)', 'Kasa bitme', 'Hedefe ulaşma', 'Son kasa (medyan)', 'Son kasa (%10-%90)'], rows)
+            + `<div class="ideal-note" style="margin-top:10px">En az kaybettiren: <b>${best.k} maçlık kupon</b> (ortalama ${sg(best.r.roi)}). Her ek maç, kesintiyi bir kez daha öder. Bu yüzden maç sayısı arttıkça ortalama kayıp büyür.</div>` + note;
+    } else if (kind === 'sys') {
+        const n = Math.min(8, Math.max(3, g('kSysN') || 5)), rows = [];
+        const one = (lab, o) => { const r = kasaSim({ ...base, ...o }); rows.push(`<tr><td>${lab}</td><td>${r.lines}</td><td>${r.totalOdd.toFixed(2)}</td><td>${P(r.hitRate)}</td><td class="${cls(r.roi)}">${sg(r.roi)}</td><td>${P(r.ruin)}</td><td>${TL(r.median)}</td><td>${TL(r.p10)} - ${TL(r.p90)}</td></tr>`); };
+        one(`${n} maçlık tek kupon`, { legs: n });
+        for (let m = n - 1; m >= 1; m--) one(`${n}/${m}`, { sys: [n, m] });
+        out.innerHTML = head + `<div class="ideal-sec">${n} maç, sistem kuponları (maç başı oran ${base.odd.toFixed(2)}, toplam bahis satırlara eşit bölünür)</div>` + table(['Tür', 'Satır', 'Satır oranı', 'En az bir satır tutma', 'Ort. sonuç', 'Kasa bitme', 'Son kasa (medyan)', 'Son kasa (%10-%90)'], rows)
+            + `<div class="ideal-note" style="margin-top:10px">Sistem, "bir maç yatarsa her şey gitmesin" diye bir şey geri getirme ihtimalini artırır (sütun "en az bir satır tutma"). Ama <b>ortalama sonuç</b>, sistemin her satırındaki maç sayısına göre belirlenir: 5/2'nin ortalaması 2'li kuponunki gibi, 5/4'ün 4'lü kuponunki gibi. Yani sistem kaybı küçük adımlara böler, ortalamada kaybı azaltmaz.</div>` + note;
+    } else {
+        const rows = [], T = 1000;
+        [1.2, 1.4, 1.6, 2, 3, 5, 10, 31.6].forEach(o => { const L = Math.ceil(Math.log(T) / Math.log(o)), pr = Math.pow(1 / (o * (1 + base.margin)), L);
+            rows.push(`<tr><td>${o}</td><td>${L}</td><td>${Math.pow(o, L).toFixed(0)}</td><td>%${(pr * 100).toFixed(4)}</td><td>yaklaşık ${Math.round(1 / pr).toLocaleString('tr-TR')} denemede 1</td></tr>`); });
+        out.innerHTML = `<div class="ideal-sec">Kasayı 1000 katına çıkarma ihtimali (kesinti %${(base.margin * 100).toFixed(1)})</div>` + table(['Maç başı oran', 'Gereken maç', 'Toplam oran', '1000 kat olma ihtimali', 'Sıklık'], rows)
+            + `<div class="ideal-note" style="margin-top:10px"><b>İki plan aynı şeyi yapar:</b> tek kuponda 1000 oranı bulmak ile "her gün 1.4 oyna, kazancı sürekli yatır" aynı olasılık çarpımıdır: her seferinde bir tane kaybedersen her şey biter. Fark sadece kesintiyi kaç kez ödediğindedir. Sürekli 1.4 oynamak 21 maç gerektirir ve ~5.500 denemede 1 tutar. Daha az maçla yüksek oran (ör. 3 maç x 10 oran) matematiksel olarak daha iyidir ama bu oranlar gerçekte nadir bulunur ve oranı yüksek bahislerde şirketlerin kesintisi genelde daha da yüksek olur. Hiçbir planda 1000 kat "mantıklı" bir hedef değildir: en iyi durumda binde bir civarındadır.</div>`;
+    }
 }
 
 // ========== BAŞLAT ==========
