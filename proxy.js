@@ -154,16 +154,29 @@ async function attachInjuries(code, matches) {
     });
 }
 
+const analyzedLeague = code => cached('a' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
+    const data = await leagueMatches(code);
+    let ms = analyzeMatches(data.matches, loadAdjustments());
+    ms = await attachMarket(code, ms);
+    ms = await attachInjuries(code, ms);
+    return { competition: data.competition, resultSet: data.resultSet, matches: ms };
+});
+
 app.get('/api/matches/:leagueId', async (req, res) => {
     if (!okLeague(req, res)) return;
-    const code = req.params.leagueId;
+    try { res.json(await analyzedLeague(req.params.leagueId)); }
+    catch (error) { res.status(502).json({ error: error.message }); }
+});
+
+// İdeal kuponlar: sunucu kendi önbelleğindeki analizlerden üretir (mode: dengeli | yuksek)
+app.get('/api/ideal', async (req, res) => {
+    const mode = req.query.mode === 'yuksek' ? 'yuksek' : 'dengeli';
     try {
-        res.json(await cached('a' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
-            const data = await leagueMatches(code);
-            let ms = analyzeMatches(data.matches, loadAdjustments());
-            ms = await attachMarket(code, ms);
-            ms = await attachInjuries(code, ms);
-            return { competition: data.competition, resultSet: data.resultSet, matches: ms };
+        res.json(await cached('ideal' + mode, 5 * 60e3, async () => {
+            const rs = await Promise.allSettled(LEAGUE_CODES.map(analyzedLeague));
+            const leagues = LEAGUE_CODES.map((code, i) => ({ code, matches: rs[i].status === 'fulfilled' ? rs[i].value.matches : [] }));
+            if (rs.every(r => r.status === 'rejected')) throw new Error(rs[0].reason && rs[0].reason.message || 'Veri alınamadı');
+            return buildIdealCoupons(leagues, mode, Date.now());
         }));
     } catch (error) { res.status(502).json({ error: error.message }); }
 });
@@ -218,8 +231,9 @@ function buildTeamStats(matches, refDate) {
         A.aGF += as * w; A.aGA += hs * w; A.aN += w;
         H.form.push(hs > as ? 'G' : hs < as ? 'M' : 'B');
         A.form.push(as > hs ? 'G' : as < hs ? 'M' : 'B');
-        H.games.push({ opp: match.awayTeam.shortName, gf: hs, ga: as, home: true });
-        A.games.push({ opp: match.homeTeam.shortName, gf: as, ga: hs, home: false });
+        const ht = match.score.halfTime && match.score.halfTime.home != null && match.score.halfTime.away != null ? match.score.halfTime.home + match.score.halfTime.away : null;
+        H.games.push({ opp: match.awayTeam.shortName, gf: hs, ga: as, home: true, ht });
+        A.games.push({ opp: match.homeTeam.shortName, gf: as, ga: hs, home: false, ht });
         list.push({ d: match.utcDate, h: match.homeTeam.shortName, a: match.awayTeam.shortName, hs, as });
         hg += hs * w; ag += as * w; n += w;
     });
@@ -237,6 +251,9 @@ function teamSummary(T) {
         w: arr.filter(x => x.gf > x.ga).length, d: arr.filter(x => x.gf === x.ga).length, l: arr.filter(x => x.gf < x.ga).length,
         gf: arr.reduce((a, x) => a + x.gf, 0), ga: arr.reduce((a, x) => a + x.ga, 0),
         o25: arr.filter(x => x.gf + x.ga >= 3).length,
+        o15: arr.filter(x => x.gf + x.ga >= 2).length,
+        u35: arr.filter(x => x.gf + x.ga <= 3).length,
+        htn: arr.filter(x => x.ht != null).length, ht05: arr.filter(x => x.ht != null && x.ht >= 1).length,
         btts: arr.filter(x => x.gf > 0 && x.ga > 0).length,
         cs: arr.filter(x => x.ga === 0).length
     });
@@ -324,6 +341,159 @@ function analyzeMatches(matches, adj) {
         return { ...match, prediction: predictMatch(home, away, league, league.teams[home], league.teams[away], adj) };
     });
 }
+
+
+// ========== İDEAL KUPON MOTORU ==========
+// Her maç için "model + bahis şirketleri + takımın bu sezonki istatistiği" birlikte destekleyen en iyi bahsi seçer,
+// sonra bunlardan lig, gün ve hafta kuponları kurar. Kazanç garantisi vermez; olasılıklar tahmindir.
+// Oran hesabı index.html'deki calculateBookmakerOdd ile AYNI olmalı (kesinti değerlerini ikisinde birlikte değiştir).
+const ODD_MARGIN = { x12: 0.091, two: 0.076, other: 0.091 };
+const IDEAL_MIN_ODD = 1.10, IDEAL_MIN_ODD_FAV = 1.03;
+function idealOdd(probPct, kind, fav) {
+    const p = Math.min(99, Math.max(1, probPct)) / 100;
+    return +Math.max(fav ? IDEAL_MIN_ODD_FAV : IDEAL_MIN_ODD, 1 / (p * (1 + ODD_MARGIN[kind]))).toFixed(2);
+}
+const IDEAL_MODES = {
+    dengeli: { minConf: 60, minOdd: 1.25, tol: 4, maxDis: 10, legsLeague: 4, legsDay: 4, legsWeek: 6, byOdd: false },
+    yuksek:  { minConf: 48, minOdd: 1.50, tol: 10, maxDis: 12, legsLeague: 4, legsDay: 4, legsWeek: 6, byOdd: true }
+};
+const IDEAL_LEAGUES = { '2015': ['Ligue 1', '🇫🇷'], '2021': ['Premier League', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2014': ['La Liga', '🇪🇸'], '2002': ['Bundesliga', '🇩🇪'], '2019': ['Serie A', '🇮🇹'], '2001': ['Şampiyonlar Ligi', '🇪🇺'], '2003': ['Eredivisie', '🇳🇱'], '2017': ['Primeira Liga', '🇵🇹'] };
+
+// Tekli bahisler: k = sitedeki bahis anahtarı, pk = tahmin alanı, hit = sonuç kontrolü
+const IDEAL_SINGLES = {
+    MS1:     { label: 'MS 1',     kind: 'x12',   fav: true,  get: p => p.ms1,            mkt: m => m.pms1,                hit: (h, a) => h > a },
+    MS2:     { label: 'MS 2',     kind: 'x12',   fav: true,  get: p => p.ms2,            mkt: m => m.pms2,                hit: (h, a) => a > h },
+    DC1X:    { label: '1X',       kind: 'other', fav: true,  get: p => p.doubleChance1X, mkt: m => m.pms1 != null ? m.pms1 + m.pmsX : null, hit: (h, a) => h >= a },
+    DCX2:    { label: 'X2',       kind: 'other', fav: true,  get: p => p.doubleChanceX2, mkt: m => m.pms2 != null ? m.pms2 + m.pmsX : null, hit: (h, a) => a >= h },
+    OVER15:  { label: '1.5 Üst',  kind: 'two',   fav: false, get: p => p.over15,         mkt: null,                       hit: (h, a) => h + a > 1.5 },
+    OVER25:  { label: '2.5 Üst',  kind: 'two',   fav: false, get: p => p.over25,         mkt: m => m.po25,                hit: (h, a) => h + a > 2.5 },
+    UNDER25: { label: '2.5 Alt',  kind: 'two',   fav: false, get: p => p.under25,        mkt: m => m.pu25,                hit: (h, a) => h + a < 2.5 },
+    UNDER35: { label: '3.5 Alt',  kind: 'two',   fav: false, get: p => p.under35,        mkt: null,                       hit: (h, a) => h + a < 3.5 },
+    KG:      { label: 'KG Var',   kind: 'two',   fav: false, get: p => p.kgVar,          mkt: null,                       hit: (h, a) => h > 0 && a > 0 },
+    KG_YOK:  { label: 'KG Yok',   kind: 'two',   fav: false, get: p => p.kgYok,          mkt: null,                       hit: (h, a) => h === 0 || a === 0 }
+};
+// Kombolar (tahmindeki combos alanından): bileşenleri tekli bahislerdir
+const IDEAL_COMBOS = {
+    MS1_O15: ['MS1', 'OVER15'], MS1_O25: ['MS1', 'OVER25'], MS1_KG: ['MS1', 'KG'], MS1_U35: ['MS1', 'UNDER35'],
+    MS2_O15: ['MS2', 'OVER15'], MS2_O25: ['MS2', 'OVER25'], MS2_KG: ['MS2', 'KG'], MS2_U35: ['MS2', 'UNDER35'],
+    DC1X_O15: ['DC1X', 'OVER15'], DCX2_O15: ['DCX2', 'OVER15']
+};
+const idealHit = (k, h, a) => IDEAL_SINGLES[k] ? IDEAL_SINGLES[k].hit(h, a) : IDEAL_COMBOS[k].every(c => IDEAL_SINGLES[c].hit(h, a));
+const idealLabel = k => IDEAL_SINGLES[k] ? IDEAL_SINGLES[k].label : IDEAL_COMBOS[k].map(c => IDEAL_SINGLES[c].label).join(' & ');
+
+// Takımın bu sezonki istatistiğinden bir bahsi destekleyen oranlar (ev sahibi evde, deplasman deplasmanda). n < 4 ise kanıt yok.
+function idealEvidence(k, ctx) {
+    const { h, a, H, A } = ctx;
+    if (!H || !A || H.n < 4 || A.n < 4) return null;
+    const rt = (x, n) => x / n, P = x => Math.round(x * 100) + '%';
+    const one = {
+        MS1:  () => [rt(H.w, H.n), rt(A.l, A.n), `${h} evde ${H.n} maçın ${H.w}'ini kazandı (${H.w}-${H.d}-${H.l}), ${a} deplasmanda ${A.n} maçın ${A.l}'ini kaybetti`],
+        MS2:  () => [rt(A.w, A.n), rt(H.l, H.n), `${a} deplasmanda ${A.n} maçın ${A.w}'ini kazandı, ${h} evde ${H.n} maçın ${H.l}'ini kaybetti`],
+        DC1X: () => [rt(H.w + H.d, H.n), rt(A.l + A.d, A.n), `${h} evde ${H.n} maçta yenilmedi oranı ${P(rt(H.w + H.d, H.n))}, ${a} deplasmanda kazanamama oranı ${P(rt(A.l + A.d, A.n))}`],
+        DCX2: () => [rt(A.w + A.d, A.n), rt(H.l + H.d, H.n), `${a} deplasmanda yenilmedi oranı ${P(rt(A.w + A.d, A.n))}, ${h} evde kazanamama oranı ${P(rt(H.l + H.d, H.n))}`],
+        OVER15: () => [rt(H.o15, H.n), rt(A.o15, A.n), `1.5 Üst: ${h} evde %${Math.round(rt(H.o15, H.n) * 100)}, ${a} deplasmanda %${Math.round(rt(A.o15, A.n) * 100)}`],
+        OVER25: () => [rt(H.o25, H.n), rt(A.o25, A.n), `2.5 Üst: ${h} evde ${P(rt(H.o25, H.n))}, ${a} deplasmanda ${P(rt(A.o25, A.n))} (ort. gol ${(H.gf / H.n).toFixed(1)}+${(H.ga / H.n).toFixed(1)} ve ${(A.gf / A.n).toFixed(1)}+${(A.ga / A.n).toFixed(1)})`],
+        UNDER25: () => [1 - rt(H.o25, H.n), 1 - rt(A.o25, A.n), `2.5 Alt: ${h} evde ${P(1 - rt(H.o25, H.n))}, ${a} deplasmanda ${P(1 - rt(A.o25, A.n))}`],
+        UNDER35: () => [rt(H.u35, H.n), rt(A.u35, A.n), `3.5 Alt: ${h} evde ${P(rt(H.u35, H.n))}, ${a} deplasmanda ${P(rt(A.u35, A.n))}`],
+        KG:   () => [rt(H.btts, H.n), rt(A.btts, A.n), `KG Var: ${h} evde ${P(rt(H.btts, H.n))}, ${a} deplasmanda ${P(rt(A.btts, A.n))}`],
+        KG_YOK: () => [1 - rt(H.btts, H.n), 1 - rt(A.btts, A.n), `KG Yok: ${h} evde ${P(1 - rt(H.btts, H.n))}, ${a} deplasmanda ${P(1 - rt(A.btts, A.n))}`]
+    };
+    const parts = IDEAL_COMBOS[k] || [k];
+    const rows = parts.map(c => one[c]());
+    const f = Math.min(...rows.map(r => (r[0] + r[1]) / 2));   // kombo: en zayıf bileşen belirler
+    return { f, texts: rows.map(r => r[2]) };
+}
+
+function idealCandidates(p, h, a, M) {
+    const ctx = p.stats ? { h, a, H: p.stats.home && p.stats.home.home, A: p.stats.away && p.stats.away.away } : { h, a };
+    const mk = p.market || null;
+    const defs = [...Object.keys(IDEAL_SINGLES).map(k => ({ k, ...IDEAL_SINGLES[k], prob: IDEAL_SINGLES[k].get(p),
+            mp: mk && IDEAL_SINGLES[k].mkt ? IDEAL_SINGLES[k].mkt(mk) : null })),
+        ...Object.keys(IDEAL_COMBOS).filter(k => p.combos && p.combos[k.toLowerCase()] !== undefined).map(k => {
+            const first = IDEAL_SINGLES[IDEAL_COMBOS[k][0]];
+            return { k, label: idealLabel(k), kind: 'other', fav: false, prob: p.combos[k.toLowerCase()], mp: null };
+        })];
+    const out = [];
+    defs.forEach(d => {
+        if (d.prob == null || isNaN(d.prob)) return;
+        const ev = idealEvidence(d.k, ctx);
+        const evPct = ev ? ev.f * 100 : null;
+        if (d.mp != null && Math.abs(d.prob - d.mp) > M.maxDis) return;          // model ile bahis şirketleri ayrışıyorsa alma
+        if (evPct != null && evPct < d.prob - 15) return;                          // takımın sezon istatistiği tahminin çok altındaysa alma
+        let conf;
+        if (d.mp != null) conf = 0.5 * d.mp + 0.3 * d.prob + 0.2 * (evPct != null ? evPct : d.prob);
+        else if (evPct != null) conf = 0.7 * d.prob + 0.3 * evPct;
+        else conf = d.prob - 4;                                                    // kanıt yoksa küçük ceza
+        const odd = idealOdd(d.prob, d.kind, d.fav);
+        if (conf < M.minConf || odd < M.minOdd) return;
+        out.push({ k: d.k, label: d.label, prob: d.prob, conf: +conf.toFixed(1), odd, market: d.mp, evidence: ev });
+    });
+    return out;
+}
+
+// Bir maç için tek seçim: güveni en yüksek bahse yakın olanlar arasında oranı en yüksek olan
+function idealPick(p, h, a, M) {
+    const c = idealCandidates(p, h, a, M);
+    if (!c.length) return null;
+    const best = Math.max(...c.map(x => x.conf));
+    const pool = c.filter(x => x.conf >= best - M.tol).sort((x, y) => y.odd - x.odd || y.conf - x.conf);
+    return pool[0];
+}
+
+function idealReasons(pick, p, h, a) {
+    const r = [];
+    if (pick.evidence) pick.evidence.texts.forEach(t => r.push(t));
+    else r.push('Bu iki takımın bu sezon yeterli ev/deplasman maçı yok, sadece model tahmini kullanıldı.');
+    r.push(`Model: ${pick.label} %${pick.prob}` + (pick.market != null ? `, bahis şirketleri ortalaması %${pick.market}` : '') + `. Beklenen gol ${p.expectedHomeGoals} - ${p.expectedAwayGoals}.`);
+    r.push(`Son 5 maç: ${h} ${p.homeForm}, ${a} ${p.awayForm}.`);
+    const H = p.stats && p.stats.home.home, A = p.stats && p.stats.away.away;
+    if (H && A && H.htn >= 4 && A.htn >= 4) r.push(`İlk yarıda gol görülme oranı (bilgi): ${h} evde %${Math.round(H.ht05 / H.htn * 100)}, ${a} deplasmanda %${Math.round(A.ht05 / A.htn * 100)}.`);
+    const inj = p.injuries;
+    if (inj) { const n1 = inj.home.filter(x => x.tur !== 'Questionable').length, n2 = inj.away.filter(x => x.tur !== 'Questionable').length; if (n1 || n2) r.push(`⚠️ Eksik oyuncu bilgisi var (${h}: ${n1}, ${a}: ${n2}), kupondan önce kadroyu kontrol et.`); }
+    return r;
+}
+
+const trDay = iso => new Date(new Date(iso).getTime() + 3 * 3600e3).toISOString().slice(0, 10);   // Türkiye saati (UTC+3)
+
+function idealAssemble(picks, maxLegs, minLegs, M, meta) {
+    if (picks.length < minLegs) return null;
+    const score = x => M.byOdd ? x.conf / 100 * x.odd : x.conf;
+    const legs = picks.slice().sort((x, y) => score(y) - score(x)).slice(0, maxLegs).sort((x, y) => x.t - y.t);
+    const totalOdd = +legs.reduce((s, x) => s * x.odd, 1).toFixed(2);
+    const jointModel = +(legs.reduce((s, x) => s * x.prob / 100, 1) * 100).toFixed(1);
+    const jointConf = +(legs.reduce((s, x) => s * x.conf / 100, 1) * 100).toFixed(1);
+    return { ...meta, legs, totalOdd, jointModel, jointConf };
+}
+
+function buildIdealCoupons(leagues, mode, nowMs) {
+    const M = IDEAL_MODES[mode] || IDEAL_MODES.dengeli;
+    const horizon = nowMs + 7 * 864e5;
+    const picks = [];
+    leagues.forEach(L => (L.matches || []).forEach(m => {
+        if (!m.prediction || (m.status !== 'TIMED' && m.status !== 'SCHEDULED')) return;
+        const t = new Date(m.utcDate).getTime(); if (t < nowMs || t > horizon) return;
+        const h = m.homeTeam.shortName, a = m.awayTeam.shortName;
+        const pk = idealPick(m.prediction, h, a, M); if (!pk) return;
+        const [ln, lf] = IDEAL_LEAGUES[L.code] || [L.name || '', ''];
+        picks.push({ matchId: m.id, matchName: `${h} - ${a}`, leagueCode: L.code, leagueName: ln, leagueFlag: lf, utcDate: m.utcDate, t, day: trDay(m.utcDate),
+            betType: pk.k, betLabel: pk.label, pickName: pk.k === 'MS1' ? h : pk.k === 'MS2' ? a : pk.k.startsWith('OVER') ? 'Üst' : pk.k.startsWith('UNDER') ? 'Alt' : pk.label,
+            prob: pk.prob, conf: pk.conf, odd: pk.odd, market: pk.market, reasons: idealReasons(pk, m.prediction, h, a) });
+    }));
+    const coupons = [];
+    const week = idealAssemble(picks, M.legsWeek, 3, M, { id: 'karma-hafta', scope: 'week', title: 'Karma Hafta Kuponu', sub: 'Tüm liglerden, önümüzdeki 7 günün en güçlü seçimleri' });
+    if (week) coupons.push(week);
+    [...new Set(picks.map(x => x.day))].sort().slice(0, 4).forEach(day => {
+        const c = idealAssemble(picks.filter(x => x.day === day), M.legsDay, 3, M, { id: 'gun-' + day, scope: 'day', day, title: 'Günün Kuponu', sub: 'Aynı günün maçlarından' });
+        if (c) coupons.push(c);
+    });
+    const empty = [];
+    leagues.forEach(L => {
+        const c = idealAssemble(picks.filter(x => x.leagueCode === L.code), M.legsLeague, 2, M, { id: 'lig-' + L.code, scope: 'league', leagueCode: L.code, leagueName: (IDEAL_LEAGUES[L.code] || [L.name])[0], leagueFlag: (IDEAL_LEAGUES[L.code] || ['', ''])[1], title: (IDEAL_LEAGUES[L.code] || [L.name])[0], sub: 'Önümüzdeki 7 gün' });
+        if (c) coupons.push(c); else empty.push({ leagueCode: L.code, leagueName: (IDEAL_LEAGUES[L.code] || [L.name])[0], leagueFlag: (IDEAL_LEAGUES[L.code] || ['', ''])[1] });
+    });
+    return { mode, generated: new Date(nowMs).toISOString(), pickCount: picks.length, coupons, empty };
+}
+
 
 // ---------- Telegram (yalnızca TELEGRAM_ENABLED=true ise; herkese açık sitede kapalı kalır) ----------
 const tgOff = res => res.status(403).json({ success: false, ok: false, disabled: true, error: 'Telegram bu sunucuda kapalı.' });

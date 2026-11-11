@@ -173,6 +173,33 @@
         .clear-btn:hover { background:rgba(248,113,113,.12); }
         .saved-badge { display:inline-block; background:rgba(185,166,240,.14); color:var(--purple); padding:0 8px; border-radius:999px; font-size:.7rem; font-weight:600; font-family:'Barlow',sans-serif; }
 
+        .ideal-container { display:none; padding:16px; max-width:1200px; margin:0 auto; }
+        .ideal-container.active { display:block; }
+        .ideal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+        .ideal-head h2 { margin:0; font-size:1.2rem; }
+        .ideal-modes { display:flex; gap:6px; }
+        .ideal-mode { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; }
+        .ideal-mode.active { background:var(--accent); color:var(--ink); border-color:var(--accent); }
+        .ideal-note { background:var(--pit); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:.8rem; color:var(--muted); margin-bottom:14px; line-height:1.5; }
+        .ideal-sec { font-size:1rem; font-weight:800; margin:18px 0 8px; color:var(--accent); }
+        .ideal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px; }
+        .ideal-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+        .ideal-card h3 { margin:0; font-size:1rem; }
+        .ideal-card .sub { color:var(--muted); font-size:.75rem; margin-bottom:8px; }
+        .ideal-stats { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+        .ideal-stat { background:var(--pit); border:1px solid var(--border); border-radius:6px; padding:5px 9px; font-size:.72rem; color:var(--muted); }
+        .ideal-stat b { display:block; font-size:1rem; color:var(--accent); }
+        .ideal-leg { border-top:1px solid var(--border); padding:8px 0; }
+        .ideal-leg-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+        .ideal-leg-name { font-weight:700; font-size:.88rem; }
+        .ideal-leg-pick { font-size:.8rem; color:var(--muted); }
+        .ideal-leg-odd { font-weight:800; color:var(--accent); font-size:1rem; white-space:nowrap; }
+        .ideal-leg-odd small { font-weight:700; margin-left:4px; }
+        .ideal-why { margin:4px 0 0; padding:0; list-style:none; font-size:.73rem; color:var(--muted); line-height:1.45; }
+        .ideal-why li { padding-left:12px; position:relative; }
+        .ideal-why li::before { content:'•'; position:absolute; left:0; color:var(--accent); }
+        .ideal-actions { display:flex; gap:8px; margin-top:8px; }
+        .ideal-empty { color:var(--muted); font-size:.82rem; padding:8px 0; }
         .saved-coupons-container, .standings-container { display:none; padding:16px; max-width:1600px; margin:0 auto; }
         .saved-coupons-container.active, .standings-container.active { display:block; }
         .saved-coupons-header, .standings-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
@@ -330,6 +357,7 @@
 <div class="main-tabs">
     <button class="main-tab active" onclick="switchMainTab('matches')">📊 Maçlar</button>
     <button class="main-tab" onclick="switchMainTab('predictions')">🔮 Tahminler</button>
+    <button class="main-tab" onclick="switchMainTab('ideal')">⭐ İdeal Kuponlar</button>
     <button class="main-tab" onclick="switchMainTab('standings')">📋 Puan Durumu</button>
     <button class="main-tab" onclick="switchMainTab('saved')">💾 Kayıtlı Kuponlarım</button>
 </div>
@@ -451,6 +479,18 @@
     </div>
 </div>
 
+<div id="idealMain" class="ideal-container">
+    <div class="ideal-head">
+        <h2>⭐ İdeal Kuponlar</h2>
+        <div class="ideal-modes">
+            <button id="idealModeDengeli" class="ideal-mode active" onclick="setIdealMode('dengeli')">🛡️ Dengeli</button>
+            <button id="idealModeYuksek" class="ideal-mode" onclick="setIdealMode('yuksek')">🚀 Yüksek oran</button>
+        </div>
+    </div>
+    <div class="ideal-note">Her maç için modelin olasılığı, (varsa) bahis şirketlerinin ortalaması ve takımların bu sezonki ev/deplasman istatistiği birlikte aranır. Üçü de aynı yönü göstermeyen bahis kupona girmez. <b>Oran yükseldikçe tutma ihtimali hızla düşer</b>, aşağıdaki "tutma ihtimali" bunu açıkça gösterir. Kazanç garantisi yoktur.</div>
+    <div id="idealContainer"><div class="loading">İdeal kuponlar hazırlanıyor...</div></div>
+</div>
+
 <div id="standingsMain" class="standings-container">
     <div class="standings-header">
         <h2>📋 Puan Durumu</h2>
@@ -548,7 +588,11 @@ function scrollToCoupon() {
 }
 
 
-const BOOKMAKER_MARGIN = 0.06; // bahis şirketi kesintisi (%6)
+// Bahis şirketi kesintisi (marj). Ekran görüntülerinden 8 maçlık ölçüm: 1-X-2 toplamı ~%9.1, Alt/Üst ve benzeri iki seçenekli bahisler ~%7.6.
+// Kombo ve çifte şans için ölçüm yok, 1-X-2 değeri kullanılır. Değerleri buradan değiştirebilirsin.
+const MARGIN_1X2 = 0.091, MARGIN_2WAY = 0.076, MARGIN_OTHER = 0.091;
+const MARGIN_1X2_KEYS = new Set(['ms1', 'msX', 'ms2']);
+const MARGIN_2WAY_KEYS = new Set(['over15', 'under15', 'over25', 'under25', 'over35', 'under35', 'over45', 'under45', 'kgVar', 'kgYok']);
 const SAVED_COUPONS_KEY = 'futbol_analiz_saved_coupons_list';
 
 const LEAGUES = [
@@ -796,18 +840,24 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
+    document.getElementById('idealMain').classList.remove('active');
     
     if (tab === 'matches') document.getElementById('matchesMain').style.display = 'grid';
     else if (tab === 'predictions') { document.getElementById('predictionsMain').style.display = 'grid'; loadPredictions(); }
     else if (tab === 'standings') { document.getElementById('standingsMain').classList.add('active'); loadStandings(); }
     else if (tab === 'saved') { document.getElementById('savedMain').classList.add('active'); renderSavedCoupons(); }
+    else if (tab === 'ideal') { document.getElementById('idealMain').classList.add('active'); loadIdeal(); }
     setTimeout(mountAds, 400);
 }
 
-function calculateBookmakerOdd(realProb) {
+// Gerçek bahis şirketleri çok düşük oran vermez: toplam gol/KG/kombo gibi bahislerde alt sınır 1.10,
+// sadece büyük favori (MS 1, MS 2, çifte şans) için 1.03. Değerleri buradan değiştirebilirsin.
+const MIN_ODD = 1.10, MIN_ODD_FAV = 1.03;
+const FAV_ODD_KEYS = new Set(['ms1', 'ms2', 'doubleChance1X', 'doubleChance12', 'doubleChanceX2']);
+function calculateBookmakerOdd(realProb, key) {
     // Kesinti tüm seçeneklere orantılı uygulanır: oran = 1 / (olasılık x (1 + kesinti))
     const p = Math.min(99, Math.max(1, realProb)) / 100;
-    return parseFloat(Math.max(1.01, 1 / (p * (1 + BOOKMAKER_MARGIN))).toFixed(2));
+    return parseFloat(Math.max(FAV_ODD_KEYS.has(key) ? MIN_ODD_FAV : MIN_ODD, 1 / (p * (1 + (MARGIN_1X2_KEYS.has(key) ? MARGIN_1X2 : MARGIN_2WAY_KEYS.has(key) ? MARGIN_2WAY : MARGIN_OTHER)))).toFixed(2));
 }
 
 function isValueBet(realProb, bookmakerOdd) {
@@ -978,8 +1028,8 @@ function renderMatchCard(m) {
     const homePick = m.homeTeam.shortName.replace(/['"]/g, '');
     const awayPick = m.awayTeam.shortName.replace(/['"]/g, '');
     const o = {};
-    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k]));
-    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk]); } });
+    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k], k));
+    COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk], 'combo'); } });
     const pcCls = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
     const mktPct = key => { const m = p.market; if (!m) return null; const v = { ms1: m.pms1, msX: m.pmsX, ms2: m.pms2, over25: m.po25, under25: m.pu25 }[key]; return v == null ? null : v; };
     const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value${pcCls(p[key])}">%${p[key]}</span>${mktPct(key) != null ? `<span class="odd-mkt" title="Bahis şirketlerinin ortalaması (marj çıkarılmış). Model ile karşılaştır.">Piyasa %${mktPct(key)}</span>` : ''}</button>`;
@@ -1022,13 +1072,13 @@ function generateDetailedAnalysis(m, p) {
     let favText = p.ms1 > p.ms2 + 15 ? `<span class="hl-green">${home}</span> favori (%${p.ms1}).` : p.ms2 > p.ms1 + 15 ? `<span class="hl-green">${away}</span> favori (%${p.ms2}).` : p.msX > Math.max(p.ms1, p.ms2) ? `Beraberlik yakın (%${p.msX}).` : `Dengeli.`;
     
     const bets = [
-        { name: 'MS 1', prob: p.ms1, odd: calculateBookmakerOdd(p.ms1) }, { name: 'MS X', prob: p.msX, odd: calculateBookmakerOdd(p.msX) }, { name: 'MS 2', prob: p.ms2, odd: calculateBookmakerOdd(p.ms2) },
-        { name: '1X', prob: p.doubleChance1X, odd: calculateBookmakerOdd(p.doubleChance1X) }, { name: '12', prob: p.doubleChance12, odd: calculateBookmakerOdd(p.doubleChance12) }, { name: 'X2', prob: p.doubleChanceX2, odd: calculateBookmakerOdd(p.doubleChanceX2) },
-        { name: '1.5 Üst', prob: p.over15, odd: calculateBookmakerOdd(p.over15) }, { name: '1.5 Alt', prob: p.under15, odd: calculateBookmakerOdd(p.under15) },
-        { name: '2.5 Üst', prob: p.over25, odd: calculateBookmakerOdd(p.over25) }, { name: '2.5 Alt', prob: p.under25, odd: calculateBookmakerOdd(p.under25) },
-        { name: '3.5 Üst', prob: p.over35, odd: calculateBookmakerOdd(p.over35) }, { name: '3.5 Alt', prob: p.under35, odd: calculateBookmakerOdd(p.under35) },
-        { name: '4.5 Üst', prob: p.over45, odd: calculateBookmakerOdd(p.over45) }, { name: '4.5 Alt', prob: p.under45, odd: calculateBookmakerOdd(p.under45) },
-        { name: 'KG Var', prob: p.kgVar, odd: calculateBookmakerOdd(p.kgVar) }, { name: 'KG Yok', prob: p.kgYok, odd: calculateBookmakerOdd(p.kgYok) }
+        { name: 'MS 1', prob: p.ms1, odd: calculateBookmakerOdd(p.ms1, 'ms1') }, { name: 'MS X', prob: p.msX, odd: calculateBookmakerOdd(p.msX, 'msX') }, { name: 'MS 2', prob: p.ms2, odd: calculateBookmakerOdd(p.ms2, 'ms2') },
+        { name: '1X', prob: p.doubleChance1X, odd: calculateBookmakerOdd(p.doubleChance1X, 'doubleChance1X') }, { name: '12', prob: p.doubleChance12, odd: calculateBookmakerOdd(p.doubleChance12, 'doubleChance12') }, { name: 'X2', prob: p.doubleChanceX2, odd: calculateBookmakerOdd(p.doubleChanceX2, 'doubleChanceX2') },
+        { name: '1.5 Üst', prob: p.over15, odd: calculateBookmakerOdd(p.over15, 'over15') }, { name: '1.5 Alt', prob: p.under15, odd: calculateBookmakerOdd(p.under15, 'under15') },
+        { name: '2.5 Üst', prob: p.over25, odd: calculateBookmakerOdd(p.over25, 'over25') }, { name: '2.5 Alt', prob: p.under25, odd: calculateBookmakerOdd(p.under25, 'under25') },
+        { name: '3.5 Üst', prob: p.over35, odd: calculateBookmakerOdd(p.over35, 'over35') }, { name: '3.5 Alt', prob: p.under35, odd: calculateBookmakerOdd(p.under35, 'under35') },
+        { name: '4.5 Üst', prob: p.over45, odd: calculateBookmakerOdd(p.over45, 'over45') }, { name: '4.5 Alt', prob: p.under45, odd: calculateBookmakerOdd(p.under45, 'under45') },
+        { name: 'KG Var', prob: p.kgVar, odd: calculateBookmakerOdd(p.kgVar, 'kgVar') }, { name: 'KG Yok', prob: p.kgYok, odd: calculateBookmakerOdd(p.kgYok, 'kgYok') }
     ];
     bets.sort((a, b) => b.prob - a.prob);
     const bestBet = bets[0], secondBet = bets[1];
@@ -1420,6 +1470,68 @@ async function autoCoupon(type) {
     
     updateCouponUI();
     showToast(found < targetCount ? `✅ ${categoryName}: kriterde ${found} maç var, ${coupon.length} maç eklendi (istenen ${targetCount}).` : `✅ ${categoryName}: ${coupon.length} maç eklendi!`);
+}
+
+
+// ========== İDEAL KUPONLAR SEKMESİ ==========
+// Kuponları sunucu üretir (/api/ideal), burada sadece gösterilir. Oranlar sunucuda sitedeki oran formülüyle hesaplanır.
+let idealMode = 'dengeli';
+const idealPc = v => v >= 85 ? ' pc-banko' : v >= 70 ? ' pc-guvenilir' : v >= 50 ? ' pc-riskli' : v >= 35 ? ' pc-cilgin' : '';
+const idealData = {};
+const escH = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function setIdealMode(m) {
+    idealMode = m;
+    document.getElementById('idealModeDengeli').classList.toggle('active', m === 'dengeli');
+    document.getElementById('idealModeYuksek').classList.toggle('active', m === 'yuksek');
+    loadIdeal();
+}
+async function loadIdeal() {
+    const box = document.getElementById('idealContainer');
+    if (idealData[idealMode] && Date.now() - idealData[idealMode].t < 5 * 60e3) { renderIdeal(idealData[idealMode].d); return; }
+    box.innerHTML = '<div class="loading">İdeal kuponlar hazırlanıyor... (ilk açılışta 10-20 saniye sürebilir)</div>';
+    try {
+        const res = await apiFetch(`${API_URL}/ideal?mode=${idealMode}`);
+        const d = await res.json();
+        if (d.error) throw new Error(d.error);
+        idealData[idealMode] = { t: Date.now(), d };
+        renderIdeal(d);
+    } catch (e) { box.innerHTML = `<div class="ideal-empty">⚠️ ${escH(e.message)}</div>`; }
+}
+const idealDayLabel = day => new Date(day + 'T12:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+function idealCard(c) {
+    const when = iso => new Date(iso).toLocaleString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const title = c.scope === 'day' ? '📅 ' + idealDayLabel(c.day) : c.scope === 'league' ? `${c.leagueFlag} ${escH(c.leagueName)}` : '🌍 ' + escH(c.title);
+    const legs = c.legs.map(l => `<div class="ideal-leg">
+        <div class="ideal-leg-top"><div><div class="ideal-leg-name">${escH(l.matchName)}</div><div class="ideal-leg-pick">${l.leagueFlag} ${escH(l.leagueName)} · ${when(l.utcDate)}</div>
+        <div class="ideal-leg-pick" style="color:var(--text)"><b>${escH(l.betLabel)}</b></div></div>
+        <div class="ideal-leg-odd">${l.odd.toFixed(2)}<small class="odd-value${idealPc(l.prob)}">%${l.prob}</small></div></div>
+        <ul class="ideal-why">${l.reasons.map(r => `<li>${escH(r)}</li>`).join('')}</ul></div>`).join('');
+    const risk = c.jointModel >= 30 ? 'Düşük risk' : c.jointModel >= 12 ? 'Orta risk' : c.jointModel >= 4 ? 'Yüksek risk' : 'Çok yüksek risk';
+    return `<div class="ideal-card"><h3>${title}</h3><div class="sub">${escH(c.sub || '')}</div>
+        <div class="ideal-stats"><div class="ideal-stat">Toplam oran<b>${c.totalOdd.toFixed(2)}</b></div>
+        <div class="ideal-stat">Tutma ihtimali<b>%${c.jointModel}</b></div><div class="ideal-stat">Maç<b>${c.legs.length}</b></div><div class="ideal-stat">Risk<b style="font-size:.85rem">${risk}</b></div></div>
+        ${legs}<div class="ideal-actions"><button class="coupon-action-btn" style="background:var(--accent);color:var(--ink);flex:1" onclick="loadIdealCoupon('${c.id}')">🎫 Kuponuma yükle</button></div></div>`;
+}
+function renderIdeal(d) {
+    const box = document.getElementById('idealContainer');
+    const by = s => d.coupons.filter(c => c.scope === s);
+    const sec = (t, list, empty) => `<div class="ideal-sec">${t}</div>` + (list.length ? `<div class="ideal-grid">${list.map(idealCard).join('')}</div>` : `<div class="ideal-empty">${empty}</div>`);
+    box.innerHTML = `<div class="ideal-note" style="margin-top:0">Oluşturulma: ${new Date(d.generated).toLocaleString('tr-TR')} · Taranan maç: ${d.pickCount} seçim bulundu. Her kupon önümüzdeki 7 günün maçlarından üretilir, oranlar sitedeki tahmini oranlardır (gerçek oranı kuponu oynamadan önce kontrol et).</div>`
+        + sec('🌍 Karma (tüm ligler, 7 gün)', by('week'), 'Bu modda tüm liglerde yeterince güçlü seçim yok.')
+        + sec('📅 Günlük karma kuponlar', by('day'), 'Önümüzdeki günlerde kupon kuracak kadar seçim yok.')
+        + sec('🏟️ Lig kuponları', by('league'), 'Hiçbir ligde kupon kuracak kadar güçlü seçim bulunamadı.')
+        + (d.empty.length ? `<div class="ideal-empty" style="margin-top:10px">Yeterli seçim bulunamayan ligler: ${d.empty.map(x => x.leagueFlag + ' ' + escH(x.leagueName)).join(', ')}</div>` : '');
+}
+function loadIdealCoupon(id) {
+    const d = idealData[idealMode] && idealData[idealMode].d; if (!d) return;
+    const c = d.coupons.find(x => x.id === id); if (!c) return;
+    coupon = c.legs.map(l => {
+        const def = COMBO_DEFS.find(x => x.key === l.betType);
+        const pickName = def ? def.label.replace('MS 1', l.matchName.split(' - ')[0]).replace('MS 2', l.matchName.split(' - ')[1] || 'MS 2') : l.pickName;
+        return { matchId: l.matchId, matchName: l.matchName, betType: l.betType, betLabel: l.betLabel, pickName, probability: l.prob / 100, realProbability: l.prob / 100, odd: l.odd, leagueName: l.leagueName, resultStatus: null };
+    });
+    updateCouponUI();
+    showToast(`✅ ${coupon.length} maçlık kupon yüklendi. Tahminler sekmesinde kuponunu görüp kaydedebilirsin.`);
 }
 
 // ========== BAŞLAT ==========
