@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1f2421">
+    <meta name="theme-color" content="#050a08">
     <meta name="description" content="Futbol maç tahminleri, oran analizi ve kupon merkezi.">
     <meta name="google-adsense-account" content="ca-pub-8868735664160445">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8868735664160445" crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-    <title>Futbol Analiz - Kupon Merkezi</title>
+    <title>FutbolAnaliz | Premium Maç Analiz Merkezi</title>
     <style>
         :root {
             --bg:#080d0b; --bg2:#101915; --card:#121d18; --card2:#17251e; --ink:#07110b; --pit:#0c1511;
@@ -398,6 +398,33 @@
         .smart-insight b { display:block;font-size:.82rem;color:var(--text);margin:1px 0 3px; }
         .smart-insight p { color:#b6c7bc;font-size:.76rem;line-height:1.5; }
         .smart-footnote { margin-top:9px;color:#71847a;font-size:.65rem;line-height:1.4; }
+
+        .smart-featured-wrap { margin-top:16px;position:relative;z-index:1; }
+        .smart-featured-head { display:flex;justify-content:space-between;align-items:end;gap:10px;margin:0 0 9px; }
+        .smart-section-kicker { color:var(--accent2);font-size:.6rem;font-weight:800;letter-spacing:.15em; }
+        .smart-featured-head h3 { font-family:var(--display);font-size:1.25rem;line-height:1.1;margin-top:3px; }
+        .smart-live-label { display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.59rem;font-weight:800;letter-spacing:.1em;white-space:nowrap; }
+        .smart-live-label i { width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(72,213,151,.1); }
+        .smart-featured { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px; }
+        .smart-feature-card { min-width:0;padding:12px;border:1px solid rgba(145,164,154,.16);border-radius:12px;background:linear-gradient(145deg,rgba(8,17,12,.72),rgba(18,31,23,.86)); }
+        .smart-feature-top { display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px; }
+        .smart-feature-league { color:var(--muted);font-size:.64rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        .smart-feature-tag { color:var(--green);font-size:.59rem;font-weight:800;white-space:nowrap; }
+        .smart-feature-teams { display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;margin-bottom:10px; }
+        .smart-feature-team { min-width:0;font-family:var(--display);font-size:.98rem;font-weight:700;line-height:1.1;overflow-wrap:anywhere; }
+        .smart-feature-team:last-child { text-align:right; }
+        .smart-feature-vs { color:var(--muted);font-size:.58rem;font-weight:800; }
+        .smart-feature-pick { display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 9px;border-radius:8px;background:rgba(72,213,151,.075);border:1px solid rgba(72,213,151,.15); }
+        .smart-feature-pick span { color:#b6c7bc;font-size:.68rem; }
+        .smart-feature-pick b { color:var(--accent2);font-family:var(--display);font-size:1.12rem;white-space:nowrap; }
+        .smart-prob-track { height:4px;background:#25352b;border-radius:99px;overflow:hidden;margin:8px 0; }
+        .smart-prob-track i { display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#48d597,#d8bd8d); }
+        .smart-feature-reason { color:#9eb0a4;font-size:.68rem;line-height:1.45;min-height:39px; }
+        .smart-feature-time { color:#71847a;font-size:.62rem;margin-top:8px; }
+        .smart-featured-empty { grid-column:1/-1;padding:14px;border:1px dashed rgba(145,164,154,.22);border-radius:10px;color:var(--muted);font-size:.76rem; }
+        @media(max-width:1100px) { .smart-featured { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media(max-width:560px) { .smart-featured { grid-template-columns:1fr; }.smart-feature-card { padding:11px; }.smart-feature-reason { min-height:0; } }
+
         .loading,.error { background:#121e17;border-color:#2a3c31;border-radius:12px; }
         .standings-table th { background:#15231b; }
         .standings-table tr:hover td { background:rgba(72,213,151,.045); }
@@ -405,95 +432,46 @@
         @media(max-width:900px) { .layout { padding:12px; }.smart-overview { padding:15px; }.header { padding:12px 14px; } }
         @media(max-width:560px) { .smart-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }.smart-overview h2 { font-size:1.55rem; }.smart-mark { padding:5px 8px; }.main-tabs { padding:0 10px; } }
 
-        /* ===== PREMIUM REDESIGN v2: belirgin arayuz yenilemesi ===== */
-        :root{
-          --bg:#070b09;--bg2:#0c1410;--card:#101b15;--card2:#14231a;--pit:#0a120d;
-          --accent:#c9a66b;--accent2:#efd29a;--text:#f3f6f1;--muted:#9aab9f;--border:#26392d;
-          --green:#54d69a;--yellow:#e9c875;--red:#f07878;
-        }
-        body{
-          background:radial-gradient(ellipse at 50% -18%,rgba(67,119,79,.24),transparent 42%),
-                     radial-gradient(ellipse at 100% 35%,rgba(201,166,107,.075),transparent 28%),
-                     #070b09;
-          letter-spacing:.005em;
-        }
-        .header{
-          padding:19px clamp(16px,3vw,42px);min-height:82px;
-          background:linear-gradient(100deg,rgba(13,24,17,.98),rgba(8,15,11,.97));
-          border-bottom:1px solid rgba(201,166,107,.3);
-          box-shadow:0 14px 38px rgba(0,0,0,.32);
-        }
-        .header h1{font-size:2.05rem;gap:12px;letter-spacing:-.035em}
-        .header h1 .logo-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#f0d6a2,#a9844d);box-shadow:0 7px 22px rgba(201,166,107,.22)}
-        .header h1 span{color:#e4c58d}
-        .header-info,.bot-status{background:#101b14;border-color:#34483a;padding:8px 13px;font-size:.76rem}
-        .main-tabs{padding:0 clamp(12px,3vw,42px);gap:7px;background:#0b130e;border-bottom:1px solid #293b2e}
-        .main-tab{position:relative;padding:16px 20px 14px;border:1px solid transparent;border-bottom:2px solid transparent;border-radius:10px 10px 0 0;font-size:.88rem}
-        .main-tab.active{background:linear-gradient(180deg,rgba(201,166,107,.13),rgba(201,166,107,.025));color:#f0d39e;border-color:rgba(201,166,107,.18);border-bottom-color:#d5b77f}
-        .layout{max-width:1840px;grid-template-columns:238px minmax(0,1fr) 350px;gap:18px;padding:24px clamp(12px,2.2vw,34px)}
-        .sidebar,.coupon-panel,.match-card,.auto-coupon-panel,.filter-bar,.standings-table-wrapper,.bk-panel,.sc-toolbar{
-          background:linear-gradient(155deg,rgba(19,32,23,.98),rgba(11,19,14,.99));
-          border:1px solid #2b4031;border-radius:16px;box-shadow:0 15px 38px rgba(0,0,0,.23)
-        }
-        .sidebar{padding:17px;position:sticky;top:112px}
-        .sidebar-section{padding-bottom:13px;margin-bottom:14px;border-bottom:1px solid rgba(154,171,159,.12)}
-        .sidebar-section:last-child{border:0;margin-bottom:0;padding-bottom:0}
-        .sidebar-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.13em;color:#b6c5b9}
-        .dropdown-btn{padding:12px 13px;border-radius:10px;background:#0a130d;font-size:.87rem}
-        .matches-area{min-width:0}
-        .smart-overview{padding:25px;margin-bottom:18px;border-radius:19px;border:1px solid rgba(201,166,107,.42);background:radial-gradient(ellipse at 88% 8%,rgba(84,214,154,.16),transparent 34%),linear-gradient(125deg,#17291e 0%,#101a13 62%,#0d1711 100%);box-shadow:0 20px 50px rgba(0,0,0,.3)}
-        .smart-overview h2{font-size:2.15rem;letter-spacing:-.025em}
-        .smart-overview-head{margin-bottom:20px;align-items:center}
-        .smart-mark{padding:8px 13px;background:rgba(201,166,107,.08);font-size:.72rem;letter-spacing:.08em}
-        .smart-stats{gap:11px;margin-bottom:15px}
-        .smart-stat{padding:14px 15px;border-radius:13px;background:rgba(4,11,7,.42);border-color:rgba(201,166,107,.15)}
-        .smart-stat span{font-size:.7rem;letter-spacing:.025em}
-        .smart-stat b{font-size:1.85rem;margin-top:7px}
-        .smart-insight{padding:15px 16px;border-radius:13px;background:rgba(84,214,154,.07);border-color:rgba(84,214,154,.24)}
-        .smart-insight b{font-size:.9rem}.smart-insight p{font-size:.82rem}
-        .filter-bar{padding:12px 15px;margin-bottom:16px}
-        .filter-btn{padding:7px 14px;border-radius:999px}
-        .day-sep{padding:10px 15px;border-radius:11px;background:linear-gradient(90deg,#17271c,#101a13);border-color:#2c4031}
-        .match-card{padding:17px;margin-bottom:15px;border-radius:17px}
-        .match-card:hover{border-color:rgba(201,166,107,.55);transform:translateY(-1px);transition:.18s}
-        .match-header{font-size:.76rem;padding-bottom:12px;margin-bottom:15px}
-        .match-league-tag{background:rgba(201,166,107,.09);border-color:rgba(201,166,107,.25);color:#e4c58d;padding:4px 10px}
-        .teams-container{padding:12px 8px 16px;margin-bottom:10px;gap:14px}
-        .team{font-size:1.48rem;font-weight:700;gap:10px}
-        .team img{width:34px;height:34px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.25))}
-        .vs{width:38px;height:38px;background:#0a130d;border-color:#3a4d3e;color:#d7bd8d;font-size:.7rem}
-        .result-box{background:linear-gradient(135deg,#1c3022,#0d1711);border-color:rgba(201,166,107,.28);border-radius:11px;padding:9px;font-size:1.7rem}
-        .odds-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;margin:14px 0 8px;color:#b6c5b9}
-        .odds-grid{gap:8px}
-        .odd-btn{padding:10px 6px;border-radius:10px;background:linear-gradient(145deg,#0b1510,#101d14);border-color:#2c4031;min-height:62px}
-        .odd-btn:hover{transform:translateY(-1px);border-color:#b89a65}
-        .odd-label{font-size:.7rem}.odd-real{font-size:1.42rem}.odd-value{font-size:.68rem}
-        .odd-btn.selected{background:linear-gradient(135deg,#e7ca92,#b58e54);border-color:#efd29a;box-shadow:0 5px 16px rgba(201,166,107,.16)}
-        .detailed-toggle{padding:10px 12px;border-radius:10px;background:rgba(201,166,107,.045);border-color:#34483a}
-        .detailed-content{padding:15px;border-radius:12px}
-        .coupon-panel{padding:0 17px 18px;top:112px;border-radius:17px;max-height:calc(100vh - 130px)}
-        .coupon-panel h3{height:64px;margin:0 -17px 14px;padding:0 18px;border-radius:16px 16px 0 0;background:linear-gradient(100deg,#19291e,#101a13);font-size:1.55rem;border-bottom:1px dashed #536044}
-        .coupon-empty{padding:34px 14px;border-radius:12px;background:rgba(255,255,255,.015)}
-        .coupon-item{padding:12px 2px}
-        .coupon-summary,.total-odd{border-radius:12px;background:#0a130d;border-color:#2e4333}
-        .total-odd{font-size:2.9rem;padding:17px 10px;color:#e7c98f}
-        .coupon-badge{border-radius:10px;padding:9px}
-        .coupon-action-btn{border-radius:10px;padding:12px 9px}
-        .save-btn{background:linear-gradient(135deg,#e7ca92,#b58e54);color:#10170f}
-        .auto-coupon-panel{padding:19px;border-radius:16px}
-        .auto-coupon-panel h4{font-size:1.45rem}
-        .auto-btn{padding:13px 7px;border-radius:11px;min-height:94px}
-        .auto-btn:hover{transform:translateY(-2px)}
-        .standings-container,.saved-coupons-container{max-width:1780px;padding:24px clamp(12px,2.2vw,34px)}
-        .standings-header h2,.saved-coupons-header h2{font-size:2rem}
-        .saved-coupon-card{border-radius:14px;background:linear-gradient(145deg,#17271d,#101a13);border-color:#2b4031}
-        .bk-panel{border-radius:15px;padding:18px}
-        .toast{border-radius:12px}
-        .site-foot{max-width:1780px;margin:12px auto 28px;padding:16px 22px;color:#89998e;border-top:1px solid #26392d}
-        .coupon-fab{border-radius:999px;background:linear-gradient(135deg,#e7ca92,#b58e54);color:#10170f;box-shadow:0 10px 28px rgba(0,0,0,.35)}
-        @media(max-width:1200px){.layout{grid-template-columns:210px minmax(0,1fr) 310px;gap:12px;padding:16px}.sidebar{top:104px}.coupon-panel{top:104px}}
-        @media(max-width:900px){.layout{grid-template-columns:1fr;padding:13px}.sidebar{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.coupon-panel{position:static!important;max-height:none!important}.smart-overview{padding:18px}}
-        @media(max-width:560px){.header{padding:13px}.header h1{font-size:1.65rem}.header-right{width:100%;justify-content:space-between}.main-tabs{padding:0 8px}.main-tab{padding:12px 13px;font-size:.78rem}.layout{padding:10px}.sidebar{grid-template-columns:1fr}.smart-overview-head{align-items:flex-start}.smart-overview h2{font-size:1.75rem}.smart-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.team{font-size:1.08rem}.team img{width:27px;height:27px}.match-card{padding:12px}.coupon-panel{padding-left:13px;padding-right:13px}.coupon-panel h3{margin-left:-13px;margin-right:-13px}}
+
+        /* ===== PREMIUM V3: tüm sekmeler için ortak görsel dil ===== */
+        :root{--bg:#050a08;--bg2:#0a120e;--card:#0e1913;--card2:#122119;--pit:#08110c;--accent:#e4bd62;--accent2:#f2d58d;--text:#f1f7f2;--muted:#9aada1;--border:#294536;--green:#31e58e;--display:'Barlow Condensed','Arial Narrow',sans-serif}
+        body{background:radial-gradient(ellipse at 50% -18%,rgba(25,143,82,.22),transparent 42%),radial-gradient(ellipse at 100% 28%,rgba(209,166,70,.07),transparent 27%),#050a08}
+        .header{padding:15px clamp(14px,2vw,30px);background:linear-gradient(105deg,rgba(5,13,9,.98),rgba(10,25,17,.96) 58%,rgba(6,13,10,.98));border-bottom:1px solid rgba(68,184,116,.3);box-shadow:0 12px 36px rgba(0,0,0,.3)}
+        .header h1{font-size:clamp(1.6rem,2.3vw,2.25rem);letter-spacing:-.03em}.header h1 .logo-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:linear-gradient(145deg,#f4d78e,#b88935);color:#10170f;box-shadow:0 0 24px rgba(228,189,98,.18)}
+        .header h1 span{color:var(--accent2)}.header-info,.bot-status{padding:7px 13px;background:rgba(5,14,9,.72);border-color:#294936;border-radius:999px}
+        .main-tabs{position:sticky;top:68px;z-index:90;gap:8px;padding:10px clamp(12px,2vw,30px);background:rgba(5,12,8,.94);backdrop-filter:blur(16px);border-bottom:1px solid rgba(67,160,103,.23)}
+        .main-tab{border:1px solid transparent;border-radius:11px;padding:11px 17px;color:#a6b8ab;font-size:.9rem;transition:all .2s ease}
+        .main-tab:hover{background:rgba(44,130,79,.12);border-color:#315b40;color:#fff;transform:translateY(-1px)}
+        .main-tab.active{background:linear-gradient(135deg,rgba(34,180,99,.23),rgba(12,65,37,.38));border:1px solid rgba(58,219,126,.48);border-bottom:1px solid rgba(58,219,126,.48);color:#eaffef;box-shadow:0 0 22px rgba(34,210,112,.12),inset 0 0 18px rgba(34,210,112,.06)}
+        .layout{max-width:1760px;grid-template-columns:230px minmax(0,1fr) 330px;gap:16px;padding:20px clamp(12px,2vw,28px)}
+        .sidebar,.coupon-panel,.match-card,.auto-coupon-panel,.filter-bar,.standings-table-wrapper,.bk-panel,.sc-toolbar{background:linear-gradient(155deg,rgba(17,32,23,.98),rgba(8,17,12,.98));border:1px solid #294635;border-radius:16px;box-shadow:0 14px 34px rgba(0,0,0,.24)}
+        .sidebar{padding:15px;box-shadow:0 12px 28px rgba(0,0,0,.2)}.sidebar-label{color:#c4d2c8;letter-spacing:.04em;text-transform:uppercase;font-size:.68rem}.dropdown-btn{border-radius:10px;padding:12px 13px;background:#09140d;border-color:#294535}.dropdown-list{background:#102117;border-color:#34563f;border-radius:10px;overflow:auto;max-height:320px}
+        .matches-area{min-width:0}.filter-bar{padding:12px 14px;border-radius:13px}.filter-btn{padding:7px 14px;border-radius:999px}.filter-btn.active{background:linear-gradient(135deg,#e8c978,#b88a38);color:#11180f;border-color:#e8c978}
+        .smart-overview{padding:clamp(16px,2vw,25px);border-radius:20px;border:1px solid rgba(52,217,124,.42);background:radial-gradient(ellipse at 88% 8%,rgba(36,205,115,.2),transparent 32%),radial-gradient(ellipse at 10% 100%,rgba(214,175,82,.1),transparent 35%),linear-gradient(125deg,#10281b,#08130d 70%);box-shadow:0 20px 50px rgba(0,0,0,.3),inset 0 0 35px rgba(33,173,91,.06)}
+        .smart-overview:before{content:'⚽';position:absolute;right:7%;top:7%;font-size:clamp(4rem,9vw,8rem);opacity:.075;filter:drop-shadow(0 0 22px #24e78a);transform:rotate(-17deg);pointer-events:none}.smart-overview:after{border-color:rgba(56,221,126,.2);box-shadow:0 0 0 24px rgba(56,221,126,.035),0 0 0 48px rgba(56,221,126,.02)}
+        .smart-overview h2{font-size:clamp(1.8rem,2.5vw,2.5rem)}.smart-overview h2 span{color:var(--accent2)}.eyebrow{letter-spacing:.18em}.smart-mark{background:rgba(6,17,10,.55);border-color:rgba(228,189,98,.45);color:var(--accent2);padding:8px 13px}
+        .smart-stats{gap:11px}.smart-stat{border-radius:13px;padding:14px;background:linear-gradient(145deg,rgba(5,15,9,.85),rgba(17,38,25,.7));border-color:rgba(94,154,112,.24)}.smart-stat b{font-size:1.8rem;color:#e8f5eb}.smart-stat:last-child b{color:var(--accent2)}
+        .smart-insight{padding:14px 16px;border-radius:13px;background:linear-gradient(100deg,rgba(29,126,70,.17),rgba(6,18,11,.65));border-color:rgba(53,216,121,.28)}.insight-icon{width:34px;height:34px;flex-basis:34px;border-radius:10px;font-size:1.3rem}.smart-insight b{font-size:.9rem}.smart-insight p{font-size:.8rem}
+        .smart-featured-wrap{margin-top:20px}.smart-featured-head h3{font-size:1.45rem}.smart-section-kicker{color:var(--accent2);font-size:.66rem}.smart-featured{gap:12px}.smart-feature-card{padding:15px;border-radius:15px;background:linear-gradient(150deg,rgba(12,31,19,.98),rgba(5,14,9,.96));border:1px solid rgba(72,171,105,.32);box-shadow:0 10px 24px rgba(0,0,0,.2);transition:transform .2s,border-color .2s,box-shadow .2s}.smart-feature-card:hover{transform:translateY(-3px);border-color:rgba(59,226,126,.65);box-shadow:0 16px 30px rgba(0,0,0,.28),0 0 20px rgba(40,210,112,.08)}
+        .smart-feature-league{padding:5px 9px;background:rgba(255,255,255,.045);border-radius:999px}.smart-feature-tag{padding:5px 8px;background:rgba(48,222,124,.1);border-radius:999px}.smart-feature-team{font-size:1.08rem}.smart-feature-vs{color:var(--accent2);font-size:.7rem}.smart-feature-pick{padding:10px 11px;border-radius:10px;background:linear-gradient(100deg,rgba(37,178,95,.15),rgba(9,24,14,.6));border-color:rgba(57,208,119,.22)}.smart-feature-pick b{font-size:1.3rem;color:#8cf2b4}.smart-prob-track{height:6px;background:#24372b}.smart-prob-track i{background:linear-gradient(90deg,#16bd69,#8cf0ad,#e5c16b)}.smart-feature-reason{font-size:.74rem;min-height:42px;color:#c0d0c5}.smart-feature-time{font-size:.67rem}
+        .match-card{border-radius:15px;padding:16px 18px;margin-bottom:13px;transition:transform .18s,border-color .18s}.match-card:hover{transform:translateY(-2px);border-color:#3c9a61;box-shadow:0 14px 30px rgba(0,0,0,.22)}.match-header{border-bottom-color:#2b4936}.teams-container{margin-bottom:16px}.odd-btn{border-radius:10px!important;min-height:62px!important;background:linear-gradient(145deg,#0b1a11,#14271a)!important;border-color:#2b4a36!important}.odd-btn:hover,.odd-btn.value{border-color:#4de28c!important;box-shadow:0 0 16px rgba(54,222,123,.1)}
+        .auto-coupon-panel{padding:18px;border-radius:17px;background:radial-gradient(ellipse at 100% 0%,rgba(216,178,91,.1),transparent 35%),linear-gradient(145deg,#14271b,#0a150e)}.auto-coupon-panel h4{font-size:1.5rem}.auto-btn{border-radius:12px;padding:13px 8px;background:rgba(4,14,8,.65)}.auto-btn:hover{transform:translateY(-2px)}
+        .coupon-panel{border-radius:17px;padding:0 17px 17px;background:linear-gradient(160deg,#14251a,#09130d);border:1px solid rgba(67,160,101,.35);box-shadow:0 18px 40px rgba(0,0,0,.28)}.coupon-panel h3{background:#122219;border-bottom:1px dashed #426149;border-radius:14px 14px 0 0}.coupon-count{background:linear-gradient(135deg,#f0d48b,#bd913e);box-shadow:0 0 15px rgba(228,189,98,.16)}.coupon-empty{border-radius:12px;padding:34px 14px;background:rgba(4,13,8,.4)}.coupon-item{padding:12px 4px}.coupon-summary,.total-odd{border-radius:12px;background:#08130c;border-color:#2d4c38}.total-odd{color:var(--accent2)}.coupon-action-btn{border-radius:10px}.save-btn{background:linear-gradient(135deg,#f0d58f,#bc8d3b)}.telegram-btn{background:linear-gradient(135deg,#229bd1,#1675a5)}
+        .tab-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:17px;min-height:142px;padding:24px 28px;margin:2px 0 4px;border:1px solid rgba(55,213,121,.42);border-radius:20px;background:radial-gradient(ellipse at 88% 40%,rgba(38,211,119,.24),transparent 28%),linear-gradient(110deg,#102b1b,#07130c 65%,#10271a);box-shadow:0 18px 40px rgba(0,0,0,.25)}
+        .tab-hero:before{content:'';position:absolute;z-index:-1;right:6%;top:-65%;width:280px;height:280px;border:1px solid rgba(100,232,147,.16);border-radius:50%;box-shadow:0 0 0 22px rgba(100,232,147,.035),0 0 0 48px rgba(100,232,147,.025),0 0 60px rgba(42,214,116,.1)}
+        .tab-hero-icon{display:grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:18px;background:linear-gradient(145deg,rgba(41,221,121,.2),rgba(9,48,25,.8));border:1px solid rgba(91,235,145,.35);font-size:1.8rem;box-shadow:0 0 28px rgba(34,213,111,.13)}
+        .tab-hero-kicker{font-size:.65rem;font-weight:800;letter-spacing:.18em;color:#7ce7a5}.tab-hero h2{font-family:var(--display);font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.05;margin:4px 0 5px}.tab-hero h2 em{font-style:normal;color:var(--accent2)}.tab-hero p{color:#a9bdb0;font-size:.85rem}.tab-hero-art{margin-left:auto;font-size:clamp(3rem,6vw,5rem);opacity:.3;filter:drop-shadow(0 0 18px #2bdc83);transform:rotate(-12deg)}
+        .predictions-layout>.tab-hero{grid-column:1/-1}.predictions-layout .sidebar{align-self:start}.predictions-layout .matches-area{min-width:0}
+        .standings-container,.saved-coupons-container{max-width:1760px;padding:22px clamp(12px,2vw,28px)}.standings-container .tab-hero,.saved-coupons-container .tab-hero{margin-bottom:18px}
+        .standings-header{padding:15px 18px;margin-bottom:12px;border:1px solid #294635;border-radius:14px;background:linear-gradient(100deg,rgba(18,39,25,.9),rgba(8,18,11,.9))}.standings-header h2,.saved-coupons-header h2{font-size:1.6rem;color:#edf6ef}
+        .standings-table-wrapper{padding:12px;border-radius:16px;overflow:hidden}.standings-table{border-collapse:separate;border-spacing:0 5px}.standings-table th{background:#14271a;color:#b9cbbd;padding:13px 10px}.standings-table th:first-child{border-radius:9px 0 0 9px}.standings-table th:last-child{border-radius:0 9px 9px 0}.standings-table td{padding:13px 10px;background:rgba(5,16,9,.72);border-bottom:1px solid rgba(91,153,105,.1)}.standings-table td:first-child{border-radius:9px 0 0 9px}.standings-table td:last-child{border-radius:0 9px 9px 0}.standings-table .pts{color:var(--accent2);font-size:1.25rem}.standings-table tr:hover td{background:rgba(36,173,90,.12)}
+        .saved-coupons-header{padding:15px 18px;border:1px solid #294635;border-radius:14px;background:linear-gradient(100deg,rgba(18,39,25,.9),rgba(8,18,11,.9))}.saved-coupons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:13px}.saved-coupon-card{border-radius:15px;background:linear-gradient(145deg,#14271b,#09140d);border-color:#2c4c37;padding:16px;box-shadow:0 12px 26px rgba(0,0,0,.18)}.saved-coupon-card:hover{border-color:#48d88b;transform:translateY(-2px)}.sc-stat{border-radius:11px;background:linear-gradient(145deg,#102118,#08120c);border-color:#294635;padding:12px}.sc-stat b{color:var(--accent2)}.sc-item{border:1px solid #294635!important;border-radius:13px!important;background:rgba(7,17,11,.55)!important;margin-bottom:8px!important}
+        .bk-panel{border-radius:16px;padding:16px}.sc-toolbar{border-radius:15px;padding:16px}.empty-saved{background:radial-gradient(ellipse at 50% 0%,rgba(43,177,94,.1),transparent 65%),#0b1710;border-color:#34533d}
+        .site-foot{max-width:1760px;margin:24px auto 0;padding:20px 28px;color:#82978a;border-top:1px solid #20392a}.coupon-fab{border-radius:999px;background:linear-gradient(135deg,#e9cb7e,#b98b3e);color:#11190f;box-shadow:0 10px 28px rgba(0,0,0,.35),0 0 20px rgba(226,190,100,.15)}
+        .loading,.error{border-radius:13px;padding:18px;background:#102017;border:1px solid #294635}.toast{border-radius:12px;background:#14271b;border-color:#3b6849}
+        @media(max-width:1200px){.layout{grid-template-columns:200px minmax(0,1fr) 300px;gap:12px}.smart-featured{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:900px){.main-tabs{top:64px}.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.coupon-panel{position:relative!important;top:auto!important;max-height:none!important}.tab-hero{grid-column:1/-1}.predictions-layout .sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:560px){.header{position:relative}.main-tabs{position:sticky;top:0;padding:8px;gap:5px}.main-tab{padding:9px 11px;font-size:.78rem}.layout{padding:10px}.sidebar{grid-template-columns:1fr}.smart-overview{padding:14px}.smart-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.smart-featured{grid-template-columns:1fr}.tab-hero{padding:17px;min-height:120px;gap:11px}.tab-hero-icon{width:48px;height:48px;flex-basis:48px;border-radius:14px;font-size:1.4rem}.tab-hero-art{font-size:2.7rem}.standings-container,.saved-coupons-container{padding:10px}.saved-coupons-grid{grid-template-columns:1fr}.standings-table-wrapper{overflow-x:auto}.standings-table{min-width:650px}}
 
     </style>
 </head>
@@ -541,7 +519,11 @@
             </div>
             <div class="smart-stats" id="smartStats"><div class="smart-stat"><span>Maçlar</span><b>—</b></div><div class="smart-stat"><span>Tahminli</span><b>—</b></div><div class="smart-stat"><span>Canlı</span><b>—</b></div><div class="smart-stat"><span>En yüksek model olasılığı</span><b>—</b></div></div>
             <div class="smart-insight" id="smartInsight"><span class="insight-icon">✧</span><div><b>Analiz hazırlanıyor</b><p>Maç verileri geldiğinde modelin öne çıkan sinyalleri burada gösterilecek.</p></div></div>
-            <div class="smart-footnote">Bu alan mevcut istatistik modelinin ürettiği olasılıkları özetler; bağımsız bir yapay zekâ servisi veya sonuç garantisi değildir.</div>
+            <div class="smart-featured-wrap">
+                <div class="smart-featured-head"><div><span class="smart-section-kicker">BUGÜNÜN RADARINDA</span><h3>Günün öne çıkan maçları</h3></div><span class="smart-live-label"><i></i> MODEL TARAMASI</span></div>
+                <div class="smart-featured" id="smartFeatured"><div class="smart-featured-empty">Maç verileri analiz ediliyor...</div></div>
+            </div>
+            <div class="smart-footnote">Analizler mevcut Poisson/Dixon-Coles modelinin olasılıkları, form ve beklenen gol verilerinden otomatik üretilir. Harici üretken yapay zekâ bağlantısı değildir; tahminler garanti vermez.</div>
         </section>
         <div class="ad-slot" data-ad="list"></div>
         <div id="matchesContainer"><div class="loading">Veriler yükleniyor...</div></div>
@@ -568,7 +550,8 @@
     </div>
 </div>
 
-<div id="predictionsMain" class="layout" style="display:none;">
+<div id="predictionsMain" class="layout predictions-layout" style="display:none;">
+    <section class="tab-hero predictions-hero"><div class="tab-hero-icon">✦</div><div><span class="tab-hero-kicker">MODEL DESTEKLİ SEÇİMLER</span><h2>Tahmin <em>Laboratuvarı</em></h2><p>Maçları filtrele, olasılıkları karşılaştır ve kendi kuponunu oluştur.</p></div><div class="tab-hero-art" aria-hidden="true">⚽</div></section>
     <div class="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-label">Lig Filtresi</div>
@@ -645,6 +628,7 @@
 </div>
 
 <div id="standingsMain" class="standings-container">
+    <section class="tab-hero standings-hero"><div class="tab-hero-icon">🏆</div><div><span class="tab-hero-kicker">LİG PERFORMANSI</span><h2>Puan <em>Durumu</em></h2><p>Takımların sezon tablosu, sıralaması ve puan yarışı.</p></div><div class="tab-hero-art" aria-hidden="true">📊</div></section>
     <div class="standings-header">
         <h2>📋 Puan Durumu</h2>
         <div id="standingsLeagueLabel" style="color:var(--muted);font-size:0.85rem;"></div>
@@ -653,6 +637,7 @@
 </div>
 
 <div id="savedMain" class="saved-coupons-container">
+    <section class="tab-hero saved-hero"><div class="tab-hero-icon">🎟</div><div><span class="tab-hero-kicker">KUPON VE BANKA YÖNETİMİ</span><h2>Kupon <em>Portföyüm</em></h2><p>Kayıtlı kuponlarını, sonuçlarını ve kasa performansını tek ekranda takip et.</p></div><div class="tab-hero-art" aria-hidden="true">💎</div></section>
     <div class="saved-coupons-header">
         <h2>💾 Kayıtlı Kuponlarım</h2>
         <button class="coupon-action-btn clear-btn" style="width:auto;padding:8px 16px;" onclick="clearAllSavedCoupons()">🗑️ Tümünü Sil</button>
@@ -1049,39 +1034,71 @@ async function loadLeague() {
 function renderSmartOverview() {
     const stats = document.getElementById('smartStats');
     const insight = document.getElementById('smartInsight');
+    const featured = document.getElementById('smartFeatured');
     if (!stats || !insight) return;
     const list = Array.isArray(allMatches) ? allMatches : [];
     const live = list.filter(m => ['IN_PLAY', 'PAUSED', 'LIVE'].includes(m.status)).length;
     const upcoming = list.filter(m => m.prediction && !['FINISHED', 'IN_PLAY', 'PAUSED', 'LIVE'].includes(m.status));
-    const candidates = [];
     const markets = [
-        ['MS 1', 'ms1'], ['MS X', 'msX'], ['MS 2', 'ms2'],
-        ['ÇŞ 1X', 'doubleChance1X'], ['ÇŞ 12', 'doubleChance12'], ['ÇŞ X2', 'doubleChanceX2'],
+        ['MS 1', 'ms1'], ['Beraberlik', 'msX'], ['MS 2', 'ms2'],
+        ['1X', 'doubleChance1X'], ['12', 'doubleChance12'], ['X2', 'doubleChanceX2'],
         ['2.5 Üst', 'over25'], ['2.5 Alt', 'under25'], ['KG Var', 'kgVar'], ['KG Yok', 'kgYok']
     ];
-    upcoming.forEach(m => {
-        const p = m.prediction || {};
-        markets.forEach(([label, key]) => {
-            const prob = Number(p[key]);
-            if (Number.isFinite(prob) && prob > 0 && prob <= 100) candidates.push({ m, label, prob });
-        });
-    });
-    candidates.sort((a, b) => b.prob - a.prob);
-    const best = candidates[0];
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const fmt = n => Number(n).toLocaleString('tr-TR');
-    stats.innerHTML = `<div class="smart-stat"><span>Haftadaki maç</span><b>${fmt(list.length)}</b></div><div class="smart-stat"><span>Tahmin üretildi</span><b>${fmt(upcoming.length)}</b></div><div class="smart-stat"><span>Canlı karşılaşma</span><b>${fmt(live)}</b></div><div class="smart-stat"><span>En yüksek model olasılığı</span><b>${best ? '%' + Math.round(best.prob) : '—'}</b></div>`;
+    const getTopMarket = m => {
+        const p = m.prediction || {};
+        return markets.map(([label,key]) => ({label,key,prob:Number(p[key])}))
+            .filter(x => Number.isFinite(x.prob) && x.prob > 0 && x.prob <= 100)
+            .sort((a,b) => b.prob-a.prob)[0];
+    };
+    const todayKey = new Date().toLocaleDateString('sv-SE');
+    const todayMatches = upcoming.filter(m => m.utcDate && new Date(m.utcDate).toLocaleDateString('sv-SE') === todayKey);
+    const ranked = todayMatches.map(m => ({m,top:getTopMarket(m)})).filter(x => x.top)
+        .sort((a,b) => b.top.prob-a.top.prob);
+    const best = ranked[0];
+    stats.innerHTML = `<div class="smart-stat"><span>Seçili ligdeki maç</span><b>${fmt(list.length)}</b></div><div class="smart-stat"><span>Tahmin üretilen</span><b>${fmt(upcoming.length)}</b></div><div class="smart-stat"><span>Canlı karşılaşma</span><b>${fmt(live)}</b></div><div class="smart-stat"><span>En yüksek model olasılığı</span><b>${best ? '%' + Math.round(best.top.prob) : '—'}</b></div>`;
+
     if (!best) {
-        insight.innerHTML = `<span class="insight-icon">✧</span><div><b>Henüz analiz edilebilir maç yok</b><p>Bu hafta için model tahmini bulunan yaklaşan karşılaşma olmadığında özet üretmiyoruz. Başka hafta veya lig seçebilirsin.</p></div>`;
+        insight.innerHTML = `<span class="insight-icon">✧</span><div><b>Analiz için uygun maç bekleniyor</b><p>Bugün bu ligde tahmini bulunan yaklaşan maç olmadığında günlük öne çıkanlar göstermiyoruz. Başka bir lig seçebilir veya maç programını kontrol edebilirsin.</p></div>`;
+        if (featured) featured.innerHTML = `<div class="smart-featured-empty">Bugün bu ligde tahmin üretilmiş yaklaşan maç bulunmuyor. Maç olduğunda en güçlü model sinyalleri burada listelenecek.</div>`;
         return;
     }
-    const safeText = value => String(value).replace(/[&<>\"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '\"':'&quot;', "'":'&#39;' }[ch]));
-    const home = safeText(best.m.homeTeam?.shortName || best.m.homeTeam?.name || 'Ev sahibi');
-    const away = safeText(best.m.awayTeam?.shortName || best.m.awayTeam?.name || 'Deplasman');
-    const signal = best.prob >= 85 ? 'yüksek model olasılığı' : best.prob >= 70 ? 'öne çıkan model sinyali' : best.prob >= 55 ? 'orta seviyede model sinyali' : 'temkinli değerlendirilmesi gereken sinyal';
-    const caution = best.prob >= 85 ? 'Yüksek olasılık kesin sonuç anlamına gelmez; maç özelindeki diğer verileri de kontrol et.' : 'Olasılık tek başına seçim yapmak için yeterli değildir; form, kadro ve piyasa verileriyle birlikte değerlendir.';
-    insight.innerHTML = `<span class="insight-icon">✧</span><div><b>Haftanın öne çıkan sinyali · ${signal}</b><p><strong>${home} – ${away}</strong> karşılaşmasında modelin en yüksek olasılık verdiği pazar <strong>${best.label} (%${Math.round(best.prob)})</strong>. ${caution}</p></div>`;
-}
 
+    const p = best.m.prediction || {};
+    const home = esc(best.m.homeTeam?.shortName || best.m.homeTeam?.name || 'Ev sahibi');
+    const away = esc(best.m.awayTeam?.shortName || best.m.awayTeam?.name || 'Deplasman');
+    const signal = best.top.prob >= 85 ? 'yüksek olasılıklı model sinyali' : best.top.prob >= 70 ? 'öne çıkan model sinyali' : best.top.prob >= 55 ? 'orta seviyeli model sinyali' : 'temkinli sinyal';
+    const formScore = form => (form || '').split('').reduce((sum,ch) => sum + (ch === 'G' ? 3 : ch === 'B' ? 1 : 0),0);
+    const hf = formScore(p.homeForm), af = formScore(p.awayForm);
+    const egHome = Number(p.expectedHomeGoals), egAway = Number(p.expectedAwayGoals);
+    const totalGoals = Number.isFinite(egHome) && Number.isFinite(egAway) ? egHome + egAway : null;
+    let reason = 'Model olasılıkları birbirine yakın; bu nedenle maçta belirgin bir taraf üstünlüğü görünmüyor.';
+    if (hf > af + 3) reason = `${home} son maç formu puanında önde (${hf}–${af}).`;
+    else if (af > hf + 3) reason = `${away} son maç formu puanında önde (${af}–${hf}).`;
+    if (totalGoals !== null) reason += ` Modelin toplam beklenen golü ${totalGoals.toFixed(1)}.`;
+    insight.innerHTML = `<span class="insight-icon">✧</span><div><b>Haftanın öne çıkan sinyali · ${signal}</b><p><strong>${home} – ${away}</strong> maçında modelin en yüksek olasılık verdiği pazar <strong>${best.top.label} (%${Math.round(best.top.prob)})</strong>. ${reason} Olasılık kesin sonuç değildir; kadro ve piyasa verileriyle birlikte değerlendirilmelidir.</p></div>`;
+
+    if (featured) {
+        const cards = ranked.slice(0,3);
+        featured.innerHTML = cards.length ? cards.map(({m,top},i) => {
+            const mh = esc(m.homeTeam?.shortName || m.homeTeam?.name || 'Ev sahibi');
+            const ma = esc(m.awayTeam?.shortName || m.awayTeam?.name || 'Deplasman');
+            const mp = m.prediction || {};
+            const fh = formScore(mp.homeForm), fa = formScore(mp.awayForm);
+            const eh = Number(mp.expectedHomeGoals), ea = Number(mp.expectedAwayGoals);
+            let why = 'Model iki takım arasında net bir fark göstermiyor.';
+            if (fh > fa + 3) why = `${mh} form puanında önde (${fh}–${fa}).`;
+            else if (fa > fh + 3) why = `${ma} form puanında önde (${fa}–${fh}).`;
+            if (Number.isFinite(eh) && Number.isFinite(ea)) why += ` Beklenen gol: ${(eh+ea).toFixed(1)}.`;
+            const date = m.utcDate ? new Date(m.utcDate) : null;
+            const time = date && !Number.isNaN(date.getTime()) ? date.toLocaleString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'Saat bilgisi yok';
+            const league = esc(m._leagueName || m.competition?.name || 'Seçili lig');
+            const level = top.prob >= 85 ? 'GÜÇLÜ SİNYAL' : top.prob >= 70 ? 'ÖNE ÇIKAN' : top.prob >= 55 ? 'ORTA SİNYAL' : 'DİKKAT';
+            return `<article class="smart-feature-card"><div class="smart-feature-top"><span class="smart-feature-league">${league}</span><span class="smart-feature-tag">${level}</span></div><div class="smart-feature-teams"><span class="smart-feature-team">${mh}</span><span class="smart-feature-vs">VS</span><span class="smart-feature-team">${ma}</span></div><div class="smart-feature-pick"><span>Modelin öne çıkardığı pazar<br><strong>${top.label}</strong></span><b>%${Math.round(top.prob)}</b></div><div class="smart-prob-track"><i style="width:${Math.max(0,Math.min(100,top.prob))}%"></i></div><p class="smart-feature-reason">${esc(why)}</p><div class="smart-feature-time">${time} · ${i+1}. öne çıkan maç</div></article>`;
+        }).join('') : `<div class="smart-featured-empty">Analiz edilecek maç bulunamadı.</div>`;
+    }
+}
 function renderMatches() {
     const container = document.getElementById('matchesContainer');
     renderSmartOverview();
