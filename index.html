@@ -550,208 +550,23 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .home-layout > *, .hd-side, .hd-panel, .hd-stats, .hd-featured, .hd-bottom, .hd-box, .hd-card, .home-main-column { min-width:0; max-width:100%; }
         .hd-featured, .hd-bottom { grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)); }
         .hd-stats { grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr)); }
+        /* ===== Kupon paylaş ===== */
+        .toast { z-index:1100 !important; }
+        .share-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:1050; place-items:center; padding:14px; }
+        .share-overlay.show { display:grid; }
+        .share-box { width:min(460px,100%); background:var(--card2); border:1px solid var(--accent); border-radius:12px; padding:14px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
+        .share-title { display:flex; justify-content:space-between; align-items:center; font-family:var(--display); font-size:1.3rem; font-weight:600; margin-bottom:8px; }
+        .share-x { background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1; }
+        #shareText { width:100%; background:var(--pit); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px; font-family:inherit; font-size:.8rem; line-height:1.5; resize:vertical; }
+        .share-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+        .share-btns button { padding:10px 8px; border-radius:8px; border:none; font-weight:700; font-size:.85rem; cursor:pointer; }
+        .share-wa { background:#25d366; color:#06210f; } .share-copy { background:var(--accent); color:var(--ink); } .share-sys { background:var(--pit); color:var(--text); border:1px solid var(--border) !important; grid-column:1 / -1; }
+        .coupon-actions .share-btn { grid-column:1 / -1; background:#25d366; color:#06210f; }
+        .share-note { font-size:.7rem; color:var(--muted); margin-top:8px; line-height:1.4; }
+        .share-mini { margin-left:auto; background:#25d366; color:#06210f; border:none; border-radius:999px; padding:3px 10px; font-size:.72rem; font-weight:800; cursor:pointer; white-space:nowrap; font-family:'Barlow',sans-serif; }
+        #fwCanvas { display:none; position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:2000; }
+        .ed-btns { display:flex; gap:8px; } .share-btn2 { background:#25d366; color:#06210f; }
 </style>
-
-<style id="futbolanaliz-reference-redesign">
-/* ===== FutbolAnaliz: reference dashboard redesign ===== */
-:root{
- --bg:#050b09;--bg2:#07120e;--card:#0c1913;--card2:#102219;--pit:#07110c;
- --accent:#e9c45e;--accent2:#f6d979;--text:#f2f8f3;--muted:#9bb0a3;
- --border:#254936;--green:#20e783;--display:'Barlow Condensed','Arial Narrow',sans-serif;
-}
-body{
- background:
-  radial-gradient(ellipse at 52% -18%,rgba(20,180,91,.2),transparent 44%),
-  radial-gradient(ellipse at 100% 28%,rgba(229,190,81,.07),transparent 27%),#050b09;
- color:var(--text);
-}
-.header{
- min-height:104px;padding:13px clamp(14px,2vw,30px);
- background:linear-gradient(105deg,rgba(3,12,8,.99),rgba(7,26,16,.97) 58%,rgba(4,13,9,.99));
- border-bottom:1px solid rgba(43,220,121,.4);
- box-shadow:0 12px 36px #0009;backdrop-filter:blur(16px);
-}
-.header h1{font-size:clamp(1.7rem,2.4vw,2.45rem);letter-spacing:-.04em;gap:12px}
-.header h1 .logo-icon{
- width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
- background:radial-gradient(circle at 35% 28%,#ffe69a,#b88732 72%);
- border:2px solid #f0cf70;color:#10170d;font-size:2rem;
- box-shadow:0 0 24px #e9c45e44;
-}
-.header h1 span{color:#f4c84d}
-.header h1:after{
- content:"Akıllı Tahmin, Güvenilir Analiz";display:block;
- position:absolute;margin:53px 0 0 67px;color:#b9c9bf;
- font:500 .75rem 'Barlow',sans-serif;letter-spacing:0;
-}
-.header-info{display:none}
-.bot-status{background:#071a10;border-color:#245b39;color:#35ee8b;font-weight:700}
-.bot-dot{background:#21ed7c;box-shadow:0 0 12px #21ed7c}
-.bk-pill{border-color:#8d7135;color:#f4d36d}
-.main-tabs{
- position:sticky;top:0;z-index:90;justify-content:center;gap:5px;
- padding:8px clamp(10px,2vw,28px);
- background:rgba(4,13,9,.96);backdrop-filter:blur(16px);
- border-bottom:1px solid #1d4a31;overflow-x:auto;
-}
-.main-tab{
- min-width:112px;padding:12px 16px 10px;border:1px solid #1a3426;
- border-radius:13px;background:linear-gradient(180deg,#0c1913,#07100c);
- color:#d2dfd6;font-size:.87rem;box-shadow:inset 0 1px #ffffff0a;
-}
-.main-tab[data-tab="analysis"]{order:2}
-.main-tab[data-tab="matches"]{order:3}
-.main-tab[data-tab="predictions"]{order:4}
-.main-tab[data-tab="standings"]{order:5}
-.main-tab[data-tab="saved"]{order:6}
-.main-tab[data-tab="performance"]{order:7}
-.main-tab[data-tab="settings"]{order:8}
-.main-tab[data-tab="home"]{order:1}
-.main-tab.active{
- background:linear-gradient(135deg,#087d42,#07562f);color:#f2fff6;
- border-color:#24e77d;box-shadow:0 0 22px #16d76a2c,inset 0 1px #ffffff24;
-}
-.main-tab:hover{border-color:#2be989;color:#fff}
-.home-shell{max-width:1780px;padding:12px 14px 22px}
-.home-layout{
- display:grid;grid-template-columns:245px minmax(0,1fr) 255px;
- gap:12px;align-items:start;
-}
-.hd-side{gap:10px}
-.hd-panel,.home-coupon-column .coupon-panel{
- background:linear-gradient(160deg,rgba(13,29,20,.98),rgba(6,17,12,.99));
- border:1px solid #28533a;border-radius:13px;box-shadow:0 10px 28px #0007;
-}
-.hd-panel{padding:12px}
-.hd-ptitle{font-size:1.08rem;color:#f3f7f3;border-bottom:1px solid #254332;padding-bottom:8px;margin-bottom:9px}
-.hd-list{gap:5px}
-.hd-opt{
- background:#0a1710;border:1px solid #203c2b;border-radius:8px;
- color:#dce8df;padding:8px 10px;font-size:.81rem;text-align:left;
-}
-.hd-opt:hover{border-color:#26db79;background:#0b2416}
-.hd-opt.on{background:linear-gradient(100deg,#087d42,#07552f);border-color:#2ee989;color:white}
-.hd-promo{
- background:radial-gradient(circle at 15% 15%,#b88a2d44,transparent 50%),linear-gradient(145deg,#1b2414,#08130d);
- border-color:#a7893f;text-align:left;padding:14px;
-}
-.hd-promo b{color:#f5d477;font-size:.9rem}
-.hd-promo span{color:#d0d8c9}
-.hd-add{
- background:linear-gradient(135deg,#f4d36d,#dca72e);border:0;border-radius:8px;
- padding:8px 12px;color:#17190e;font-weight:800;cursor:pointer;
-}
-.home-main-column{min-width:0}
-.hd-hero{
- min-height:132px;display:flex;align-items:center;padding:22px 24px;margin:0 0 12px;
- border:1px solid #159d59;border-radius:15px;overflow:hidden;position:relative;
- background:
-  radial-gradient(circle at 86% 50%,#13c66b3b,transparent 24%),
-  radial-gradient(ellipse at 60% 0%,#0e9a503b,transparent 60%),
-  linear-gradient(115deg,#09241a,#071512 70%,#092018);
- box-shadow:0 0 0 1px #20e7831c,0 12px 32px #0008;
-}
-.hd-hero:after{
- content:"⚽";position:absolute;right:5%;top:-24px;font-size:8rem;
- color:#e8fff0;opacity:.2;filter:drop-shadow(0 0 20px #26ee8b);
- transform:rotate(-15deg);pointer-events:none;
-}
-.hd-hero .smart-overview-head{position:relative;z-index:1;margin:0;align-items:center}
-.hd-hero .eyebrow{color:#5af3a0;font-weight:800;letter-spacing:.1em}
-.hd-hero h2{font-size:2.35rem;margin:5px 0;color:#f3faf5}
-.hd-hero h2 span{color:#f3d16c;background:none}
-.hd-hero p{font-size:.9rem;color:#d1e1d7}
-.hd-checks{display:none}
-.hd-featured{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.hd-card,.smart-feature-card{
- border:1px solid #1c7045!important;border-radius:13px!important;
- background:linear-gradient(150deg,#0d2118,#08130f)!important;
- box-shadow:inset 0 1px #ffffff0c,0 9px 24px #0007!important;
-}
-.hd-card{padding:14px!important}
-.hd-card:hover,.smart-feature-card:hover{border-color:#2cf18a!important;box-shadow:0 0 22px #19e77b25!important}
-.hd-bottom,.home-detail-grid{
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;
-}
-.hd-box,.home-detail-card{
- min-width:0;border:1px solid #254936;border-radius:12px;
- background:linear-gradient(145deg,#0e1c14,#08120d);padding:12px;
-}
-.hd-box h4,.home-card-heading{font-family:var(--display);font-size:1.08rem;color:#f1f7f2}
-.home-card-heading span{color:#f4d36d}
-.home-coupon-column{display:flex;flex-direction:column;gap:10px;min-width:0}
-.hd-stats{display:grid;grid-template-columns:1fr;gap:7px;margin:0}
-.hd-stat{
- min-height:63px;display:flex;align-items:center;gap:12px;padding:9px 12px;
- border:1px solid #254936;border-radius:11px;
- background:linear-gradient(145deg,#102219,#08140e);
-}
-.hd-ic{font-size:1.55rem;filter:drop-shadow(0 0 7px #20e78333)}
-.hd-stat small{display:block;color:#a8bdb0;font-size:.76rem}
-.hd-stat b{font-family:var(--display);font-size:1.42rem;color:#f3f8f4}
-.hd-trust{border-color:#16884e;background:radial-gradient(circle at 15% 20%,#17c66b20,transparent 60%),linear-gradient(145deg,#0d2117,#07130d)}
-.hd-trust-row{display:flex;align-items:center;gap:12px}
-.hd-trust-row b{font-size:.8rem;color:#e8f3eb}
-.hd-trust-row small{display:block;font-size:.67rem;color:#9eb4a5;line-height:1.35;margin-top:4px}
-.hd-donut{width:82px;height:82px;flex:none}
-.home-coupon-column .coupon-panel{
- position:static;top:auto;max-height:none;overflow:visible;
- padding:0 13px 13px;background:linear-gradient(160deg,#101f16,#07120c);
-}
-.home-coupon-column .coupon-panel h3{
- height:49px;background:transparent;border-bottom:1px dashed #45624b;
- font-size:1.16rem;margin-bottom:8px;
-}
-.coupon-empty{border-color:#31503a;color:#a6b9aa}
-.home-coupon-column .save-btn{background:linear-gradient(135deg,#f2d36e,#d7a52f);color:#17190e}
-.home-live-strip{border-color:#31583b;background:#0b1b12}
-#matchesMain.layout{grid-template-columns:220px minmax(0,1fr);max-width:1500px}
-.sidebar,.coupon-panel,.match-card,.auto-coupon-panel,.filter-bar,.standings-table-wrapper,.bk-panel,.sc-toolbar{
- border-color:#254936;
-}
-.filter-btn.active,.save-btn,.match-count-selector .count-display{
- background:linear-gradient(135deg,#f1d36d,#d5a32d);color:#17190e;border-color:#e9c45e;
-}
-.odd-real,.total-odd,.sc-odd{color:#f3d36d}
-.odd-btn.selected{background:linear-gradient(135deg,#f1d36d,#d5a32d)!important;border-color:#f1d36d!important;color:#17190e!important}
-.tab-hero{border-color:#1c7548!important}
-.site-foot{color:#9aafa2}
-@media(max-width:1250px){
- .home-layout{grid-template-columns:210px minmax(0,1fr) 225px}
- .hd-featured{grid-template-columns:repeat(2,minmax(0,1fr))}
- .hd-bottom,.home-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:980px){
- .home-layout{grid-template-columns:1fr 240px}
- .hd-side{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
- .hd-side .hd-promo{display:none}
- .home-main-column{grid-column:1}
- .home-coupon-column{grid-column:2;grid-row:2}
- .hd-featured{grid-template-columns:1fr}
- .hd-bottom,.home-detail-grid{grid-template-columns:1fr}
-}
-@media(max-width:680px){
- .header{min-height:80px}
- .header h1:after{margin-top:44px;font-size:.62rem}
- .header h1 .logo-icon{width:43px;height:43px;font-size:1.6rem}
- .main-tabs{justify-content:flex-start}
- .main-tab{min-width:auto;padding:9px 11px;font-size:.76rem}
- .home-shell{padding:8px}
- .home-layout{grid-template-columns:1fr}
- .hd-side{grid-column:1;grid-template-columns:1fr}
- .hd-side .hd-promo{display:flex}
- .home-main-column,.home-coupon-column{grid-column:1;grid-row:auto}
- .home-coupon-column{display:grid;grid-template-columns:1fr}
- .hd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
- .hd-stat{padding:8px}
- .hd-hero{padding:17px;min-height:120px}
- .hd-hero h2{font-size:1.85rem}
- .hd-hero:after{font-size:5rem;right:1%;top:12px}
- .hd-featured{grid-template-columns:1fr}
- .hd-bottom,.home-detail-grid{grid-template-columns:1fr}
-}
-</style>
-
 </head>
 <body>
 
@@ -779,6 +594,7 @@ body{
     <div class="home-layout">
         <aside class="hd-side" id="hdSide"></aside>
         <main class="home-main-column">
+            <div class="hd-stats" id="hdStats"></div>
             <section class="hd-hero"><div class="smart-overview-head">
                 <div><div class="eyebrow"><span class="pulse-dot"></span> YAPAY ZEKÂ DESTEKLİ FUTBOL ANALİZİ</div><h2>AI Analiz <span>Merkezi</span></h2><p>Günün öne çıkan maçları ve yapay zekâ yorumları.</p></div>
                 <ul class="hd-checks"><li>Gelişmiş Analiz</li><li>Akıllı Yorum</li><li>Detaylı İstatistik</li></ul>
@@ -792,11 +608,10 @@ body{
             <div class="smart-footnote">Yorumlar Poisson/Dixon-Coles modelinin olasılıklarından, formdan ve beklenen gol verilerinden otomatik üretilir; harici bir üretken yapay zekâ kullanılmaz. Tahminler garanti değildir.</div>
         </main>
         <aside class="home-coupon-column">
-    <div class="hd-stats" id="hdStats"></div>
     <div id="hdRight"></div>
     <div class="coupon-panel">
-        <h3>🎫 Kupon <span class="coupon-count" id="couponCount">0</span> <span id="savedIndicator"></span></h3>
-        <div id="couponItems"><div class="coupon-empty">Henüz tahmin seçmedin.</div></div>
+        <h3>🎫 Kupon <span class="coupon-count" id="couponCount">0</span><button class="share-mini" onclick="whatsappCoupon()" title="Kuponu WhatsApp'ta paylaş">💬 Paylaş</button> <span id="savedIndicator"></span></h3>
+        <div id="couponItems"><div class="coupon-empty">Henüz tahmin seçmedin. Maç ekleyince kuponu 📲 Paylaş ile arkadaşlarına gönderebilirsin.</div></div>
         <div id="couponSummary" style="display:none;">
             <div class="coupon-summary">
                 <div class="summary-row"><span class="label">Toplam Oran:</span><span class="value" id="totalOdd">-</span></div>
@@ -808,6 +623,7 @@ body{
             <div class="coupon-actions">
                 <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
                 <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
+                <button class="coupon-action-btn share-btn" onclick="whatsappCoupon()">💬 WhatsApp'ta paylaş</button>
                 <button class="coupon-action-btn telegram-btn" onclick="sendToTelegram()">📤 Telegram'a Gönder</button>
                 <button class="coupon-action-btn clear-btn" onclick="clearCoupon()">🗑️ Temizle</button>
             </div>
@@ -904,8 +720,8 @@ body{
         <div id="predictionsContainer"><div class="loading">Tahminler yükleniyor...</div></div>
     </div>
     <div class="coupon-panel">
-        <h3>🎫 Kupon <span class="coupon-count" id="couponCount2">0</span> <span id="savedIndicator2"></span></h3>
-        <div id="couponItems2"><div class="coupon-empty">Henüz tahmin seçmedin.</div></div>
+        <h3>🎫 Kupon <span class="coupon-count" id="couponCount2">0</span><button class="share-mini" onclick="whatsappCoupon()" title="Kuponu WhatsApp'ta paylaş">💬 Paylaş</button> <span id="savedIndicator2"></span></h3>
+        <div id="couponItems2"><div class="coupon-empty">Henüz tahmin seçmedin. Maç ekleyince kuponu 📲 Paylaş ile arkadaşlarına gönderebilirsin.</div></div>
         <div id="couponSummary2" style="display:none;">
             <div class="coupon-summary">
                 <div class="summary-row"><span class="label">Toplam Oran:</span><span class="value" id="totalOdd2">-</span></div>
@@ -917,6 +733,7 @@ body{
             <div class="coupon-actions">
                 <button class="coupon-action-btn save-btn" onclick="saveCouponToSaved()">💾 Kaydet</button>
                 <button class="coupon-action-btn load-btn" onclick="loadLastCoupon()">📂 Yükle</button>
+                <button class="coupon-action-btn share-btn" onclick="whatsappCoupon()">💬 WhatsApp'ta paylaş</button>
                 <button class="coupon-action-btn telegram-btn" onclick="sendToTelegram()">📤 Telegram'a Gönder</button>
                 <button class="coupon-action-btn clear-btn" onclick="clearCoupon()">🗑️ Temizle</button>
             </div>
@@ -947,6 +764,12 @@ body{
 
 <footer class="site-foot">⚠️ Bu sitedeki tahminler istatistiksel bir modele dayanır; kazanç garantisi vermez ve bahis tavsiyesi değildir. Bahis bağımlılık yapabilir, 18 yaş altı kullanamaz. Kaybetmeyi göze alabileceğin tutardan fazlasını oynama.</footer>
 <button id="couponFab" class="coupon-fab" onclick="scrollToCoupon()">🎫 Kupon <b id="fabCount">0</b> <span id="fabOdd"></span></button>
+<div id="shareSheet" class="share-overlay" onclick="closeShare(event)"><div class="share-box">
+    <div class="share-title"><span>📲 Kuponu paylaş</span><button class="share-x" onclick="closeShare(event)" aria-label="Kapat">×</button></div>
+    <textarea id="shareText" rows="10"></textarea>
+    <div class="share-btns"><button class="share-wa" onclick="shareWhatsApp()">💬 WhatsApp</button><button class="share-copy" onclick="shareCopy()">📋 Kopyala</button><button class="share-sys" id="shareSys" onclick="shareSystem()">📤 Diğer uygulamalar (Telegram, Mesajlar...)</button></div>
+    <div class="share-note">Metni göndermeden önce düzenleyebilirsin. Kasa ve bahis tutarın paylaşılmaz.</div>
+</div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -1497,6 +1320,7 @@ function renderSettings() {
     el.innerHTML = `<h2 class="hd-h2">⚙️ Ayarlar</h2>
         <div class="hd-panel"><div class="hd-ptitle">Tema</div><div class="hd-row">${b(!gray, '🌿 Koyu yeşil (varsayılan)', "setTheme('green')")}${b(gray, '☁️ Koyu gri (göz yormaz)', "setTheme('gray')")}</div></div>
         <div class="hd-panel"><div class="hd-ptitle">Animasyonlar</div><div class="hd-row">${b(anim, 'Açık', 'setAnim(true)')}${b(!anim, 'Kapalı', 'setAnim(false)')}</div></div>
+        <div class="hd-panel"><div class="hd-ptitle">🔔 Kupon bildirimleri</div><div class="hd-row">${b(prefOn(PREF_SOUND, true), '🔊 Ses açık', 'setPref(PREF_SOUND,true)')}${b(!prefOn(PREF_SOUND, true), '🔇 Ses kapalı', 'setPref(PREF_SOUND,false)')}</div><div class="hd-row">${b(prefOn(PREF_TG, true), '📤 Telegram bildirimi açık', 'setPref(PREF_TG,true)')}${b(!prefOn(PREF_TG, true), 'Telegram bildirimi kapalı', 'setPref(PREF_TG,false)')}</div><div class="hd-row">${b(false, '🎆 Bildirimi dene', 'testNotify()')}</div><div class="hd-note">Kuponundaki bir maç tutunca (ör. 1.5 Üst: ikinci gol atılınca) ses çalar, havai fişek patlar, Telegram'a mesaj gider. Bu kontrol sayfa açıkken dakikada bir çalışır. Tarayıcı ses için sayfada bir kez tıklamanı ister.</div></div>
         <div class="hd-panel"><div class="hd-ptitle">Veri</div><div class="hd-row">${b(false, '🔄 Verileri yenile', 'refreshAllData()')}${b(false, '💰 Kasa ve hedef', "switchMainTab('saved')")}${b(false, '🗑 Kayıtlı her şeyi sil', 'wipeLocal()')}</div><div class="hd-note">Kuponlar, kasa ve ayarlar bu tarayıcıda saklanır; başka cihazda görünmez.</div></div>`;
 }
 
@@ -1647,8 +1471,13 @@ function renderEditorCard(list) {
     }).join('');
     const fw = ['-34px,-16px', '30px,-18px', '-18px,-26px', '22px,-28px', '-42px,6px', '40px,8px'].map((v, i) => `<i class="fw" style="--dx:${v.split(',')[0]};--dy:${v.split(',')[1]};--d:${(i * 0.3).toFixed(1)}s"></i>`).join('');
     box.innerHTML = `<div class="editor-card"><div class="editor-head">${fw}<b>⭐ Editörün Seçimi</b><small>Otomatik · ${list.length} maç içinden</small></div>${rows}
-        <div class="ed-foot"><div>Toplam oran <b class="ed-total">${totalOdd.toFixed(2)}</b> · Hepsinin tutma ihtimali <b>≈ %${allProb.toFixed(0)}</b></div><button class="coupon-action-btn save-btn" onclick="addEditorPicks()">🎫 Kupona ekle</button></div>
+        <div class="ed-foot"><div>Toplam oran <b class="ed-total">${totalOdd.toFixed(2)}</b> · Hepsinin tutma ihtimali <b>≈ %${allProb.toFixed(0)}</b></div><span class="ed-btns"><button class="coupon-action-btn share-btn2" onclick="shareEditorPicks()">📲 Paylaş</button><button class="coupon-action-btn save-btn" onclick="addEditorPicks()">🎫 Kupona ekle</button></span></div>
         <div class="ed-note">Seçili günlerdeki maçlardan, seçili bahis türleri içinde en yüksek olasılıklıları model otomatik seçer. İnsan editör değildir, garanti vermez.${hist != null ? ` Bu güven aralığındaki tekli bahisler geçmişte %${hist} tutmuş; kuponun tamamının tutması için ise tüm maçların tutması gerekir.` : ''}</div></div>`;
+}
+function shareEditorPicks() {
+    const picks = window.__editorPicks || []; if (!picks.length) { showToast('⚠️ Paylaşılacak seçim yok.'); return; }
+    const odd = picks.reduce((a, x) => a * x.odd, 1), prob = picks.reduce((a, x) => a * x.prob / 100, 1) * 100;
+    openShareSheet(buildShareText(picks.map(x => ({ matchName: x.matchName, betLabel: x.label, pickName: x.pick, odd: x.odd })), odd, prob, false).replace('Futbol Analiz kuponu', 'Futbol Analiz · Editörün Seçimi'));
 }
 function addEditorPicks() {
     const picks = window.__editorPicks || [];
@@ -1740,6 +1569,36 @@ function addTargetPicks() {
     const picks = window.__targetPicks || []; if (!picks.length) return;
     coupon = picks.map(x => ({ matchId: x.matchId, matchName: x.matchName, betType: x.key, betLabel: x.label, pickName: x.pick, probability: x.prob / 100, realProbability: x.prob / 100, odd: x.odd, leagueName: x.leagueName, resultStatus: null }));
     updateCouponUI(); showToast(`🎯 Hedef oran kuponu kupona yüklendi (${picks.length} maç).`);
+}
+
+// ========== KUPON PAYLAŞ (WhatsApp, kopyala, sistem paylaşımı) ==========
+function buildShareText(items, totalOdd, prob, withStatus) {
+    const pub = /^https?:$/.test(location.protocol) && !/^(localhost|127\.|192\.168\.)/.test(location.hostname);
+    const lines = items.map((x, i) => `${i + 1}) ${x.matchName}\n   ${x.betLabel} → ${x.pickName} (@${x.odd})${withStatus ? ' ' + ({ won: '✅', lost: '❌' }[x.resultStatus] || '⏳') : ''}`);
+    return `⚽ Futbol Analiz kuponu\n\n${lines.join('\n')}\n\n🎯 Toplam oran: ${Number(totalOdd).toFixed(2)}\n📊 Modele göre tutma ihtimali: %${Number(prob).toFixed(1)}\n⚠️ İstatistiksel tahmindir, kazanç garantisi vermez.${pub ? '\n' + location.origin : ''}`;
+}
+function openShareSheet(text) {
+    document.getElementById('shareText').value = text;
+    document.getElementById('shareSys').style.display = navigator.share ? '' : 'none';
+    document.getElementById('shareSheet').classList.add('show');
+}
+function closeShare(e) { if (!e || e.target.id === 'shareSheet' || e.target.classList.contains('share-x')) document.getElementById('shareSheet').classList.remove('show'); }
+function shareCurrentCoupon() {
+    if (!coupon.length) { showToast('⚠️ Kuponda maç yok, önce bahis seç.'); return; }
+    const totalOdd = coupon.reduce((a, c) => a * c.odd, 1), prob = coupon.reduce((a, c) => a * (c.realProbability || c.probability), 1) * 100;
+    openShareSheet(buildShareText(coupon, totalOdd, prob, false));
+}
+function shareSaved(id) {
+    const sc = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]').find(x => x.id === id); if (!sc) return;
+    openShareSheet(buildShareText(sc.matches, sc.totalOdd, sc.totalProb, true));
+}
+const shareValue = () => document.getElementById('shareText').value;
+function shareWhatsApp() { window.open('https://wa.me/?text=' + encodeURIComponent(shareValue()), '_blank', 'noopener'); }
+async function shareSystem() { try { await navigator.share({ text: shareValue() }); } catch (e) {} }
+async function shareCopy() {
+    try { await navigator.clipboard.writeText(shareValue()); }
+    catch (e) { const t = document.getElementById('shareText'); t.select(); document.execCommand('copy'); }
+    showToast('📋 Kupon metni kopyalandı.');
 }
 
 function renderDayGroups(list) {
@@ -1892,7 +1751,7 @@ function updateCouponUI() {
         const items = document.getElementById('couponItems' + sfx);
         const summary = document.getElementById('couponSummary' + sfx);
         if (n === 0) {
-            items.innerHTML = '<div class="coupon-empty">Henüz tahmin seçmedin.</div>';
+            items.innerHTML = '<div class="coupon-empty">Henüz tahmin seçmedin. Maç ekleyince kuponu 📲 Paylaş ile arkadaşlarına gönderebilirsin.</div>';
             summary.style.display = 'none';
             return;
         }
@@ -2036,7 +1895,7 @@ try { if (localStorage.getItem('futbolTema') === 'gray') document.body.classList
                 <button class="coupon-remove" aria-label="Kuponu sil" onclick="event.preventDefault(); event.stopPropagation(); deleteSavedCoupon(${sc.id})">×</button>
             </summary>
             <div class="sc-body">${matchesHtml}
-                <div class="sc-footer"><span class="sc-prob">Tutma olasılığı: %${sc.totalProb.toFixed(1)}</span><button class="coupon-action-btn save-btn" style="padding:7px 12px;" onclick="checkCouponResults(${sc.id})">🔍 Sonuçları kontrol et</button></div>
+                <div class="sc-footer"><span class="sc-prob">Tutma olasılığı: %${sc.totalProb.toFixed(1)}</span><button class="coupon-action-btn load-btn" style="padding:7px 12px;" onclick="shareSaved(${sc.id})">📲 Paylaş</button><button class="coupon-action-btn save-btn" style="padding:7px 12px;" onclick="checkCouponResults(${sc.id})">🔍 Sonuçları kontrol et</button></div>
             </div></details>`;
     }).join('');
 }
@@ -2220,6 +2079,142 @@ async function autoCoupon(type) {
     updateCouponUI();
     showToast(found < targetCount ? `✅ ${categoryName}: kriterde ${found} maç var, ${coupon.length} maç eklendi (istenen ${targetCount}).` : `✅ ${categoryName}: ${coupon.length} maç eklendi!`);
 }
+
+// ========== WHATSAPP PAYLAŞ ==========
+function whatsappCoupon() {
+    if (!coupon.length) { showToast('⚠️ Kuponda maç yok, önce bahis seç.'); return; }
+    const totalOdd = coupon.reduce((a, c) => a * c.odd, 1), prob = coupon.reduce((a, c) => a * (c.realProbability || c.probability), 1) * 100;
+    window.open('https://wa.me/?text=' + encodeURIComponent(buildShareText(coupon, totalOdd, prob, false)), '_blank', 'noopener');
+}
+
+// ========== KUPON TAKİBİ: ses + havai fişek + Telegram ==========
+const NOTIF_KEY = 'futbolBildirimGonderilen', PREF_SOUND = 'futbolSes', PREF_TG = 'futbolTgBildirim';
+const prefOn = (k, def) => { try { const v = localStorage.getItem(k); return v === null ? def : v === '1'; } catch (e) { return def; } };
+function setPref(k, on) { try { localStorage.setItem(k, on ? '1' : '0'); } catch (e) {} if (on && k === PREF_SOUND) playChime(false); renderSettings(); }
+let audioCtx = null;
+function unlockAudio() { try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} }
+document.addEventListener('click', unlockAudio);
+document.addEventListener('touchstart', unlockAudio, { passive: true });
+function playChime(big) {
+    if (!prefOn(PREF_SOUND, true)) return;
+    unlockAudio(); if (!audioCtx) return;
+    const notes = big ? [523, 659, 784, 1047, 784, 1047, 1319] : [659, 880, 1175], t0 = audioCtx.currentTime;
+    notes.forEach((f, i) => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = t0 + i * 0.13;
+        o.type = 'triangle'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.4);
+    });
+}
+function fireworks(big) {
+    if (document.body.classList.contains('no-anim')) return;
+    let cv = document.getElementById('fwCanvas');
+    if (!cv) { cv = document.createElement('canvas'); cv.id = 'fwCanvas'; document.body.appendChild(cv); }
+    cv.width = innerWidth; cv.height = innerHeight; cv.style.display = 'block';
+    const ctx = cv.getContext('2d'), parts = [], colors = ['#ffd66e', '#48d597', '#f28ba8', '#83c8d8', '#ffffff', '#e6a66c'], bursts = big ? 8 : 4;
+    const burst = (x, y) => { const n = big ? 70 : 48, c = colors[Math.floor(Math.random() * colors.length)]; for (let i = 0; i < n; i++) { const a = Math.PI * 2 * i / n, sp = 2 + Math.random() * 4.5; parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, c }); } };
+    for (let b = 0; b < bursts; b++) setTimeout(() => burst(innerWidth * (0.15 + Math.random() * 0.7), innerHeight * (0.15 + Math.random() * 0.45)), b * 350);
+    const end = performance.now() + bursts * 350 + 600;
+    (function frame(now) {
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.vx *= 0.985; p.life -= 0.014; });
+        for (let i = parts.length - 1; i >= 0; i--) if (parts[i].life <= 0) parts.splice(i, 1);
+        parts.forEach(p => { ctx.globalAlpha = Math.max(p.life, 0); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, 2.4, 0, 7); ctx.fill(); });
+        if (now < end || parts.length) requestAnimationFrame(frame); else { ctx.clearRect(0, 0, cv.width, cv.height); cv.style.display = 'none'; }
+    })(performance.now());
+}
+async function tgNotify(html, force) {
+    if (window.botDisabled || !prefOn(PREF_TG, true)) return;
+    if (!force && window.serverWatchAt && Date.now() - window.serverWatchAt < 150000) return;   // sunucu zaten takip ediyor, çift mesaj gitmesin
+    try { await fetch(`${API_URL}/telegram/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: html }) }); } catch (e) {}
+}
+function celebrate(big, toast, tgHtml) {
+    playChime(big); fireworks(big); showToast(toast);
+    if (navigator.vibrate) { try { navigator.vibrate(big ? [200, 100, 200, 100, 400] : [200]); } catch (e) {} }
+    if (tgHtml) tgNotify(tgHtml);
+}
+function testNotify() { celebrate(true, '🎆 Test: kuponun tuttu!', null); tgNotify('🎆 <b>Test bildirimi</b>\nFutbol Analiz bildirimleri çalışıyor.', true); }
+
+// Bahis, maç bitmeden de kesinleşebilir: Üst çizgileri ve KG Var gol atılınca bir daha bozulmaz
+function legInstantWin(type, hs, as) {
+    const t = hs + as;
+    switch (type) { case 'OVER15': return t > 1.5; case 'OVER25': return t > 2.5; case 'OVER35': return t > 3.5; case 'OVER45': return t > 4.5; case 'KG': return hs > 0 && as > 0; }
+    return false;
+}
+function findMatchById(id) {
+    for (const code of Object.keys(allLeaguesCache)) { const m = (allLeaguesCache[code] || []).find(x => x.id === id); if (m) return m; }
+    return null;
+}
+function legVerdict(leg) {
+    const m = findMatchById(leg.matchId); if (!m) return null;
+    const ft = m.score && m.score.fullTime; if (!ft || ft.home == null || ft.away == null) return null;
+    const hs = ft.home, as = ft.away;
+    if (m.status === 'FINISHED') return { res: betWon(leg.betType, hs, as) ? 'won' : 'lost', m, hs, as, final: true };
+    if (isLiveSt(m.status) && legInstantWin(leg.betType, hs, as)) return { res: 'won', m, hs, as, final: false };
+    return null;
+}
+let watching = false;
+async function watchCoupon() {
+    if (watching) return; watching = true;
+    try {
+        const saved = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+        const open = c => c.resultStatus !== 'won' && c.resultStatus !== 'lost';
+        const legs = [...coupon.map(c => ({ leg: c, sc: null })), ...saved.flatMap(sc => sc.matches.filter(open).map(c => ({ leg: c, sc })))];
+        if (!legs.length) return;
+        // Başlamış ya da bitmemiş izlenen maçların liglerini tazele
+        const ids = new Set(legs.map(x => x.leg.matchId)), now = Date.now(), codes = [];
+        Object.keys(allLeaguesCache).forEach(code => { if ((allLeaguesCache[code] || []).some(m => ids.has(m.id) && m.status !== 'FINISHED' && new Date(m.utcDate).getTime() - 300000 <= now)) codes.push(code); });
+        for (const code of codes) { try { const res = await apiFetch(`${API_URL}/matches/${code}`); allLeaguesCache[code] = (await res.json()).matches; } catch (e) {} }
+
+        const sent = new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')), events = [];
+        let savedChanged = false;
+        legs.forEach(({ leg, sc }) => {
+            const v = legVerdict(leg); if (!v) return;
+            if (sc) { const real = sc.matches.find(x => x.matchId === leg.matchId && x.betType === leg.betType); if (real && real.resultStatus !== v.res) { real.resultStatus = v.res; savedChanged = true; } }
+            const key = leg.matchId + ':' + leg.betType + ':' + v.res;
+            if (sent.has(key)) return;
+            sent.add(key);
+            if (now - new Date(v.m.utcDate).getTime() < 8 * 3600000) events.push({ leg, v });   // eski maçlar için gürültü yapma
+        });
+        if (savedChanged) {
+            saved.forEach(sc => { sc.status = sc.matches.some(m => m.resultStatus === 'lost') ? 'lost' : sc.matches.every(m => m.resultStatus === 'won') ? 'won' : sc.status; });
+            localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(saved));
+            if (document.getElementById('savedMain').classList.contains('active')) renderSavedCoupons();
+        }
+        // Tüm kupon tuttu mu?
+        let bigDone = null;
+        saved.forEach(sc => { const k = 'kupon:' + sc.id; if (!sent.has(k) && sc.matches.length && sc.matches.every(m => m.resultStatus === 'won')) { sent.add(k); if (events.length || savedChanged) bigDone = sc; } });
+        localStorage.setItem(NOTIF_KEY, JSON.stringify([...sent].slice(-500)));
+
+        const wins = events.filter(e => e.v.res === 'won'), losses = events.filter(e => e.v.res === 'lost');
+        wins.forEach((e, i) => {
+            const { leg, v } = e, last = i === wins.length - 1;
+            const html = `✅ <b>TUTTU!</b>\n${escH(leg.matchName)}\n${escH(leg.betLabel)} → ${escH(leg.pickName)} (@${leg.odd})\nSkor: ${v.hs}-${v.as} (${v.final ? 'maç sonu' : 'canlı'})`;
+            if (last && !bigDone) celebrate(false, `✅ Tuttu: ${leg.matchName} · ${leg.betLabel} (${v.hs}-${v.as})`, html);
+            else { tgNotify(html); if (!last) showToast(`✅ Tuttu: ${leg.matchName} · ${leg.betLabel}`); }
+        });
+        if (bigDone) celebrate(true, `🏆 KUPON TUTTU! Oran ${bigDone.totalOdd.toFixed(2)}`, `🏆 <b>KUPON TUTTU!</b>\n${bigDone.matches.length} maçın hepsi tuttu · Toplam oran ${bigDone.totalOdd.toFixed(2)}`);
+        losses.forEach(e => { const { leg, v } = e; tgNotify(`❌ <b>Yattı</b>\n${escH(leg.matchName)}\n${escH(leg.betLabel)} → ${escH(leg.pickName)} (@${leg.odd})\nSkor: ${v.hs}-${v.as} (maç sonu)`); });
+        if (losses.length && !wins.length && !bigDone) showToast(`❌ Yattı: ${losses[0].leg.matchName} · ${losses[0].leg.betLabel}`);
+    } finally { watching = false; }
+}
+// Kupondaki bahisleri sunucuya bildir: sayfa kapalıyken de Telegram'a haber gider (sunucuda bot açıksa)
+async function syncWatch() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+        const out = [];
+        const add = (arr, g, gOdd) => arr.forEach(c => out.push({ matchId: c.matchId, betType: c.betType, matchName: c.matchName, betLabel: c.betLabel, pickName: c.pickName, odd: c.odd, g, gOdd, rs: c.resultStatus || null }));
+        if (coupon.length) add(coupon, 'aktif', coupon.reduce((a, c) => a * c.odd, 1));
+        saved.filter(sc => sc.status !== 'won' && sc.status !== 'lost').forEach(sc => add(sc.matches, 'k' + sc.id, sc.totalOdd));
+        const legs = prefOn(PREF_TG, true) ? out : [];
+        const r = await fetch(`${API_URL}/watch`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ legs }) });
+        if (r.ok) window.serverWatchAt = Date.now();
+    } catch (e) {}
+}
+setInterval(syncWatch, 60000);
+setTimeout(syncWatch, 4000);
+setInterval(watchCoupon, 60000);
+setTimeout(watchCoupon, 10000);
 
 // ========== BAŞLAT ==========
 renderBetTypeSelector();

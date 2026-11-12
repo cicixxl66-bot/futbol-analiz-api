@@ -536,6 +536,108 @@ app.post('/api/check-results', async (req, res) => {
     res.json({ results });
 });
 
+// ---------- Sunucu tarafı kupon takibi (sayfa kapalıyken de Telegram'a haber verir) ----------
+// Sayfa, kupondaki bahisleri /api/watch ile buraya bildirir. Sunucu maçları dakikada bir kontrol eder,
+// bahis tutunca ya da yatınca Telegram'a yazar. Yalnızca TELEGRAM_ENABLED=true olan sunucuda çalışır.
+const WATCH_FILE = path.join(__dirname, 'izlenen.json');
+const escH = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+let watchState = { legs: {}, done: {} };   // legs: anahtar -> bahis, done: anahtar -> 'won' | 'lost' (bildirildi)
+try { const j = JSON.parse(fs.readFileSync(WATCH_FILE, 'utf8')); if (j && j.legs && j.done) watchState = j; } catch (e) {}
+const saveWatch = () => { try { fs.writeFileSync(WATCH_FILE, JSON.stringify(watchState)); } catch (e) {} };
+
+async function sendTelegram(text) {
+    if (!TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return false;
+    try {
+        const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: String(text).slice(0, 4000), parse_mode: 'HTML', disable_web_page_preview: true })
+        });
+        return !!(await r.json()).ok;
+    } catch (e) { console.log('Telegram gönderilemedi:', e.message); return false; }
+}
+
+// index.html'deki betWon ile AYNI olmalı
+function betWonSrv(type, hs, as) {
+    const t = hs + as;
+    switch (type) {
+        case 'MS1': return hs > as; case 'MSX': return hs === as; case 'MS2': return as > hs;
+        case 'DC1X': return hs >= as; case 'DC12': return hs !== as; case 'DCX2': return as >= hs;
+        case 'OVER15': return t > 1.5; case 'UNDER15': return t < 1.5;
+        case 'OVER25': return t > 2.5; case 'UNDER25': return t < 2.5;
+        case 'OVER35': return t > 3.5; case 'UNDER35': return t < 3.5;
+        case 'OVER45': return t > 4.5; case 'UNDER45': return t < 4.5;
+        case 'KG': return hs > 0 && as > 0; case 'KG_YOK': return hs === 0 || as === 0;
+    }
+    const m = /^(MS1|MS2|DC1X|DCX2|DC12)_(O15|O25|U35|KG|KGYOK)$/.exec(type);
+    if (!m) return false;
+    const r = { MS1: hs > as, MS2: as > hs, DC1X: hs >= as, DCX2: as >= hs, DC12: hs !== as }[m[1]];
+    const c = { O15: t > 1.5, O25: t > 2.5, U35: t < 3.5, KG: hs > 0 && as > 0, KGYOK: hs === 0 || as === 0 }[m[2]];
+    return r && c;
+}
+// Maç bitmeden kesin tutmuş sayılan bahisler (gol sayısı çizgiyi geçti, iki takım da attı)
+const instantWinSrv = (type, hs, as) => ['OVER15', 'OVER25', 'OVER35', 'OVER45'].includes(type) ? betWonSrv(type, hs, as) : type === 'KG' ? hs > 0 && as > 0 : false;
+
+app.post('/api/watch', (req, res) => {
+    if (!TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return tgOff(res);
+    const arr = Array.isArray(req.body.legs) ? req.body.legs.slice(0, 60) : null;
+    if (!arr) return res.status(400).json({ success: false, error: 'legs gerekli' });
+    const legs = {};
+    arr.forEach(l => {
+        if (!Number.isInteger(l.matchId) || typeof l.betType !== 'string') return;
+        const key = l.matchId + ':' + l.betType;
+        legs[key] = { matchId: l.matchId, betType: l.betType.slice(0, 20), matchName: String(l.matchName || '').slice(0, 80), betLabel: String(l.betLabel || '').slice(0, 40),
+            pickName: String(l.pickName || '').slice(0, 40), odd: Number(l.odd) || 0, g: String(l.g || '').slice(0, 40), gOdd: Number(l.gOdd) || 0 };
+        // Sayfa sonucu zaten biliyorsa tekrar bildirme
+        if (l.rs === 'won' || l.rs === 'lost') watchState.done[key] = l.rs;
+    });
+    watchState.legs = legs;
+    saveWatch();
+    res.json({ success: true, count: Object.keys(legs).length });
+});
+
+let watching = false;
+async function watchTick() {
+    if (watching || !TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return;
+    const keys = Object.keys(watchState.legs);
+    if (!keys.length) return;
+    watching = true;
+    try {
+        const ids = new Set(keys.map(k => watchState.legs[k].matchId)), found = {};
+        const all = await Promise.allSettled(LEAGUE_CODES.map(leagueMatches));
+        all.forEach(x => { if (x.status === 'fulfilled' && x.value.matches) x.value.matches.forEach(m => { if (ids.has(m.id)) found[m.id] = m; }); });
+        const now = Date.now(), wins = [], losses = [], pendingTotal = [];
+        keys.forEach(k => {
+            const l = watchState.legs[k], m = found[l.matchId];
+            if (!m || watchState.done[k]) return;
+            const ft = m.score && m.score.fullTime; if (!ft || ft.home == null || ft.away == null) return;
+            const hs = ft.home, as = ft.away; let res = null, final = false;
+            if (m.status === 'FINISHED') { res = betWonSrv(l.betType, hs, as) ? 'won' : 'lost'; final = true; }
+            else if (isLiveStatus(m.status) && instantWinSrv(l.betType, hs, as)) res = 'won';
+            if (!res) return;
+            watchState.done[k] = res;
+            if (now - new Date(m.utcDate).getTime() > 8 * 3600e3) return;   // eski maç için gürültü yapma
+            (res === 'won' ? wins : losses).push({ l, hs, as, final });
+        });
+        // Bir kuponun tüm bahisleri tuttuysa büyük mesaj
+        const groups = {};
+        keys.forEach(k => { const l = watchState.legs[k]; if (l.g) (groups[l.g] = groups[l.g] || []).push(k); });
+        const bigGroups = [];
+        Object.keys(groups).forEach(g => {
+            const gk = 'kupon:' + g;
+            if (watchState.done[gk] || groups[g].length < 2) return;
+            if (groups[g].every(k => watchState.done[k] === 'won')) { watchState.done[gk] = 'won'; if (wins.some(w => w.l.g === g)) bigGroups.push({ n: groups[g].length, odd: watchState.legs[groups[g][0]].gOdd }); }
+        });
+        saveWatch();
+        for (const w of wins) await sendTelegram(`✅ <b>TUTTU!</b>\n${escH(w.l.matchName)}\n${escH(w.l.betLabel)} → ${escH(w.l.pickName)} (@${w.l.odd})\nSkor: ${w.hs}-${w.as} (${w.final ? 'maç sonu' : 'canlı'})`);
+        for (const b of bigGroups) await sendTelegram(`🏆 <b>KUPON TUTTU!</b>\n${b.n} maçın hepsi tuttu${b.odd ? ' · Toplam oran ' + b.odd.toFixed(2) : ''}`);
+        for (const x of losses) await sendTelegram(`❌ <b>Yattı</b>\n${escH(x.l.matchName)}\n${escH(x.l.betLabel)} → ${escH(x.l.pickName)} (@${x.l.odd})\nSkor: ${x.hs}-${x.as} (maç sonu)`);
+        // Şişmeyi önle
+        const dk = Object.keys(watchState.done); if (dk.length > 1000) { dk.slice(0, dk.length - 1000).forEach(k => delete watchState.done[k]); saveWatch(); }
+    } catch (e) { console.log('Kupon takibi hatası:', e.message); }
+    finally { watching = false; }
+}
+if (TELEGRAM_ENABLED && TELEGRAM_BOT_TOKEN) { setInterval(watchTick, 60e3); setTimeout(watchTick, 15e3); }
+
 app.listen(PORT, () => {
     console.log(`✅ Sunucu çalışıyor: http://localhost:${PORT}`);
     if (!APIFOOTBALL_KEY) console.log('ℹ️  APIFOOTBALL_KEY yok: sakat/cezalı listesi kapalı.');
