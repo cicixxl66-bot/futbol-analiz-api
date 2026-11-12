@@ -551,6 +551,207 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .hd-featured, .hd-bottom { grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)); }
         .hd-stats { grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr)); }
 </style>
+
+<style id="futbolanaliz-reference-redesign">
+/* ===== FutbolAnaliz: reference dashboard redesign ===== */
+:root{
+ --bg:#050b09;--bg2:#07120e;--card:#0c1913;--card2:#102219;--pit:#07110c;
+ --accent:#e9c45e;--accent2:#f6d979;--text:#f2f8f3;--muted:#9bb0a3;
+ --border:#254936;--green:#20e783;--display:'Barlow Condensed','Arial Narrow',sans-serif;
+}
+body{
+ background:
+  radial-gradient(ellipse at 52% -18%,rgba(20,180,91,.2),transparent 44%),
+  radial-gradient(ellipse at 100% 28%,rgba(229,190,81,.07),transparent 27%),#050b09;
+ color:var(--text);
+}
+.header{
+ min-height:104px;padding:13px clamp(14px,2vw,30px);
+ background:linear-gradient(105deg,rgba(3,12,8,.99),rgba(7,26,16,.97) 58%,rgba(4,13,9,.99));
+ border-bottom:1px solid rgba(43,220,121,.4);
+ box-shadow:0 12px 36px #0009;backdrop-filter:blur(16px);
+}
+.header h1{font-size:clamp(1.7rem,2.4vw,2.45rem);letter-spacing:-.04em;gap:12px}
+.header h1 .logo-icon{
+ width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+ background:radial-gradient(circle at 35% 28%,#ffe69a,#b88732 72%);
+ border:2px solid #f0cf70;color:#10170d;font-size:2rem;
+ box-shadow:0 0 24px #e9c45e44;
+}
+.header h1 span{color:#f4c84d}
+.header h1:after{
+ content:"Akıllı Tahmin, Güvenilir Analiz";display:block;
+ position:absolute;margin:53px 0 0 67px;color:#b9c9bf;
+ font:500 .75rem 'Barlow',sans-serif;letter-spacing:0;
+}
+.header-info{display:none}
+.bot-status{background:#071a10;border-color:#245b39;color:#35ee8b;font-weight:700}
+.bot-dot{background:#21ed7c;box-shadow:0 0 12px #21ed7c}
+.bk-pill{border-color:#8d7135;color:#f4d36d}
+.main-tabs{
+ position:sticky;top:0;z-index:90;justify-content:center;gap:5px;
+ padding:8px clamp(10px,2vw,28px);
+ background:rgba(4,13,9,.96);backdrop-filter:blur(16px);
+ border-bottom:1px solid #1d4a31;overflow-x:auto;
+}
+.main-tab{
+ min-width:112px;padding:12px 16px 10px;border:1px solid #1a3426;
+ border-radius:13px;background:linear-gradient(180deg,#0c1913,#07100c);
+ color:#d2dfd6;font-size:.87rem;box-shadow:inset 0 1px #ffffff0a;
+}
+.main-tab[data-tab="analysis"]{order:2}
+.main-tab[data-tab="matches"]{order:3}
+.main-tab[data-tab="predictions"]{order:4}
+.main-tab[data-tab="standings"]{order:5}
+.main-tab[data-tab="saved"]{order:6}
+.main-tab[data-tab="performance"]{order:7}
+.main-tab[data-tab="settings"]{order:8}
+.main-tab[data-tab="home"]{order:1}
+.main-tab.active{
+ background:linear-gradient(135deg,#087d42,#07562f);color:#f2fff6;
+ border-color:#24e77d;box-shadow:0 0 22px #16d76a2c,inset 0 1px #ffffff24;
+}
+.main-tab:hover{border-color:#2be989;color:#fff}
+.home-shell{max-width:1780px;padding:12px 14px 22px}
+.home-layout{
+ display:grid;grid-template-columns:245px minmax(0,1fr) 255px;
+ gap:12px;align-items:start;
+}
+.hd-side{gap:10px}
+.hd-panel,.home-coupon-column .coupon-panel{
+ background:linear-gradient(160deg,rgba(13,29,20,.98),rgba(6,17,12,.99));
+ border:1px solid #28533a;border-radius:13px;box-shadow:0 10px 28px #0007;
+}
+.hd-panel{padding:12px}
+.hd-ptitle{font-size:1.08rem;color:#f3f7f3;border-bottom:1px solid #254332;padding-bottom:8px;margin-bottom:9px}
+.hd-list{gap:5px}
+.hd-opt{
+ background:#0a1710;border:1px solid #203c2b;border-radius:8px;
+ color:#dce8df;padding:8px 10px;font-size:.81rem;text-align:left;
+}
+.hd-opt:hover{border-color:#26db79;background:#0b2416}
+.hd-opt.on{background:linear-gradient(100deg,#087d42,#07552f);border-color:#2ee989;color:white}
+.hd-promo{
+ background:radial-gradient(circle at 15% 15%,#b88a2d44,transparent 50%),linear-gradient(145deg,#1b2414,#08130d);
+ border-color:#a7893f;text-align:left;padding:14px;
+}
+.hd-promo b{color:#f5d477;font-size:.9rem}
+.hd-promo span{color:#d0d8c9}
+.hd-add{
+ background:linear-gradient(135deg,#f4d36d,#dca72e);border:0;border-radius:8px;
+ padding:8px 12px;color:#17190e;font-weight:800;cursor:pointer;
+}
+.home-main-column{min-width:0}
+.hd-hero{
+ min-height:132px;display:flex;align-items:center;padding:22px 24px;margin:0 0 12px;
+ border:1px solid #159d59;border-radius:15px;overflow:hidden;position:relative;
+ background:
+  radial-gradient(circle at 86% 50%,#13c66b3b,transparent 24%),
+  radial-gradient(ellipse at 60% 0%,#0e9a503b,transparent 60%),
+  linear-gradient(115deg,#09241a,#071512 70%,#092018);
+ box-shadow:0 0 0 1px #20e7831c,0 12px 32px #0008;
+}
+.hd-hero:after{
+ content:"⚽";position:absolute;right:5%;top:-24px;font-size:8rem;
+ color:#e8fff0;opacity:.2;filter:drop-shadow(0 0 20px #26ee8b);
+ transform:rotate(-15deg);pointer-events:none;
+}
+.hd-hero .smart-overview-head{position:relative;z-index:1;margin:0;align-items:center}
+.hd-hero .eyebrow{color:#5af3a0;font-weight:800;letter-spacing:.1em}
+.hd-hero h2{font-size:2.35rem;margin:5px 0;color:#f3faf5}
+.hd-hero h2 span{color:#f3d16c;background:none}
+.hd-hero p{font-size:.9rem;color:#d1e1d7}
+.hd-checks{display:none}
+.hd-featured{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.hd-card,.smart-feature-card{
+ border:1px solid #1c7045!important;border-radius:13px!important;
+ background:linear-gradient(150deg,#0d2118,#08130f)!important;
+ box-shadow:inset 0 1px #ffffff0c,0 9px 24px #0007!important;
+}
+.hd-card{padding:14px!important}
+.hd-card:hover,.smart-feature-card:hover{border-color:#2cf18a!important;box-shadow:0 0 22px #19e77b25!important}
+.hd-bottom,.home-detail-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;
+}
+.hd-box,.home-detail-card{
+ min-width:0;border:1px solid #254936;border-radius:12px;
+ background:linear-gradient(145deg,#0e1c14,#08120d);padding:12px;
+}
+.hd-box h4,.home-card-heading{font-family:var(--display);font-size:1.08rem;color:#f1f7f2}
+.home-card-heading span{color:#f4d36d}
+.home-coupon-column{display:flex;flex-direction:column;gap:10px;min-width:0}
+.hd-stats{display:grid;grid-template-columns:1fr;gap:7px;margin:0}
+.hd-stat{
+ min-height:63px;display:flex;align-items:center;gap:12px;padding:9px 12px;
+ border:1px solid #254936;border-radius:11px;
+ background:linear-gradient(145deg,#102219,#08140e);
+}
+.hd-ic{font-size:1.55rem;filter:drop-shadow(0 0 7px #20e78333)}
+.hd-stat small{display:block;color:#a8bdb0;font-size:.76rem}
+.hd-stat b{font-family:var(--display);font-size:1.42rem;color:#f3f8f4}
+.hd-trust{border-color:#16884e;background:radial-gradient(circle at 15% 20%,#17c66b20,transparent 60%),linear-gradient(145deg,#0d2117,#07130d)}
+.hd-trust-row{display:flex;align-items:center;gap:12px}
+.hd-trust-row b{font-size:.8rem;color:#e8f3eb}
+.hd-trust-row small{display:block;font-size:.67rem;color:#9eb4a5;line-height:1.35;margin-top:4px}
+.hd-donut{width:82px;height:82px;flex:none}
+.home-coupon-column .coupon-panel{
+ position:static;top:auto;max-height:none;overflow:visible;
+ padding:0 13px 13px;background:linear-gradient(160deg,#101f16,#07120c);
+}
+.home-coupon-column .coupon-panel h3{
+ height:49px;background:transparent;border-bottom:1px dashed #45624b;
+ font-size:1.16rem;margin-bottom:8px;
+}
+.coupon-empty{border-color:#31503a;color:#a6b9aa}
+.home-coupon-column .save-btn{background:linear-gradient(135deg,#f2d36e,#d7a52f);color:#17190e}
+.home-live-strip{border-color:#31583b;background:#0b1b12}
+#matchesMain.layout{grid-template-columns:220px minmax(0,1fr);max-width:1500px}
+.sidebar,.coupon-panel,.match-card,.auto-coupon-panel,.filter-bar,.standings-table-wrapper,.bk-panel,.sc-toolbar{
+ border-color:#254936;
+}
+.filter-btn.active,.save-btn,.match-count-selector .count-display{
+ background:linear-gradient(135deg,#f1d36d,#d5a32d);color:#17190e;border-color:#e9c45e;
+}
+.odd-real,.total-odd,.sc-odd{color:#f3d36d}
+.odd-btn.selected{background:linear-gradient(135deg,#f1d36d,#d5a32d)!important;border-color:#f1d36d!important;color:#17190e!important}
+.tab-hero{border-color:#1c7548!important}
+.site-foot{color:#9aafa2}
+@media(max-width:1250px){
+ .home-layout{grid-template-columns:210px minmax(0,1fr) 225px}
+ .hd-featured{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hd-bottom,.home-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:980px){
+ .home-layout{grid-template-columns:1fr 240px}
+ .hd-side{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .hd-side .hd-promo{display:none}
+ .home-main-column{grid-column:1}
+ .home-coupon-column{grid-column:2;grid-row:2}
+ .hd-featured{grid-template-columns:1fr}
+ .hd-bottom,.home-detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .header{min-height:80px}
+ .header h1:after{margin-top:44px;font-size:.62rem}
+ .header h1 .logo-icon{width:43px;height:43px;font-size:1.6rem}
+ .main-tabs{justify-content:flex-start}
+ .main-tab{min-width:auto;padding:9px 11px;font-size:.76rem}
+ .home-shell{padding:8px}
+ .home-layout{grid-template-columns:1fr}
+ .hd-side{grid-column:1;grid-template-columns:1fr}
+ .hd-side .hd-promo{display:flex}
+ .home-main-column,.home-coupon-column{grid-column:1;grid-row:auto}
+ .home-coupon-column{display:grid;grid-template-columns:1fr}
+ .hd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hd-stat{padding:8px}
+ .hd-hero{padding:17px;min-height:120px}
+ .hd-hero h2{font-size:1.85rem}
+ .hd-hero:after{font-size:5rem;right:1%;top:12px}
+ .hd-featured{grid-template-columns:1fr}
+ .hd-bottom,.home-detail-grid{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
 
@@ -578,7 +779,6 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <div class="home-layout">
         <aside class="hd-side" id="hdSide"></aside>
         <main class="home-main-column">
-            <div class="hd-stats" id="hdStats"></div>
             <section class="hd-hero"><div class="smart-overview-head">
                 <div><div class="eyebrow"><span class="pulse-dot"></span> YAPAY ZEKÂ DESTEKLİ FUTBOL ANALİZİ</div><h2>AI Analiz <span>Merkezi</span></h2><p>Günün öne çıkan maçları ve yapay zekâ yorumları.</p></div>
                 <ul class="hd-checks"><li>Gelişmiş Analiz</li><li>Akıllı Yorum</li><li>Detaylı İstatistik</li></ul>
@@ -592,6 +792,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
             <div class="smart-footnote">Yorumlar Poisson/Dixon-Coles modelinin olasılıklarından, formdan ve beklenen gol verilerinden otomatik üretilir; harici bir üretken yapay zekâ kullanılmaz. Tahminler garanti değildir.</div>
         </main>
         <aside class="home-coupon-column">
+    <div class="hd-stats" id="hdStats"></div>
     <div id="hdRight"></div>
     <div class="coupon-panel">
         <h3>🎫 Kupon <span class="coupon-count" id="couponCount">0</span> <span id="savedIndicator"></span></h3>
