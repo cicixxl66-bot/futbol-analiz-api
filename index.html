@@ -864,7 +864,13 @@ const LEAGUES = [
     { code: '2019', country: 'İtalya', name: 'Serie A', flag: '🇮🇹' },
     { code: '2001', country: 'Avrupa', name: 'Şampiyonlar Ligi', flag: '🇪🇺' },
     { code: '2003', country: 'Hollanda', name: 'Eredivisie', flag: '🇳🇱' },
-    { code: '2017', country: 'Portekiz', name: 'Primeira Liga', flag: '🇵🇹' }
+    { code: '2017', country: 'Portekiz', name: 'Primeira Liga', flag: '🇵🇹' },
+    { code: 'tur.1', country: 'Türkiye', name: 'Süper Lig', flag: '🇹🇷' },
+    { code: '2016', country: 'İngiltere', name: 'Championship', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { code: '2013', country: 'Brezilya', name: 'Brasileirão', flag: '🇧🇷' },
+    { code: 'uefa.europa', country: 'Avrupa', name: 'Avrupa Ligi', flag: '🇪🇺' },
+    { code: 'uefa.europa.conf', country: 'Avrupa', name: 'Konferans Ligi', flag: '🇪🇺' },
+    { code: 'uefa.nations', country: 'Avrupa', name: 'Uluslar Ligi', flag: '🇪🇺' }
 ];
 
 // Seçilebilir bahis türleri
@@ -1703,18 +1709,27 @@ async function loadStandings() {
     try {
         const res = await apiFetch(`${API_URL}/standings/${currentLeagueCode}`);
         const data = await res.json();
-        if (!data.standings || !data.standings[0] || !data.standings[0].table) { container.innerHTML = '<div class="error">Puan durumu verisi bulunamadı.</div>'; return; }
-        const table = data.standings[0].table;
-        let html = `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>AV</th><th>P</th></tr></thead><tbody>`;
-        table.forEach(row => {
-            let cls = '';
-            if (row.position <= 4) cls = 'pos-cl';
-            else if (row.position === 5) cls = 'pos-el';
-            else if (row.position === 6) cls = 'pos-conf';
-            else if (row.position >= table.length - 2) cls = 'pos-rel';
-            html += `<tr><td class="pos ${cls}">${row.position}</td><td class="team-name"><img src="${row.team.crest}" alt=""> ${row.team.shortName}</td><td>${row.playedGames}</td><td>${row.won}</td><td>${row.draw}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? '+' : ''}${row.goalDifference}</td><td class="pts">${row.points}</td></tr>`;
+        // Gruplu turnuvalarda (Uluslar Ligi, eski formatta kupalar) birden fazla tablo gelir; hepsini göster
+        const groups = (data.standings || []).filter(s => s.table && s.table.length && (!s.type || s.type === 'TOTAL'));
+        if (!groups.length) { container.innerHTML = '<div class="error">Puan durumu verisi bulunamadı.</div>'; return; }
+        const multi = groups.length > 1;
+        let html = '';
+        groups.forEach(g => {
+            const table = g.table;
+            if (multi) html += `<h3 style="margin:14px 4px 6px;font-size:1rem;color:var(--muted)">${escH(String(g.group || '').replace(/_/g, ' ').replace(/^GROUP/i, 'Grup'))}</h3>`;
+            html += `<table class="standings-table"><thead><tr><th>#</th><th style="text-align:left;">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>A</th><th>Y</th><th>AV</th><th>P</th></tr></thead><tbody>`;
+            table.forEach(row => {
+                let cls = '';
+                if (!multi) {
+                    if (row.position <= 4) cls = 'pos-cl';
+                    else if (row.position === 5) cls = 'pos-el';
+                    else if (row.position === 6) cls = 'pos-conf';
+                    else if (row.position >= table.length - 2) cls = 'pos-rel';
+                }
+                html += `<tr><td class="pos ${cls}">${row.position}</td><td class="team-name"><img src="${escH(row.team.crest || '')}" alt=""> ${escH(row.team.shortName || row.team.name)}</td><td>${row.playedGames}</td><td>${row.won}</td><td>${row.draw}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference > 0 ? '+' : ''}${row.goalDifference}</td><td class="pts">${row.points}</td></tr>`;
+            });
+            html += `</tbody></table>`;
         });
-        html += `</tbody></table>`;
         container.innerHTML = html;
     } catch (error) { container.innerHTML = errHtml(error); }
 }

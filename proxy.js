@@ -17,10 +17,15 @@ const TELEGRAM_ENABLED = process.env.TELEGRAM_ENABLED === 'true';   // herkese a
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 const ODDS_API_KEY = process.env.ODDS_API_KEY || '';                 // isteğe bağlı: gerçek piyasa oranı (The Odds API)
-const ODDS_CACHE_MS = (parseFloat(process.env.ODDS_CACHE_HOURS) || 12) * 3600e3;
+const ODDS_CACHE_MS = (parseFloat(process.env.ODDS_CACHE_HOURS) || 24) * 3600e3;   // ücretsiz plan ayda 500 kredi: lig sayısı arttığı için 24 saat
 const VALUE_EDGE = 0.05;                                             // "değerli" için minimum avantaj (%5)
 const PORT = process.env.PORT || 3000;
-const LEAGUE_CODES = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017'];
+// football-data.org (ücretsiz planda olan ligler, sayısal kod)
+const FD_CODES = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017', '2016', '2013'];
+// ESPN (anahtarsız, resmi olmayan uç nokta; noktalı kod = ESPN lig kısaltması)
+const ESPN_CODES = ['tur.1', 'uefa.nations', 'uefa.europa', 'uefa.europa.conf'];
+const LEAGUE_CODES = [...FD_CODES, ...ESPN_CODES];
+const isEspn = code => ESPN_CODES.includes(code);
 if (!API_KEY) console.log('⚠️  API_KEY tanımlı değil. .env dosyası oluştur (.env.example dosyasına bak) ya da Render ortam değişkenlerine ekle.');
 
 const app = express();
@@ -39,7 +44,18 @@ function cached(key, ttl, fn) {
     cache.set(key, { t: Date.now(), p });
     return p;
 }
+// football-data ücretsiz planı dakikada 10 istek verir: 9'u geçmemek için sıraya sokar
+const fdTimes = [];
+async function fdSlot() {
+    for (;;) {
+        const now = Date.now();
+        while (fdTimes.length && now - fdTimes[0] > 60e3) fdTimes.shift();
+        if (fdTimes.length < 9) { fdTimes.push(now); return; }
+        await new Promise(r => setTimeout(r, 60e3 - (now - fdTimes[0]) + 250));
+    }
+}
 async function fd(pathname) {
+    await fdSlot();
     const r = await fetch(`${BASE_URL}${pathname}`, { headers: { 'X-Auth-Token': API_KEY } });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(r.status === 429 ? 'Veri kaynağı istek sınırına ulaştı, bir dakika sonra tekrar dene.' : `Veri kaynağı hata verdi (${r.status}).`);
@@ -47,8 +63,71 @@ async function fd(pathname) {
 }
 const liveFlag = {};   // o ligde şu an canlı maç var mı? Varsa önbellek 1 dakikaya iner
 const isLiveStatus = st => st === 'IN_PLAY' || st === 'PAUSED' || st === 'LIVE';
+// ---------- ESPN adaptörü: ESPN verisini football-data biçimine çevirir (model, kupon, takip aynen çalışır) ----------
+const ESPN_BASE = 'https://site.api.espn.com/apis';
+async function espnGet(p) {
+    const r = await fetch(ESPN_BASE + p);
+    if (!r.ok) throw new Error(`Veri kaynağı (ESPN) hata verdi (${r.status}).`);
+    return r.json();
+}
+function espnStatus(t) {
+    const n = (t && t.name) || '';
+    if (n === 'STATUS_POSTPONED') return 'POSTPONED';
+    if (n === 'STATUS_CANCELED' || n === 'STATUS_ABANDONED') return 'CANCELLED';
+    if (n === 'STATUS_SUSPENDED') return 'SUSPENDED';
+    if (t && t.state === 'post') return t.completed ? 'FINISHED' : 'POSTPONED';
+    if (t && t.state === 'in') return n === 'STATUS_HALFTIME' ? 'PAUSED' : 'IN_PLAY';
+    return 'TIMED';
+}
+const espnTeam = c => ({ id: +c.team.id, name: c.team.displayName, shortName: c.team.shortDisplayName || c.team.displayName, tla: c.team.abbreviation, crest: c.team.logo || '' });
+function espnEvent(e) {
+    const c = e.competitions && e.competitions[0];
+    const H = c && c.competitors.find(x => x.homeAway === 'home'), A = c && c.competitors.find(x => x.homeAway === 'away');
+    if (!H || !A || !H.team || !A.team) return null;
+    const status = espnStatus(e.status && e.status.type);
+    const has = status === 'FINISHED' || isLiveStatus(status);
+    const hs = has && H.score != null && H.score !== '' ? +H.score : null, as = has && A.score != null && A.score !== '' ? +A.score : null;
+    return { id: +e.id, utcDate: new Date(e.date).toISOString(), status, matchday: 0, homeTeam: espnTeam(H), awayTeam: espnTeam(A),
+        score: { winner: hs == null ? null : hs > as ? 'HOME_TEAM' : hs < as ? 'AWAY_TEAM' : 'DRAW', fullTime: { home: hs, away: as }, halfTime: { home: null, away: null } } };
+}
+async function espnMatches(code) {
+    const head = await espnGet(`/site/v2/sports/soccer/${code}/scoreboard`);
+    const L = (head.leagues && head.leagues[0]) || {}, se = L.season || {};
+    const start = new Date(se.startDate || L.calendarStartDate || Date.now() - 300 * 864e5).getTime();
+    const end = new Date(se.endDate || L.calendarEndDate || Date.now() + 60 * 864e5).getTime();
+    const y0 = new Date(start).getUTCFullYear(), y1 = new Date(Math.min(end, Date.now() + 365 * 864e5)).getUTCFullYear();
+    const byId = new Map();
+    for (let y = y0; y <= y1; y++) {
+        const d = await espnGet(`/site/v2/sports/soccer/${code}/scoreboard?dates=${y}&limit=1000`);
+        (d.events || []).forEach(e => { const t = new Date(e.date).getTime(); if (t >= start && t <= end) { const m = espnEvent(e); if (m) byId.set(m.id, m); } });
+    }
+    const matches = [...byId.values()].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    // ESPN hafta numarası vermiyor: maçları Salı başlangıçlı haftalara göre numaralandır (lig haftaları Cuma-Pazartesi oynanır)
+    const wk = m => Math.floor((new Date(m.utcDate).getTime() / 864e5 + 2 + 0.125) / 7);
+    const weeks = [...new Set(matches.map(wk))].sort((a, b) => a - b);
+    matches.forEach(m => m.matchday = weeks.indexOf(wk(m)) + 1);
+    return { competition: { id: code, code, name: L.name || code, emblem: (L.logos && L.logos[0] && L.logos[0].href) || '' },
+        resultSet: { count: matches.length, played: matches.filter(m => m.status === 'FINISHED').length }, matches };
+}
+async function espnStandings(code) {
+    const d = await espnGet(`/v2/sports/soccer/${code}/standings`);
+    const groups = d.children && d.children.length ? d.children : [d];
+    const standings = groups.filter(g => g.standings && g.standings.entries && g.standings.entries.length).map(g => {
+        const table = g.standings.entries.map(e => {
+            const st = n => { const s = (e.stats || []).find(x => x.name === n); return s ? +s.value || 0 : 0; };
+            return { position: st('rank'), team: { id: +e.team.id, name: e.team.displayName, shortName: e.team.shortDisplayName || e.team.displayName,
+                    crest: (e.team.logos && e.team.logos[0] && e.team.logos[0].href) || '' },
+                playedGames: st('gamesPlayed'), won: st('wins'), draw: st('ties'), lost: st('losses'), points: st('points'),
+                goalsFor: st('pointsFor'), goalsAgainst: st('pointsAgainst'), goalDifference: st('pointDifferential') };
+        }).sort((a, b) => (a.position || 999) - (b.position || 999) || b.points - a.points || b.goalDifference - a.goalDifference);
+        table.forEach((r, i) => { if (!r.position) r.position = i + 1; });
+        return { stage: 'REGULAR_SEASON', type: 'TOTAL', group: groups.length > 1 ? g.name || null : null, table };
+    });
+    return { competition: { id: code, code, name: d.name || code }, standings };
+}
+
 const leagueMatches = code => cached('m' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
-    const d = await fd(`/competitions/${code}/matches`);
+    const d = isEspn(code) ? await espnMatches(code) : await fd(`/competitions/${code}/matches`);
     liveFlag[code] = (d.matches || []).some(m => isLiveStatus(m.status));
     return d;
 });
@@ -56,7 +135,7 @@ function loadAdjustments() {
     try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'duzeltmeler.json'), 'utf8')); }
     catch (e) { if (e.code !== 'ENOENT') console.log('duzeltmeler.json okunamadı:', e.message); return {}; }
 }
-const leagueStandings = code => cached('s' + code, 30 * 60e3, () => fd(`/competitions/${code}/standings`));
+const leagueStandings = code => cached('s' + code, 30 * 60e3, () => isEspn(code) ? espnStandings(code) : fd(`/competitions/${code}/standings`));
 const okLeague = (req, res) => { if (!LEAGUE_CODES.includes(req.params.leagueId)) { res.status(400).json({ error: 'Geçersiz lig' }); return false; } return true; };
 
 // ---------- Sayfa, ads.txt, sağlık kontrolü ----------
@@ -71,7 +150,8 @@ app.get('/api/standings/:leagueId', async (req, res) => {
 });
 
 // ---------- Gerçek piyasa oranı (The Odds API, isteğe bağlı) -> "Değerli" etiketi ----------
-const ODDS_SPORTS = { '2021': 'soccer_epl', '2014': 'soccer_spain_la_liga', '2019': 'soccer_italy_serie_a', '2002': 'soccer_germany_bundesliga', '2015': 'soccer_france_ligue_one', '2001': 'soccer_uefa_champs_league', '2003': 'soccer_netherlands_eredivisie', '2017': 'soccer_portugal_primeira_liga' };
+const ODDS_SPORTS = { '2021': 'soccer_epl', '2014': 'soccer_spain_la_liga', '2019': 'soccer_italy_serie_a', '2002': 'soccer_germany_bundesliga', '2015': 'soccer_france_ligue_one', '2001': 'soccer_uefa_champs_league', '2003': 'soccer_netherlands_eredivisie', '2017': 'soccer_portugal_primeira_liga',
+    '2016': 'soccer_efl_champ', '2013': 'soccer_brazil_campeonato', 'tur.1': 'soccer_turkey_super_league', 'uefa.europa': 'soccer_uefa_europa_league', 'uefa.europa.conf': 'soccer_uefa_europa_conference_league' };
 const STOP = new Set(['fc', 'cf', 'afc', 'ac', 'sc', 'sv', 'ssc', 'as', 'us', 'rc', 'rcd', 'ud', 'cd', 'fk', 'vfl', 'vfb', 'tsg', 'fsv', 'bv', 'sl', 'club', 'de', 'the', 'calcio', '1']);
 const toks = s => new Set((s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t && !STOP.has(t)));
 const jac = (a, b) => { const i = [...a].filter(x => b.has(x)).length, u = new Set([...a, ...b]).size; return u ? i / u : 0; };
@@ -129,7 +209,8 @@ async function attachMarket(code, matches) {
 
 // ---------- Sakat / cezalı oyuncu bilgisi (API-Football, isteğe bağlı). Olasılıkları DEĞİŞTİRMEZ, sadece gösterir ----------
 const APIFOOTBALL_KEY = process.env.APIFOOTBALL_KEY || '';
-const AF_LEAGUES = { '2021': 39, '2014': 140, '2019': 135, '2002': 78, '2015': 61, '2001': 2, '2003': 88, '2017': 94 };
+const AF_LEAGUES = { '2021': 39, '2014': 140, '2019': 135, '2002': 78, '2015': 61, '2001': 2, '2003': 88, '2017': 94,
+    '2016': 40, '2013': 71, 'tur.1': 203, 'uefa.nations': 5, 'uefa.europa': 3, 'uefa.europa.conf': 848 };
 const AF_SEASON = parseInt(process.env.AF_SEASON) || (new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1);
 async function fetchInjuries(code) {
     const r = await fetch(`https://v3.football.api-sports.io/injuries?league=${AF_LEAGUES[code]}&season=${AF_SEASON}`, { headers: { 'x-apisports-key': APIFOOTBALL_KEY } });
@@ -357,7 +438,8 @@ const IDEAL_MODES = {
     dengeli: { minConf: 60, minOdd: 1.25, tol: 4, maxDis: 10, legsLeague: 4, legsDay: 4, legsWeek: 6, byOdd: false },
     yuksek:  { minConf: 48, minOdd: 1.50, tol: 10, maxDis: 12, legsLeague: 4, legsDay: 4, legsWeek: 6, byOdd: true }
 };
-const IDEAL_LEAGUES = { '2015': ['Ligue 1', '🇫🇷'], '2021': ['Premier League', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2014': ['La Liga', '🇪🇸'], '2002': ['Bundesliga', '🇩🇪'], '2019': ['Serie A', '🇮🇹'], '2001': ['Şampiyonlar Ligi', '🇪🇺'], '2003': ['Eredivisie', '🇳🇱'], '2017': ['Primeira Liga', '🇵🇹'] };
+const IDEAL_LEAGUES = { '2015': ['Ligue 1', '🇫🇷'], '2021': ['Premier League', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2014': ['La Liga', '🇪🇸'], '2002': ['Bundesliga', '🇩🇪'], '2019': ['Serie A', '🇮🇹'], '2001': ['Şampiyonlar Ligi', '🇪🇺'], '2003': ['Eredivisie', '🇳🇱'], '2017': ['Primeira Liga', '🇵🇹'],
+    '2016': ['Championship', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2013': ['Brasileirão', '🇧🇷'], 'tur.1': ['Süper Lig', '🇹🇷'], 'uefa.nations': ['Uluslar Ligi', '🇪🇺'], 'uefa.europa': ['Avrupa Ligi', '🇪🇺'], 'uefa.europa.conf': ['Konferans Ligi', '🇪🇺'] };
 
 // Tekli bahisler: k = sitedeki bahis anahtarı, pk = tahmin alanı, hit = sonuç kontrolü
 const IDEAL_SINGLES = {
