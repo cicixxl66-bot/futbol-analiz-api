@@ -958,6 +958,8 @@ function betWon(type, hs, as) {
         case 'OVER45': return t > 4.5;  case 'UNDER45': return t < 4.5;
         case 'KG': return hs > 0 && as > 0;
         case 'KG_YOK': return hs === 0 || as === 0;
+        case 'HOME05': return hs > 0;   // ev sahibi en az 1 gol
+        case 'AWAY05': return as > 0;   // deplasman en az 1 gol
     }
     const d = COMBO_DEFS.find(x => x.key === type);
     if (!d) return false;
@@ -1003,7 +1005,9 @@ const ALL_BET_TYPES = [
     { key: 'OVER45', label: '4.5 Üst', category: 'goals' },
     { key: 'UNDER45', label: '4.5 Alt', category: 'goals' },
     { key: 'KG', label: 'KG Var', category: 'kg' },
-    { key: 'KG_YOK', label: 'KG Yok', category: 'kg' }
+    { key: 'KG_YOK', label: 'KG Yok', category: 'kg' },
+    { key: 'HOME05', label: 'Ev 0.5 Üst', category: 'team' },
+    { key: 'AWAY05', label: 'Dep 0.5 Üst', category: 'team' }
 ];
 
 ALL_BET_TYPES.push(...COMBO_DEFS.map(d => ({ key: d.key, label: d.label, category: 'combo' })));
@@ -1504,7 +1508,8 @@ function allBetsFor(m) {
     const b = {
         MS1: ['MS 1', h, p.ms1], MSX: ['MS X', 'Beraberlik', p.msX], MS2: ['MS 2', a, p.ms2],
         DC1X: ['1X', '1X', p.doubleChance1X], DC12: ['12', '12', p.doubleChance12], DCX2: ['X2', 'X2', p.doubleChanceX2],
-        KG: ['KG Var', 'KG Var', p.kgVar], KG_YOK: ['KG Yok', 'KG Yok', p.kgYok]
+        KG: ['KG Var', 'KG Var', p.kgVar], KG_YOK: ['KG Yok', 'KG Yok', p.kgYok],
+        HOME05: ['Ev 0.5 Üst', h + ' gol atar', p.home05], AWAY05: ['Dep 0.5 Üst', a + ' gol atar', p.away05]
     };
     [15, 25, 35, 45].forEach(n => { b['OVER' + n] = [(n / 10) + ' Üst', 'Üst', p['over' + n]]; b['UNDER' + n] = [(n / 10) + ' Alt', 'Alt', p['under' + n]]; });
     COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) b[d.key] = [d.label, d.label.replace('MS 1', h).replace('MS 2', a), p.combos[d.pk]]; });
@@ -1701,13 +1706,14 @@ function renderMatchCard(m) {
     const homePick = m.homeTeam.shortName.replace(/['"]/g, '');
     const awayPick = m.awayTeam.shortName.replace(/['"]/g, '');
     const o = {};
-    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok'].forEach(k => o[k] = calculateBookmakerOdd(p[k]));
+    ['ms1','msX','ms2','doubleChance1X','doubleChance12','doubleChanceX2','over15','under15','over25','under25','over35','under35','over45','under45','kgVar','kgYok','home05','away05'].forEach(k => { if (p[k] !== undefined) o[k] = calculateBookmakerOdd(p[k]); });
     COMBO_DEFS.forEach(d => { if (p.combos && p.combos[d.pk] !== undefined) { p['c_' + d.pk] = p.combos[d.pk]; o['c_' + d.pk] = calculateBookmakerOdd(p.combos[d.pk]); } });
     const B = (type, pick, label, key, short) => `<button class="odd-btn${val[key] ? ' value' : ''}${star && star.key === type ? ' star' : ''}" ${val[key] ? `title="Değerli: piyasa ort. ${val[key].odd} (avantaj +%${val[key].edge})"` : ''} data-matchid="${mid}" data-bettype="${type}" data-mname="${mname}" data-pick="${pick}" data-prob="${p[key]}" data-label="${label}" data-league="${leagueName}" data-odd="${o[key]}"><span class="odd-label">${short || label}</span><span class="odd-real">${o[key]}</span><span class="odd-value">%${p[key]}</span></button>`;
     const MS = [B('MS1', homePick, 'MS 1', 'ms1', '1'), B('MSX', 'Beraberlik', 'MS X', 'msX', 'X'), B('MS2', awayPick, 'MS 2', 'ms2', '2')];
     const DC = [B('DC1X', '1X', '1X', 'doubleChance1X'), B('DC12', '12', '12', 'doubleChance12'), B('DCX2', 'X2', 'X2', 'doubleChanceX2')];
     const OU = n => [B('OVER' + n, 'Üst', (n / 10) + ' Üst', 'over' + n), B('UNDER' + n, 'Alt', (n / 10) + ' Alt', 'under' + n)];
     const KG = [B('KG', 'KG Var', 'KG Var', 'kgVar'), B('KG_YOK', 'KG Yok', 'KG Yok', 'kgYok')];
+    const TG = p.home05 !== undefined ? [B('HOME05', homePick + ' gol atar', 'Ev 0.5 Üst', 'home05'), B('AWAY05', awayPick + ' gol atar', 'Dep 0.5 Üst', 'away05')] : [];
     const quick = `<div class="mrow-odds"><div class="og">${MS.join('')}</div><div class="og">${B('OVER25', 'Üst', '2.5 Üst', 'over25', '2.5 Ü')}${B('UNDER25', 'Alt', '2.5 Alt', 'under25', '2.5 A')}</div><div class="og">${B('KG', 'KG Var', 'KG Var', 'kgVar', 'KG +')}${B('KG_YOK', 'KG Yok', 'KG Yok', 'kgYok', 'KG -')}</div></div>`;
     const vb = (p.value || []).map(v => v.key === 'over25' ? '2.5 Üst' : '2.5 Alt').join(' · ');
     const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1718,7 +1724,7 @@ function renderMatchCard(m) {
     const fb = f => (f || '').split('').map(x => `<span class="form-badge f-${x}">${x}</span>`).join('');
 
     return `<div class="mrow"><div class="mrow-main">${timeBox}${teams2}${quick}<button class="mrow-more" aria-label="Tüm bahisler ve analiz" onclick="this.closest('.mrow').classList.toggle('open')"></button></div>
-        <div class="mrow-detail"><div class="mk-grid">${mk('Maç Sonucu', MS)}${mk('Çifte Şans', DC)}${mk('1.5 Gol', OU(15))}${mk('2.5 Gol', OU(25))}${p.market ? `<div class="mkt-note">Piyasa ort. (${p.market.books} site): 2.5 Üst ${p.market.over25} · 2.5 Alt ${p.market.under25}</div>` : ''}${mk('3.5 Gol', OU(35))}${mk('4.5 Gol', OU(45))}${mk('Karşılıklı Gol', KG)}${mk('MS & Alt/Üst', CB(['ms1_o15','ms1_o25','ms1_u35','ms2_o15','ms2_o25','ms2_u35']), 'ms')}${mk('Çifte Şans & 1.5 Üst', CB(['dc1x_o15','dc12_o15','dcx2_o15']), 'ms')}${mk('MS & Karşılıklı Gol', CB(['ms1_kg','ms1_kgyok','ms2_kg','ms2_kgyok']), 'ms')}</div>
+        <div class="mrow-detail"><div class="mk-grid">${mk('Maç Sonucu', MS)}${mk('Çifte Şans', DC)}${mk('1.5 Gol', OU(15))}${mk('2.5 Gol', OU(25))}${p.market ? `<div class="mkt-note">Piyasa ort. (${p.market.books} site): 2.5 Üst ${p.market.over25} · 2.5 Alt ${p.market.under25}</div>` : ''}${mk('3.5 Gol', OU(35))}${mk('4.5 Gol', OU(45))}${mk('Karşılıklı Gol', KG)}${mk('Takım Golü (0.5 Üst)', TG)}${mk('MS & Alt/Üst', CB(['ms1_o15','ms1_o25','ms1_u35','ms2_o15','ms2_o25','ms2_u35']), 'ms')}${mk('Çifte Şans & 1.5 Üst', CB(['dc1x_o15','dc12_o15','dcx2_o15']), 'ms')}${mk('MS & Karşılıklı Gol', CB(['ms1_kg','ms1_kgyok','ms2_kg','ms2_kgyok']), 'ms')}</div>
         ${renderStatsBlock(m, p)}${renderInjuriesBlock(m, p)}
         <div class="form-badges"><span style="font-size:0.7rem;color:var(--muted);">Form:</span>${fb(p.homeForm)}<span style="color:var(--muted);margin:0 4px;font-size:0.7rem;">vs</span>${fb(p.awayForm)}</div>
         <button class="detailed-toggle" onclick="toggleDetailed(this)">🧠 Detaylı Analiz</button>
@@ -2214,7 +2220,7 @@ function testNotify() { celebrate(true, '🎆 Test: kuponun tuttu!', null); tgNo
 // Bahis, maç bitmeden de kesinleşebilir: Üst çizgileri ve KG Var gol atılınca bir daha bozulmaz
 function legInstantWin(type, hs, as) {
     const t = hs + as;
-    switch (type) { case 'OVER15': return t > 1.5; case 'OVER25': return t > 2.5; case 'OVER35': return t > 3.5; case 'OVER45': return t > 4.5; case 'KG': return hs > 0 && as > 0; }
+    switch (type) { case 'OVER15': return t > 1.5; case 'OVER25': return t > 2.5; case 'OVER35': return t > 3.5; case 'OVER45': return t > 4.5; case 'KG': return hs > 0 && as > 0; case 'HOME05': return hs > 0; case 'AWAY05': return as > 0; }
     return false;
 }
 function findMatchById(id) {
@@ -2319,6 +2325,7 @@ function tkPickName(type, m) {
     const h = m.homeTeam.shortName, a = m.awayTeam.shortName;
     if (type === 'MS1') return h; if (type === 'MS2') return a; if (type === 'MSX') return 'Beraberlik';
     if (type.startsWith('OVER')) return 'Üst'; if (type.startsWith('UNDER')) return 'Alt';
+    if (type === 'HOME05') return h + ' gol atar'; if (type === 'AWAY05') return a + ' gol atar';
     const bt = ALL_BET_TYPES.find(b => b.key === type);
     return (bt ? bt.label : type).replace('MS 1', h).replace('MS 2', a);
 }
@@ -2399,7 +2406,7 @@ function renderTkPick() {
     const el = document.getElementById('tkPick'); if (!el) return;
     const m = tkSel && findMatchById(tkSel.id);
     if (!m) { el.innerHTML = '<div class="hd-note" style="margin-top:8px">Listeden maçı seç, sonra bahis türünü ve aldığın oranı gir.</div>'; return; }
-    const cats = [['ms', 'Maç Sonucu'], ['dc', 'Çifte Şans'], ['goals', 'Alt / Üst'], ['kg', 'Karşılıklı Gol'], ['combo', 'Kombinasyon']];
+    const cats = [['ms', 'Maç Sonucu'], ['dc', 'Çifte Şans'], ['goals', 'Alt / Üst'], ['kg', 'Karşılıklı Gol'], ['team', 'Takım Golü'], ['combo', 'Kombinasyon']];
     const opts = cats.map(([c, n]) => `<optgroup label="${n}">${ALL_BET_TYPES.filter(b => b.category === c).map(b => `<option value="${b.key}">${escH(b.key === 'MS1' || b.key === 'MS2' ? b.label + ' (' + tkPickName(b.key, m) + ')' : b.label)}</option>`).join('')}</optgroup>`).join('');
     el.innerHTML = `<div class="tk-pick"><div class="tk-pt">${escH(m.homeTeam.shortName)} - ${escH(m.awayTeam.shortName)}</div>
         <label>Bahis<select class="tk-in" id="tkType">${opts}</select></label>
@@ -2503,7 +2510,7 @@ function nfAdd(items) {
 function nfRecord(logged, doneCoupons, bigDone) {
     const tkIds = new Set(loadTakip().map(c => c.id));
     const items = logged.map(({ leg, v, recent, src }) => ({ type: v.res, matchName: leg.matchName, betLabel: leg.betLabel, pickName: leg.pickName, odd: leg.odd, hs: v.hs, as: v.as, final: v.final, src, quiet: !recent }));
-    doneCoupons.forEach(sc => items.push({ type: 'kupon', n: sc.matches.length, odd: sc.totalOdd, stake: sc.stake || 0, src: tkIds.has(sc.id) ? 'Kupon Takip' : 'Kuponlarım', quiet: sc !== bigDone }));
+    doneCoupons.filter(sc => sc.matches.length > 1).forEach(sc => items.push({ type: 'kupon', n: sc.matches.length, odd: sc.totalOdd, stake: sc.stake || 0, src: tkIds.has(sc.id) ? 'Kupon Takip' : 'Kuponlarım', quiet: sc !== bigDone }));
     nfAdd(items);
     items.filter(x => !x.quiet).forEach(nfDesktop);
 }
@@ -2602,7 +2609,7 @@ function renderBildirim() {
     let lastDay = '', items = '';
     shown.forEach(x => { const day = nfDayLabel(new Date(x.t)); if (day !== lastDay) { items += `<div class="nf-day">${day}</div>`; lastDay = day; } items += nfItem(x); });
     const empty = `<div class="empty-saved"><span class="emoji">🔔</span><h3 style="color:var(--text);margin-bottom:8px;">${list.length ? 'Bu filtrede bildirim yok' : 'Henüz bildirim yok'}</h3><p style="font-size:0.85rem;">Kupon Takip ya da Kuponlarım'daki bir bahis tutunca ya da yatınca burada görünür.</p></div>`;
-    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🔔</div><div><span class="tab-hero-kicker">SONUÇ GEÇMİŞİ</span><h2>Bildirim<em>ler</em></h2><p>Hangi bahsin tuttuğunu, hangisinin yattığını buradan gör.</p></div><div class="tab-hero-art" aria-hidden="true">📬</div></section>
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🔔</div><div><span class="tab-hero-kicker">SONUÇ GEÇMİŞİ</span><h2>Bildirim <em>Geçmişi</em></h2><p>Hangi bahsin tuttuğunu, hangisinin yattığını buradan gör.</p></div><div class="tab-hero-art" aria-hidden="true">📬</div></section>
         <div class="hd-panel"><div class="hd-ptitle">Bildirim ayarları</div><div id="nfStatus"></div></div>
         <div class="sc-chips" style="margin:14px 0 4px">${chip('all', 'Tümü')}${chip('won', '✅ Tutanlar')}${chip('lost', '❌ Yatanlar')}${list.length ? '<button class="filter-btn" onclick="nfClear()">🗑 Temizle</button>' : ''}</div>
         ${shown.length ? items : empty}`;
@@ -2616,6 +2623,7 @@ renderLeagueList();
 selectLeague('2015');
 switchMainTab('home');
 updateSavedIndicator();
+nfUpdateBadge();
 setTimeout(checkBotStatus, 1000);
 renderBacktestBadges();
 renderBankroll();

@@ -392,6 +392,8 @@ function predictMatch(home, away, league, homeStats, awayStats, adj) {
     const over15 = shr(over(1.5), 0.9), over25 = shr(over(2.5), 0.9);
     const over35 = shr(over(3.5), 0.9), over45 = shr(over(4.5), 0.9);
     const kgVar = shr(pBtts, 0.45);
+    // Takım golü: ev / deplasman en az 1 gol atar (0.5 Üst)
+    const home05 = shr(joint((i, j) => i > 0), 0.9), away05 = shr(joint((i, j) => j > 0), 0.9);
 
     let fav;
     if (ms1 > ms2 + 15) fav = `${home} (MS 1)`;
@@ -405,6 +407,7 @@ function predictMatch(home, away, league, homeStats, awayStats, adj) {
         over15, under15: 100 - over15, over25, under25: 100 - over25,
         over35, under35: 100 - over35, over45, under45: 100 - over45,
         kgVar, kgYok: 100 - kgVar,
+        home05, away05,
         adjust: notes.length ? notes : undefined,
         combos, stats: { home: teamSummary(H), away: teamSummary(A), h2h },
         expectedHomeGoals: lh.toFixed(1), expectedAwayGoals: la.toFixed(1),
@@ -649,6 +652,7 @@ function betWonSrv(type, hs, as) {
         case 'OVER35': return t > 3.5; case 'UNDER35': return t < 3.5;
         case 'OVER45': return t > 4.5; case 'UNDER45': return t < 4.5;
         case 'KG': return hs > 0 && as > 0; case 'KG_YOK': return hs === 0 || as === 0;
+        case 'HOME05': return hs > 0; case 'AWAY05': return as > 0;
     }
     const m = /^(MS1|MS2|DC1X|DCX2|DC12)_(O15|O25|U35|KG|KGYOK)$/.exec(type);
     if (!m) return false;
@@ -657,7 +661,7 @@ function betWonSrv(type, hs, as) {
     return r && c;
 }
 // Maç bitmeden kesin tutmuş sayılan bahisler (gol sayısı çizgiyi geçti, iki takım da attı)
-const instantWinSrv = (type, hs, as) => ['OVER15', 'OVER25', 'OVER35', 'OVER45'].includes(type) ? betWonSrv(type, hs, as) : type === 'KG' ? hs > 0 && as > 0 : false;
+const instantWinSrv = (type, hs, as) => ['OVER15', 'OVER25', 'OVER35', 'OVER45', 'KG', 'HOME05', 'AWAY05'].includes(type) ? betWonSrv(type, hs, as) : false;
 
 app.post('/api/watch', (req, res) => {
     if (!TELEGRAM_ENABLED || !TELEGRAM_BOT_TOKEN) return tgOff(res);
