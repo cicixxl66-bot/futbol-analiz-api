@@ -566,6 +566,61 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .share-mini { margin-left:auto; background:#25d366; color:#06210f; border:none; border-radius:999px; padding:3px 10px; font-size:.72rem; font-weight:800; cursor:pointer; white-space:nowrap; font-family:'Barlow',sans-serif; }
         #fwCanvas { display:none; position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:2000; }
         .ed-btns { display:flex; gap:8px; } .share-btn2 { background:#25d366; color:#06210f; }
+        /* ===== Bildirimler ===== */
+        .nf-badge { display:inline-block; min-width:18px; padding:0 5px; margin-left:4px; border-radius:999px; background:var(--red); color:#fff; font-size:.68rem; line-height:18px; text-align:center; font-weight:700; }
+        .nf-badge[hidden] { display:none; }
+        .nf-day { font-size:.75rem; color:var(--muted); font-weight:700; letter-spacing:.04em; text-transform:uppercase; margin:14px 0 6px; }
+        .nf-item { display:flex; gap:12px; align-items:flex-start; background:var(--card2); border:1px solid var(--border); border-left:4px solid var(--border); border-radius:10px; padding:11px 14px; margin-bottom:8px; }
+        .nf-item.won { border-left-color:var(--green); } .nf-item.lost { border-left-color:var(--red); } .nf-item.kupon { border-left-color:var(--accent); background:linear-gradient(90deg, rgba(233,189,82,.12), var(--card2) 60%); } .nf-item.test { border-left-color:#1a7fb4; }
+        .nf-item.new { box-shadow:0 0 0 1px var(--accent) inset; }
+        .nf-ic { font-size:1.4rem; line-height:1; flex-shrink:0; margin-top:2px; }
+        .nf-body { flex:1; min-width:0; }
+        .nf-t { font-weight:700; font-size:.9rem; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .nf-m { font-size:.86rem; margin-top:2px; overflow-wrap:anywhere; }
+        .nf-b { font-size:.78rem; color:var(--accent); margin-top:2px; }
+        .nf-meta { font-size:.72rem; color:var(--muted); margin-top:4px; }
+        .nf-score { font-family:var(--display); font-weight:700; font-size:1.25rem; flex-shrink:0; text-align:right; }
+        .nf-score small { display:block; font-family:inherit; font-size:.66rem; font-weight:600; color:var(--muted); }
+        .nf-status { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.82rem; }
+        .nf-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); display:inline-block; }
+        .nf-dot.ok { background:var(--green); } .nf-dot.bad { background:var(--red); }
+        /* ===== Kupon Takip ===== */
+        .tk-grid { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:12px; align-items:start; }
+        @media (max-width:860px) { .tk-grid { grid-template-columns:1fr; } }
+        .tk-in { background:var(--pit); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font:inherit; font-size:.88rem; width:100%; min-width:0; }
+        .tk-in:focus { outline:none; border-color:var(--accent); }
+        .tk-filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:8px; margin-bottom:10px; }
+        .tk-list { max-height:420px; overflow:auto; display:flex; flex-direction:column; gap:6px; padding-right:2px; }
+        .tk-m { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:9px 11px; color:var(--text); cursor:pointer; font:inherit; }
+        .tk-m:hover, .tk-m.sel { border-color:var(--accent); }
+        .tk-m .tk-t { flex:0 0 64px; font-size:.72rem; color:var(--muted); line-height:1.3; }
+        .tk-m .tk-n { flex:1; min-width:0; font-weight:600; font-size:.86rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .tk-m .tk-s { font-family:var(--display); font-weight:700; color:var(--accent); }
+        .tk-live { display:inline-block; background:var(--red); color:#fff; font-size:.62rem; font-weight:700; padding:1px 6px; border-radius:4px; letter-spacing:.04em; }
+        .tk-pick { margin-top:10px; padding:12px; border:1px dashed var(--accent); border-radius:10px; display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) auto; gap:8px; align-items:end; }
+        .tk-pick .tk-pt { grid-column:1/-1; font-weight:700; font-size:.88rem; }
+        .tk-pick label { display:flex; flex-direction:column; gap:4px; font-size:.72rem; color:var(--muted); }
+        @media (max-width:520px) { .tk-pick { grid-template-columns:1fr 1fr; } .tk-pick .coupon-action-btn { grid-column:1/-1; } .tk-filters { grid-template-columns:1fr; } }
+        .tk-leg { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border); }
+        .tk-leg:last-child { border-bottom:none; }
+        .tk-leg .tk-lm { flex:1; min-width:0; }
+        .tk-leg .tk-lm b { display:block; font-size:.84rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .tk-leg .tk-lm small { color:var(--accent); font-size:.75rem; }
+        .tk-leg .tk-ls { text-align:right; flex-shrink:0; font-size:.72rem; }
+        .tk-leg .tk-ls b { display:block; font-family:var(--display); font-size:1.05rem; }
+        .tk-badge { display:inline-block; padding:1px 8px; border-radius:999px; font-size:.68rem; font-weight:700; white-space:nowrap; }
+        .tk-b-wait { background:rgba(233,200,90,.14); color:var(--yellow); }
+        .tk-b-ok { background:rgba(74,222,128,.14); color:var(--green); }
+        .tk-b-bad { background:rgba(248,113,113,.14); color:var(--red); }
+        .tk-x { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; padding:0 4px; }
+        .tk-x:hover { color:var(--red); }
+        .tk-sum { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:.85rem; }
+        .tk-card { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+        .tk-card.won { border-color:rgba(74,222,128,.5); } .tk-card.lost { border-color:rgba(248,113,113,.4); opacity:.85; }
+        .tk-ch { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding-bottom:8px; margin-bottom:4px; border-bottom:1px solid var(--border); font-size:.8rem; color:var(--muted); }
+        .tk-ch .sc-odd { margin-left:auto; }
+        .tk-tg { font-size:.78rem; padding:8px 10px; border-radius:8px; margin-bottom:12px; background:rgba(26,127,180,.14); color:var(--text); border:1px solid rgba(26,127,180,.4); }
+        .tk-tg.off { background:rgba(233,200,90,.1); border-color:rgba(233,200,90,.35); }
 </style>
 </head>
 <body>
@@ -585,6 +640,8 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
     <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
     <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')">🎟 Kuponlarım</button>
+    <button class="main-tab" data-tab="takip" onclick="switchMainTab('takip')">📡 Kupon Takip</button>
+    <button class="main-tab" data-tab="bildirim" onclick="switchMainTab('bildirim')">🔔 Bildirimler <b class="nf-badge" id="nfBadge" hidden></b></button>
     <button class="main-tab" data-tab="analysis" onclick="switchMainTab('analysis')">✧ AI Analiz Merkezi</button>
     <button class="main-tab" data-tab="performance" onclick="switchMainTab('performance')">📈 Performans</button>
     <button class="main-tab" data-tab="settings" onclick="switchMainTab('settings')">⚙️ Ayarlar</button>
@@ -637,6 +694,8 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
 
 <div id="perfMain" class="hd-page" style="display:none;"></div>
 <div id="settingsMain" class="hd-page" style="display:none;"></div>
+<div id="takipMain" class="hd-page" style="display:none;"></div>
+<div id="bildirimMain" class="hd-page" style="display:none;"></div>
 
 <div id="matchesMain" class="layout">
     <div class="sidebar">
@@ -1110,13 +1169,15 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    ['perfMain', 'settingsMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    ['perfMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
     if (view === 'home') {
         document.getElementById('homeMain').style.display = 'block';
         renderSmartOverview();
         if (selectedTab === 'analysis') setTimeout(() => document.getElementById('smartOverview')?.scrollIntoView({behavior:'smooth',block:'start'}), 80);
     } else if (view === 'performance') { document.getElementById('perfMain').style.display = 'block'; renderPerformance(); }
     else if (view === 'settings') { document.getElementById('settingsMain').style.display = 'block'; renderSettings(); }
+    else if (view === 'takip') { document.getElementById('takipMain').style.display = 'block'; openTakip(); }
+    else if (view === 'bildirim') { document.getElementById('bildirimMain').style.display = 'block'; renderBildirim(); nfMarkRead(); }
     else if (view === 'matches') document.getElementById('matchesMain').style.display = 'grid';
     else if (view === 'predictions') { document.getElementById('predictionsMain').style.display = 'grid'; loadPredictions(); }
     else if (view === 'standings') { document.getElementById('standingsMain').classList.add('active'); loadStandings(); }
@@ -1317,7 +1378,7 @@ function setAnim(on) { document.body.classList.toggle('no-anim', !on); try { loc
 function refreshAllData() { allLeaguesLoaded = false; Object.keys(allLeaguesCache).forEach(k => delete allLeaguesCache[k]); showToast('Veriler yenileniyor...'); renderSmartOverview(); }
 function wipeLocal() {
     if (!confirm('Kayıtlı kuponlar, kasa ve ayarlar silinsin mi? Bu geri alınamaz.')) return;
-    [SAVED_COUPONS_KEY, BK_KEY, 'futbolTema', 'futbolAnim'].forEach(k => localStorage.removeItem(k)); location.reload();
+    [SAVED_COUPONS_KEY, BK_KEY, 'futbolTema', 'futbolAnim', TAKIP_KEY, NF_LOG_KEY].forEach(k => localStorage.removeItem(k)); location.reload();
 }
 function renderSettings() {
     const el = document.getElementById('settingsMain'); if (!el) return;
@@ -2173,33 +2234,44 @@ async function watchCoupon() {
     if (watching) return; watching = true;
     try {
         const saved = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+        const takip = loadTakip();
         const open = c => c.resultStatus !== 'won' && c.resultStatus !== 'lost';
-        const legs = [...coupon.map(c => ({ leg: c, sc: null })), ...saved.flatMap(sc => sc.matches.filter(open).map(c => ({ leg: c, sc })))];
+        const legs = [...coupon.map(c => ({ leg: c, sc: null })), ...saved.flatMap(sc => sc.matches.filter(open).map(c => ({ leg: c, sc }))),
+            ...takip.flatMap(sc => sc.matches.filter(open).map(c => ({ leg: c, sc, tk: true })))];
         if (!legs.length) return;
         // Başlamış ya da bitmemiş izlenen maçların liglerini tazele
         const ids = new Set(legs.map(x => x.leg.matchId)), now = Date.now(), codes = [];
         Object.keys(allLeaguesCache).forEach(code => { if ((allLeaguesCache[code] || []).some(m => ids.has(m.id) && m.status !== 'FINISHED' && new Date(m.utcDate).getTime() - 300000 <= now)) codes.push(code); });
+        // Takipteki bahsin ligi henüz yüklenmediyse onu da çek
+        legs.forEach(x => { const c = x.tk && x.leg.leagueCode; if (c && !allLeaguesCache[c] && !codes.includes(c)) codes.push(c); });
         for (const code of codes) { try { const res = await apiFetch(`${API_URL}/matches/${code}`); allLeaguesCache[code] = (await res.json()).matches; } catch (e) {} }
 
-        const sent = new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')), events = [];
-        let savedChanged = false;
-        legs.forEach(({ leg, sc }) => {
+        const sent = new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')), events = [], logged = [], doneCoupons = [];
+        let savedChanged = false, takipChanged = false;
+        legs.forEach(({ leg, sc, tk }) => {
             const v = legVerdict(leg); if (!v) return;
-            if (sc) { const real = sc.matches.find(x => x.matchId === leg.matchId && x.betType === leg.betType); if (real && real.resultStatus !== v.res) { real.resultStatus = v.res; savedChanged = true; } }
+            if (sc) { const real = sc.matches.find(x => x.matchId === leg.matchId && x.betType === leg.betType); if (real && real.resultStatus !== v.res) { real.resultStatus = v.res; if (tk) takipChanged = true; else savedChanged = true; } }
             const key = leg.matchId + ':' + leg.betType + ':' + v.res;
             if (sent.has(key)) return;
             sent.add(key);
-            if (now - new Date(v.m.utcDate).getTime() < 8 * 3600000) events.push({ leg, v });   // eski maçlar için gürültü yapma
+            const recent = now - new Date(v.m.utcDate).getTime() < 8 * 3600000;
+            logged.push({ leg, v, recent, src: tk ? 'Kupon Takip' : sc ? 'Kuponlarım' : 'Aktif kupon' });   // Bildirimler sekmesine her sonuç yazılır
+            if (recent) events.push({ leg, v });   // eski maçlar için ses/Telegram gürültüsü yapma
         });
         if (savedChanged) {
             saved.forEach(sc => { sc.status = sc.matches.some(m => m.resultStatus === 'lost') ? 'lost' : sc.matches.every(m => m.resultStatus === 'won') ? 'won' : sc.status; });
             localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(saved));
             if (document.getElementById('savedMain').classList.contains('active')) renderSavedCoupons();
         }
+        if (takipChanged) {
+            takip.forEach(sc => { sc.status = sc.matches.some(m => m.resultStatus === 'lost') ? 'lost' : sc.matches.every(m => m.resultStatus === 'won') ? 'won' : 'pending'; });
+            saveTakip(takip);
+        }
         // Tüm kupon tuttu mu?
         let bigDone = null;
-        saved.forEach(sc => { const k = 'kupon:' + sc.id; if (!sent.has(k) && sc.matches.length && sc.matches.every(m => m.resultStatus === 'won')) { sent.add(k); if (events.length || savedChanged) bigDone = sc; } });
+        [...saved, ...takip].forEach(sc => { const k = 'kupon:' + sc.id; if (!sent.has(k) && sc.matches.length && sc.matches.every(m => m.resultStatus === 'won')) { sent.add(k); doneCoupons.push(sc); if (events.length || savedChanged || takipChanged) bigDone = sc; } });
         localStorage.setItem(NOTIF_KEY, JSON.stringify([...sent].slice(-500)));
+        nfRecord(logged, doneCoupons, bigDone);
 
         const wins = events.filter(e => e.v.res === 'won'), losses = events.filter(e => e.v.res === 'lost');
         wins.forEach((e, i) => {
@@ -2211,7 +2283,7 @@ async function watchCoupon() {
         if (bigDone) celebrate(true, `🏆 KUPON TUTTU! Oran ${bigDone.totalOdd.toFixed(2)}`, `🏆 <b>KUPON TUTTU!</b>\n${bigDone.matches.length} maçın hepsi tuttu · Toplam oran ${bigDone.totalOdd.toFixed(2)}`);
         losses.forEach(e => { const { leg, v } = e; tgNotify(`❌ <b>Yattı</b>\n${escH(leg.matchName)}\n${escH(leg.betLabel)} → ${escH(leg.pickName)} (@${leg.odd})\nSkor: ${v.hs}-${v.as} (maç sonu)`); });
         if (losses.length && !wins.length && !bigDone) showToast(`❌ Yattı: ${losses[0].leg.matchName} · ${losses[0].leg.betLabel}`);
-    } finally { watching = false; }
+    } finally { watching = false; tkRefreshView(); }
 }
 // Kupondaki bahisleri sunucuya bildir: sayfa kapalıyken de Telegram'a haber gider (sunucuda bot açıksa)
 async function syncWatch() {
@@ -2221,6 +2293,7 @@ async function syncWatch() {
         const add = (arr, g, gOdd) => arr.forEach(c => out.push({ matchId: c.matchId, betType: c.betType, matchName: c.matchName, betLabel: c.betLabel, pickName: c.pickName, odd: c.odd, g, gOdd, rs: c.resultStatus || null }));
         if (coupon.length) add(coupon, 'aktif', coupon.reduce((a, c) => a * c.odd, 1));
         saved.filter(sc => sc.status !== 'won' && sc.status !== 'lost').forEach(sc => add(sc.matches, 'k' + sc.id, sc.totalOdd));
+        loadTakip().filter(sc => sc.status !== 'won' && sc.status !== 'lost').forEach(sc => add(sc.matches, 't' + sc.id, sc.totalOdd));
         const legs = prefOn(PREF_TG, true) ? out : [];
         const r = await fetch(`${API_URL}/watch`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ legs }) });
         if (r.ok) window.serverWatchAt = Date.now();
@@ -2230,6 +2303,312 @@ setInterval(syncWatch, 60000);
 setTimeout(syncWatch, 4000);
 setInterval(watchCoupon, 60000);
 setTimeout(watchCoupon, 10000);
+
+// ========== KUPON TAKİP: kendi oynadığın bahisleri kaydet, canlı izle, Telegram'a bildir ==========
+// Kuponlar bu tarayıcıda saklanır; syncWatch ile sunucuya da bildirilir, sunucu sayfa kapalıyken de Telegram'a yazar.
+const TAKIP_KEY = 'futbolKuponTakip';
+function loadTakip() { try { const a = JSON.parse(localStorage.getItem(TAKIP_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function saveTakip(list) { try { localStorage.setItem(TAKIP_KEY, JSON.stringify(list)); } catch (e) {} }
+let tkDraft = [], tkLeague = 'all', tkQuery = '', tkSel = null, tkLoading = false;
+const tkLeagueOf = code => LEAGUES.find(l => l.code === code) || { flag: '', name: '' };
+const tkNum = v => { const n = parseFloat(String(v || '').replace(',', '.')); return isFinite(n) ? n : 0; };
+const tkTotal = legs => legs.reduce((a, l) => a * l.odd, 1);
+const tkVisible = () => { const el = document.getElementById('takipMain'); return !!el && el.style.display === 'block'; };
+
+function tkPickName(type, m) {
+    const h = m.homeTeam.shortName, a = m.awayTeam.shortName;
+    if (type === 'MS1') return h; if (type === 'MS2') return a; if (type === 'MSX') return 'Beraberlik';
+    if (type.startsWith('OVER')) return 'Üst'; if (type.startsWith('UNDER')) return 'Alt';
+    const bt = ALL_BET_TYPES.find(b => b.key === type);
+    return (bt ? bt.label : type).replace('MS 1', h).replace('MS 2', a);
+}
+
+// Seçilebilir maçlar: canlı olanlar + önümüzdeki 10 gün
+function tkPool() {
+    const now = Date.now(), out = [];
+    Object.keys(allLeaguesCache).forEach(code => {
+        if (tkLeague !== 'all' && code !== tkLeague) return;
+        (allLeaguesCache[code] || []).forEach(m => {
+            if (!m || !m.homeTeam || !m.awayTeam || ['FINISHED', 'POSTPONED', 'CANCELLED', 'SUSPENDED'].includes(m.status)) return;
+            const t = new Date(m.utcDate).getTime();
+            if (!isLiveSt(m.status) && (t < now - 3 * 3600e3 || t > now + 10 * 86400e3)) return;
+            out.push({ m, code });
+        });
+    });
+    const q = tkQuery.trim().toLocaleLowerCase('tr');
+    const hit = x => [x.m.homeTeam.name, x.m.homeTeam.shortName, x.m.awayTeam.name, x.m.awayTeam.shortName].join(' ').toLocaleLowerCase('tr').includes(q);
+    return (q ? out.filter(hit) : out).sort((a, b) => (isLiveSt(b.m.status) - isLiveSt(a.m.status)) || new Date(a.m.utcDate) - new Date(b.m.utcDate)).slice(0, 80);
+}
+
+async function openTakip() {
+    renderTakip();
+    if (!allLeaguesLoaded && !tkLoading) {
+        tkLoading = true; renderTkList();
+        try { await loadAllLeagues(); } catch (e) { showToast('⚠️ ' + (e.message || CONN_MSG)); }
+        tkLoading = false; renderTkList(); renderTkTracked();
+    }
+}
+
+function renderTakip() {
+    const el = document.getElementById('takipMain'); if (!el) return;
+    if (!document.getElementById('tkList')) {
+        el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">📡</div><div><span class="tab-hero-kicker">CANLI BAHİS TAKİBİ</span><h2>Kupon <em>Takip</em></h2><p>Oynadığın maçları ekle; skorları canlı izle, tutunca Telegram'dan haber al.</p></div><div class="tab-hero-art" aria-hidden="true">🔔</div></section>
+        <div id="tkTg"></div>
+        <div class="tk-grid">
+            <div class="hd-panel"><div class="hd-ptitle">➕ Bahis ekle</div>
+                <div class="tk-filters">
+                    <select class="tk-in" id="tkLeagueSel" aria-label="Lig" onchange="tkLeague=this.value; renderTkList()"><option value="all">Tüm ligler</option>${LEAGUES.map(l => `<option value="${l.code}">${l.flag} ${l.name}</option>`).join('')}</select>
+                    <input class="tk-in" id="tkSearch" type="search" placeholder="Takım ara (ör. Galatasaray)" aria-label="Takım ara" oninput="tkQuery=this.value; renderTkList()">
+                </div>
+                <div id="tkList" class="tk-list"></div>
+                <div id="tkPick"></div>
+            </div>
+            <div class="hd-panel"><div class="hd-ptitle">🧾 Yeni kupon</div><div id="tkDraft"></div></div>
+        </div>
+        <div id="tkStats"></div>
+        <h2 class="hd-h2" style="margin-top:8px">📡 Takipteki kuponlar</h2>
+        <div id="tkTracked"></div>`;
+    }
+    renderTkTg(); renderTkList(); renderTkPick(); renderTkDraft(); renderTkTracked();
+}
+
+function renderTkTg() {
+    const el = document.getElementById('tkTg'); if (!el) return;
+    if (window.botDisabled) el.innerHTML = `<div class="tk-tg off">⚠️ Bu sunucuda Telegram kapalı. Bildirim yalnızca sayfa açıkken gelir (ses + havai fişek). Açmak için .env dosyasında <b>TELEGRAM_ENABLED=true</b>, <b>TELEGRAM_BOT_TOKEN</b> ve <b>TELEGRAM_CHAT_ID</b> değerlerini doldurup sunucuyu yeniden başlat.</div>`;
+    else if (!prefOn(PREF_TG, true)) el.innerHTML = `<div class="tk-tg off">🔕 Telegram bildirimi kapalı. <button class="hd-opt" onclick="setPref(PREF_TG,true); renderTkTg(); syncWatch()">Aç</button></div>`;
+    else el.innerHTML = `<div class="tk-tg">📤 Takipteki bahislerin sunucuya bildirilir: bir bahis tutunca ya da yatınca <b>Telegram</b>'a mesaj gelir, sayfa kapalı olsa bile. Üst ve KG Var bahislerinde haber maç bitmeden, gol atıldığı anda gelir.</div>`;
+}
+
+function renderTkList() {
+    const el = document.getElementById('tkList'); if (!el) return;
+    const pool = tkPool();
+    if (!pool.length) { el.innerHTML = `<div class="hd-note">${tkLoading ? '⏳ Maçlar yükleniyor...' : tkQuery ? 'Aramana uyan yaklaşan ya da canlı maç yok.' : 'Bu ligde önümüzdeki 10 günde maç yok.'}</div>`; return; }
+    el.innerHTML = pool.map(({ m, code }) => {
+        const d = new Date(m.utcDate), live = isLiveSt(m.status), ft = m.score && m.score.fullTime;
+        const t = live ? '<span class="tk-live">CANLI</span>' : d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) + '<br>' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        return `<button class="tk-m${tkSel && tkSel.id === m.id ? ' sel' : ''}" onclick="tkSelect(${m.id}, '${code}')"><span class="tk-t">${t}</span><span class="tk-n">${tkLeagueOf(code).flag} ${escH(m.homeTeam.shortName)} - ${escH(m.awayTeam.shortName)}</span>${live && ft ? `<span class="tk-s">${ft.home ?? 0}-${ft.away ?? 0}</span>` : ''}</button>`;
+    }).join('') + (tkLoading ? '<div class="hd-note">⏳ Diğer ligler yükleniyor...</div>' : '');
+}
+
+function tkSelect(id, code) {
+    tkSel = { id, code }; renderTkList(); renderTkPick();
+    const odd = document.getElementById('tkOdd'); if (odd) { odd.closest('.tk-pick').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+}
+
+function renderTkPick() {
+    const el = document.getElementById('tkPick'); if (!el) return;
+    const m = tkSel && findMatchById(tkSel.id);
+    if (!m) { el.innerHTML = '<div class="hd-note" style="margin-top:8px">Listeden maçı seç, sonra bahis türünü ve aldığın oranı gir.</div>'; return; }
+    const cats = [['ms', 'Maç Sonucu'], ['dc', 'Çifte Şans'], ['goals', 'Alt / Üst'], ['kg', 'Karşılıklı Gol'], ['combo', 'Kombinasyon']];
+    const opts = cats.map(([c, n]) => `<optgroup label="${n}">${ALL_BET_TYPES.filter(b => b.category === c).map(b => `<option value="${b.key}">${escH(b.key === 'MS1' || b.key === 'MS2' ? b.label + ' (' + tkPickName(b.key, m) + ')' : b.label)}</option>`).join('')}</optgroup>`).join('');
+    el.innerHTML = `<div class="tk-pick"><div class="tk-pt">${escH(m.homeTeam.shortName)} - ${escH(m.awayTeam.shortName)}</div>
+        <label>Bahis<select class="tk-in" id="tkType">${opts}</select></label>
+        <label>Oran<input class="tk-in" id="tkOdd" type="text" inputmode="decimal" placeholder="1.85" onkeydown="if(event.key==='Enter')tkAddLeg()"></label>
+        <button class="coupon-action-btn save-btn" onclick="tkAddLeg()">Ekle</button></div>`;
+}
+
+function tkAddLeg() {
+    const m = tkSel && findMatchById(tkSel.id); if (!m) return;
+    const type = document.getElementById('tkType').value, odd = tkNum(document.getElementById('tkOdd').value);
+    if (!(odd >= 1.01 && odd <= 1000)) { showToast('⚠️ Geçerli bir oran gir (ör. 1.85)'); document.getElementById('tkOdd').focus(); return; }
+    if (tkDraft.some(l => l.matchId === m.id)) { showToast('⚠️ Bu maç kuponda zaten var.'); return; }
+    const bt = ALL_BET_TYPES.find(b => b.key === type);
+    tkDraft.push({ matchId: m.id, leagueCode: tkSel.code, utcDate: m.utcDate, matchName: `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`, betType: type, betLabel: bt ? bt.label : type, pickName: tkPickName(type, m), odd: Math.round(odd * 100) / 100, resultStatus: null });
+    tkSel = null; renderTkList(); renderTkPick(); renderTkDraft();
+}
+
+function renderTkDraft() {
+    const el = document.getElementById('tkDraft'); if (!el) return;
+    if (!tkDraft.length) { el.innerHTML = '<div class="hd-note">Henüz bahis eklemedin. Soldan maç seçip ekle. Tek maç da olur, kombine de.</div>'; return; }
+    const stakeVal = (document.getElementById('tkStake') || {}).value || '';
+    el.innerHTML = tkDraft.map((l, i) => `<div class="tk-leg"><div class="tk-lm"><b>${tkLeagueOf(l.leagueCode).flag} ${escH(l.matchName)}</b><small>${escH(l.betLabel)} → ${escH(l.pickName)} @${l.odd.toFixed(2)}</small></div><button class="tk-x" aria-label="Çıkar" onclick="tkDraft.splice(${i},1); renderTkDraft()">×</button></div>`).join('') +
+        `<div class="tk-sum"><span>Toplam oran</span><span class="sc-odd">${tkTotal(tkDraft).toFixed(2)}</span></div>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:.72rem;color:var(--muted);margin-top:8px">Yatırdığın tutar (₺, isteğe bağlı)<input class="tk-in" id="tkStake" inputmode="decimal" placeholder="100" value="${escH(stakeVal)}" oninput="tkStakeHint()"></label>
+        <div class="hd-note" id="tkWin"></div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px"><button class="coupon-action-btn save-btn" onclick="tkSave()">📡 Takibe al</button><button class="coupon-action-btn load-btn" style="padding:10px 14px" onclick="tkDraft=[]; renderTkDraft()">Temizle</button></div>`;
+    tkStakeHint();
+}
+function tkStakeVal() { const v = tkNum((document.getElementById('tkStake') || {}).value); return v > 0 ? v : 0; }
+function tkStakeHint() { const s = tkStakeVal(), el = document.getElementById('tkWin'); if (el) el.textContent = s > 0 ? `Tutarsa: ${money(s * tkTotal(tkDraft))}` : ''; }
+
+function tkSave() {
+    if (!tkDraft.length) return;
+    const list = loadTakip();
+    list.unshift({ id: Date.now(), savedAt: new Date().toISOString(), matches: tkDraft.map(l => ({ ...l })), totalOdd: tkTotal(tkDraft), stake: tkStakeVal(), status: 'pending' });
+    saveTakip(list);
+    tkDraft = []; renderTkDraft(); renderTkTracked();
+    showToast('📡 Kupon takibe alındı');
+    syncWatch(); watchCoupon();
+}
+
+function tkDelete(id) {
+    if (!confirm('Bu kupon takipten silinsin mi?')) return;
+    saveTakip(loadTakip().filter(c => c.id !== id));
+    renderTkTracked(); syncWatch();
+}
+
+function tkLegState(l) {
+    if (l.resultStatus === 'won') return ['tk-b-ok', '✅ Tuttu'];
+    if (l.resultStatus === 'lost') return ['tk-b-bad', '❌ Yattı'];
+    const m = findMatchById(l.matchId);
+    if (m && isLiveSt(m.status)) {
+        const ft = m.score && m.score.fullTime, hs = (ft && ft.home) || 0, as = (ft && ft.away) || 0;
+        return betWon(l.betType, hs, as) ? ['tk-b-ok', '🟢 Şu an tutuyor'] : ['tk-b-bad', '🔴 Şu an tutmuyor'];
+    }
+    return ['tk-b-wait', '⏳ Bekliyor'];
+}
+
+function renderTkTracked() {
+    const el = document.getElementById('tkTracked'), st = document.getElementById('tkStats'); if (!el || !st) return;
+    const list = loadTakip();
+    let stake = 0, ret = 0, w = 0, lo = 0, p = 0;
+    list.forEach(c => { const s = c.stake || 0; if (c.status === 'won') { w++; stake += s; ret += s * c.totalOdd; } else if (c.status === 'lost') { lo++; stake += s; } else p++; });
+    const net = ret - stake, tile = (v, l, cls) => `<div class="sc-stat"><b class="${cls || ''}">${v}</b><span>${l}</span></div>`;
+    st.innerHTML = list.length ? `<div class="hd-panel"><div class="hd-stats4">${tile(p, 'Takipte')}${tile(w, 'Tuttu', 'c-green')}${tile(lo, 'Yattı', 'c-red')}${tile(money(stake), 'Sonuçlanan yatırım')}${tile(money(ret), 'Geri dönen')}${tile((net >= 0 ? '+' : '−') + money(Math.abs(net)), 'Net kâr/zarar', net >= 0 ? 'c-green' : 'c-red')}</div></div>` : '';
+    if (!list.length) { el.innerHTML = '<div class="empty-saved"><span class="emoji">📡</span><h3 style="color:var(--text);margin-bottom:8px;">Takipte kupon yok</h3><p style="font-size:0.85rem;">Yukarıdan oynadığın maçları ekleyip "Takibe al" butonuna bas.</p></div>'; return; }
+    el.innerHTML = list.map(c => {
+        const state = c.status === 'won' || c.status === 'lost' ? c.status : 'pending';
+        const stTxt = { won: '✅ Kazandı', lost: '❌ Kaybetti', pending: '⏳ Devam ediyor' }[state];
+        const legs = c.matches.map(l => {
+            const m = findMatchById(l.matchId), [cls, txt] = tkLegState(l);
+            let sc;
+            if (m && (isLiveSt(m.status) || m.status === 'FINISHED') && m.score && m.score.fullTime) { const ft = m.score.fullTime; sc = `<b>${ft.home ?? 0} - ${ft.away ?? 0}</b>${isLiveSt(m.status) ? '<span class="tk-live">CANLI</span> ' : 'MS '}`; }
+            else { const d = new Date((m && m.utcDate) || l.utcDate); sc = `<b>${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</b>${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} `; }
+            return `<div class="tk-leg"><div class="tk-lm"><b>${tkLeagueOf(l.leagueCode).flag} ${escH(l.matchName)}</b><small>${escH(l.betLabel)} → ${escH(l.pickName)} @${Number(l.odd).toFixed(2)}</small></div><div class="tk-ls">${sc}<span class="tk-badge ${cls}">${txt}</span></div></div>`;
+        }).join('');
+        const dt = new Date(c.savedAt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const money2 = c.stake ? ` · ${money(c.stake)} → ${money(c.stake * c.totalOdd)}` : '';
+        return `<div class="tk-card ${state}"><div class="tk-ch"><span>📅 ${dt}</span><span>${c.matches.length} maç${money2}</span><span class="sc-status status-${state}">${stTxt}</span><span class="sc-odd">${c.totalOdd.toFixed(2)}</span><button class="tk-x" aria-label="Kuponu sil" onclick="tkDelete(${c.id})">×</button></div>${legs}</div>`;
+    }).join('');
+}
+
+// watchCoupon her turda skorları tazeler; sekme açıksa ekranı da güncelle
+function tkRefreshView() { if (tkVisible()) { renderTkList(); renderTkTracked(); } }
+
+// ========== BİLDİRİMLER: tutan / yatan her bahis burada listelenir ==========
+// watchCoupon her yeni sonucu nfRecord ile buraya yazar. Kayıt bu tarayıcıda tutulur.
+const NF_LOG_KEY = 'futbolBildirimKaydi', PREF_DESK = 'futbolMasaustu';
+let nfFilter = 'all', nfTgState = null;
+function nfLoad() { try { const a = JSON.parse(localStorage.getItem(NF_LOG_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function nfSave(a) { try { localStorage.setItem(NF_LOG_KEY, JSON.stringify(a.slice(0, 300))); } catch (e) {} }
+const nfVisible = () => { const el = document.getElementById('bildirimMain'); return !!el && el.style.display === 'block'; };
+
+function nfAdd(items) {
+    if (!items.length) return;
+    const list = nfLoad();
+    items.forEach((x, i) => list.unshift({ ...x, id: Date.now() + '-' + i, t: Date.now(), read: false }));
+    nfSave(list);
+    if (nfVisible()) { renderBildirim(); nfMarkRead(); } else nfUpdateBadge();
+}
+function nfRecord(logged, doneCoupons, bigDone) {
+    const tkIds = new Set(loadTakip().map(c => c.id));
+    const items = logged.map(({ leg, v, recent, src }) => ({ type: v.res, matchName: leg.matchName, betLabel: leg.betLabel, pickName: leg.pickName, odd: leg.odd, hs: v.hs, as: v.as, final: v.final, src, quiet: !recent }));
+    doneCoupons.forEach(sc => items.push({ type: 'kupon', n: sc.matches.length, odd: sc.totalOdd, stake: sc.stake || 0, src: tkIds.has(sc.id) ? 'Kupon Takip' : 'Kuponlarım', quiet: sc !== bigDone }));
+    nfAdd(items);
+    items.filter(x => !x.quiet).forEach(nfDesktop);
+}
+function nfText(x) {
+    if (x.type === 'kupon') return ['🏆 KUPON TUTTU!', `${x.n} maçın hepsi tuttu · Oran ${Number(x.odd).toFixed(2)}${x.stake ? ' · Kazanç ' + money(x.stake * x.odd) : ''}`];
+    if (x.type === 'test') return ['🔔 Test bildirimi', 'Bildirimler çalışıyor.'];
+    return [(x.type === 'won' ? '✅ Tuttu: ' : '❌ Yattı: ') + x.matchName, `${x.betLabel} → ${x.pickName} @${x.odd} · Skor ${x.hs}-${x.as} (${x.final ? 'maç sonu' : 'canlı'})`];
+}
+// Masaüstü (Windows/Android) bildirimi: sayfa açıkken, başka pencerede olsan da görünür
+function nfDesktop(x) {
+    if (!prefOn(PREF_DESK, false) || !('Notification' in window) || Notification.permission !== 'granted') return;
+    try { const [t, b] = nfText(x); const n = new Notification(t, { body: b }); n.onclick = () => { window.focus(); switchMainTab('bildirim'); n.close(); }; } catch (e) {}
+}
+async function nfToggleDesk(on) {
+    if (on) {
+        if (!('Notification' in window)) { showToast('⚠️ Bu tarayıcı masaüstü bildirimini desteklemiyor.'); return; }
+        let p = Notification.permission;
+        if (p === 'default') { try { p = await Notification.requestPermission(); } catch (e) {} }
+        if (p !== 'granted') { showToast('⚠️ Bildirim izni verilmedi. Adres çubuğundaki kilit simgesinden "Bildirimler: İzin ver" yap.'); setPref(PREF_DESK, false); renderNfStatus(); return; }
+    }
+    setPref(PREF_DESK, on); renderNfStatus();
+    if (on) nfDesktop({ type: 'test' });
+}
+function nfUpdateBadge() {
+    const b = document.getElementById('nfBadge'); if (!b) return;
+    const n = nfLoad().filter(x => !x.read && x.type !== 'test').length;
+    b.textContent = n > 99 ? '99+' : n; b.hidden = !n;
+}
+function nfMarkRead() {
+    const list = nfLoad(); if (list.some(x => !x.read)) { list.forEach(x => x.read = true); nfSave(list); }
+    nfUpdateBadge();
+}
+function nfClear() {
+    if (!confirm('Tüm bildirim geçmişi silinsin mi?')) return;
+    nfSave([]); renderBildirim(); nfUpdateBadge();
+}
+async function nfCheckTg() {
+    nfTgState = 'checking'; renderNfStatus();
+    try {
+        const r = await fetch(`${API_URL}/telegram/test`), d = await r.json().catch(() => ({}));
+        nfTgState = d.disabled ? 'off' : d.ok ? 'ok' : 'bad';
+        window.botDisabled = nfTgState === 'off';
+        if (nfTgState === 'ok') syncWatch();
+    } catch (e) { nfTgState = 'noconn'; }
+    renderNfStatus();
+}
+async function nfTest() {
+    celebrate(false, '🔔 Test bildirimi gönderildi', null);
+    const x = { type: 'test', src: 'Test' }; nfAdd([x]); nfDesktop(x);
+    if (nfTgState === 'off') { showToast('Telegram sunucuda kapalı; yalnızca uygulama içi bildirim gönderildi.'); return; }
+    try {
+        const r = await fetch(`${API_URL}/telegram/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: '🔔 <b>Test bildirimi</b>\nFutbol Analiz bildirimleri çalışıyor.' }) });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.success) showToast('📤 Telegram test mesajı gönderildi, telefonuna bak.');
+        else if (d.disabled) { nfTgState = 'off'; renderNfStatus(); showToast('⚠️ Telegram sunucuda kapalı.'); }
+        else showToast('⚠️ Telegram mesajı gitmedi: ' + (d.error || 'HTTP ' + r.status));
+    } catch (e) { showToast('⚠️ Sunucuya ulaşılamadı.'); }
+}
+function renderNfStatus() {
+    const el = document.getElementById('nfStatus'); if (!el) return;
+    const tg = {
+        checking: ['', 'Telegram kontrol ediliyor...'],
+        ok: ['ok', '<b>Telegram bağlı.</b> Tutan ve yatan bahisler telefonuna mesaj olarak gelir, sayfa kapalı olsa bile.'],
+        off: ['bad', '<b>Telegram bu sunucuda kapalı.</b> .env dosyasında TELEGRAM_ENABLED=true, TELEGRAM_BOT_TOKEN ve TELEGRAM_CHAT_ID dolu olmalı. <b>.env değiştiyse sunucuyu kapatıp yeniden başlat</b> (basit.bat), çünkü sunucu bu dosyayı yalnızca açılışta okur.'],
+        bad: ['bad', '<b>Telegram botuna ulaşılamadı.</b> TELEGRAM_BOT_TOKEN yanlış olabilir.'],
+        noconn: ['bad', '<b>Sunucuya ulaşılamadı.</b> Sunucu açık mı?']
+    }[nfTgState || 'checking'];
+    const b = (on, label, fn) => `<button class="hd-opt${on ? ' on' : ''}" onclick="${fn}">${label}</button>`;
+    const desk = prefOn(PREF_DESK, false) && 'Notification' in window && Notification.permission === 'granted';
+    el.innerHTML = `<div class="nf-status"><span class="nf-dot ${tg[0]}"></span><span style="flex:1;min-width:200px">${tg[1]}</span><button class="hd-opt" onclick="nfCheckTg()">↻ Yeniden kontrol et</button></div>
+        <div class="hd-row" style="margin-top:10px">${b(prefOn(PREF_TG, true), '📤 Telegram açık', 'setPref(PREF_TG,true); syncWatch(); renderNfStatus()')}${b(!prefOn(PREF_TG, true), 'Telegram kapalı', 'setPref(PREF_TG,false); syncWatch(); renderNfStatus()')}</div>
+        <div class="hd-row">${b(desk, '🖥 Masaüstü bildirimi açık', 'nfToggleDesk(true)')}${b(!desk, 'Masaüstü bildirimi kapalı', 'nfToggleDesk(false)')}</div>
+        <div class="hd-row">${b(prefOn(PREF_SOUND, true), '🔊 Ses açık', 'setPref(PREF_SOUND,true); renderNfStatus()')}${b(!prefOn(PREF_SOUND, true), '🔇 Ses kapalı', 'setPref(PREF_SOUND,false); renderNfStatus()')}</div>
+        <div class="hd-row">${b(false, '🧪 Test bildirimi gönder', 'nfTest()')}</div>
+        <div class="hd-note">Masaüstü bildirimi ve ses yalnızca site bir sekmede açıkken çalışır (sekme arkada olabilir). Sayfa tamamen kapalıyken haber almanın yolu Telegram'dır.</div>`;
+}
+function nfDayLabel(d) {
+    const k = x => x.toDateString(), today = new Date(), yest = new Date(Date.now() - 86400e3);
+    if (k(d) === k(today)) return 'Bugün'; if (k(d) === k(yest)) return 'Dün';
+    return d.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function nfItem(x) {
+    const time = new Date(x.t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const ic = { won: '✅', lost: '❌', kupon: '🏆', test: '🔔' }[x.type] || '🔔', isNew = x.read ? '' : ' new';
+    const newTag = x.read ? '' : '<span class="tk-badge tk-b-wait">Yeni</span>';
+    if (x.type === 'won' || x.type === 'lost') return `<div class="nf-item ${x.type}${isNew}"><div class="nf-ic">${ic}</div><div class="nf-body"><div class="nf-t">${x.type === 'won' ? 'Tuttu' : 'Yattı'}${newTag}</div><div class="nf-m">${escH(x.matchName)}</div><div class="nf-b">${escH(x.betLabel)} → ${escH(x.pickName)} @${Number(x.odd).toFixed(2)}</div><div class="nf-meta">${time} · ${escH(x.src || '')}</div></div><div class="nf-score">${x.hs}-${x.as}<small>${x.final ? 'Maç sonu' : 'Canlı'}</small></div></div>`;
+    const [t, body] = nfText(x);
+    return `<div class="nf-item ${x.type}${isNew}"><div class="nf-ic">${ic}</div><div class="nf-body"><div class="nf-t">${escH(t.replace(/^\S+\s/, ''))}${newTag}</div><div class="nf-m">${escH(body)}</div><div class="nf-meta">${time}${x.src ? ' · ' + escH(x.src) : ''}</div></div></div>`;
+}
+function renderBildirim() {
+    const el = document.getElementById('bildirimMain'); if (!el) return;
+    const list = nfLoad(), isWon = x => x.type === 'won' || x.type === 'kupon';
+    const cnt = { all: list.length, won: list.filter(isWon).length, lost: list.filter(x => x.type === 'lost').length };
+    const shown = nfFilter === 'won' ? list.filter(isWon) : nfFilter === 'lost' ? list.filter(x => x.type === 'lost') : list;
+    const chip = (k, l) => `<button class="filter-btn ${nfFilter === k ? 'active' : ''}" onclick="nfFilter='${k}'; renderBildirim()">${l} <small>${cnt[k]}</small></button>`;
+    let lastDay = '', items = '';
+    shown.forEach(x => { const day = nfDayLabel(new Date(x.t)); if (day !== lastDay) { items += `<div class="nf-day">${day}</div>`; lastDay = day; } items += nfItem(x); });
+    const empty = `<div class="empty-saved"><span class="emoji">🔔</span><h3 style="color:var(--text);margin-bottom:8px;">${list.length ? 'Bu filtrede bildirim yok' : 'Henüz bildirim yok'}</h3><p style="font-size:0.85rem;">Kupon Takip ya da Kuponlarım'daki bir bahis tutunca ya da yatınca burada görünür.</p></div>`;
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🔔</div><div><span class="tab-hero-kicker">SONUÇ GEÇMİŞİ</span><h2>Bildirim<em>ler</em></h2><p>Hangi bahsin tuttuğunu, hangisinin yattığını buradan gör.</p></div><div class="tab-hero-art" aria-hidden="true">📬</div></section>
+        <div class="hd-panel"><div class="hd-ptitle">Bildirim ayarları</div><div id="nfStatus"></div></div>
+        <div class="sc-chips" style="margin:14px 0 4px">${chip('all', 'Tümü')}${chip('won', '✅ Tutanlar')}${chip('lost', '❌ Yatanlar')}${list.length ? '<button class="filter-btn" onclick="nfClear()">🗑 Temizle</button>' : ''}</div>
+        ${shown.length ? items : empty}`;
+    renderNfStatus();
+    if (nfTgState === null || nfTgState === 'off' || nfTgState === 'noconn') nfCheckTg();
+}
 
 // ========== BAŞLAT ==========
 renderBetTypeSelector();
