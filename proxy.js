@@ -235,9 +235,76 @@ async function attachInjuries(code, matches) {
     });
 }
 
+// ---------- Önceki sezonların maçları (veri/*.csv, veri-indir.ps1 hazırlar) -> H2H geçmişi ----------
+// Klasör yoksa (ör. sunucuda) H2H sadece bu sezonun maçlarıyla çalışır.
+const CSV_LEAGUE = { E0: '2021', SP1: '2014', D1: '2002', I1: '2019', F1: '2015', N1: '2003', P1: '2017', E1: '2016', BRA: '2013', T1: 'tur.1', UNL: 'uefa.nations', UEL: 'uefa.europa', UECL: 'uefa.europa.conf' };
+const CLUB_CSV = ['E0', 'SP1', 'D1', 'I1', 'F1', 'N1', 'P1', 'T1', 'UEL', 'UECL'];
+let pastDb = null;
+function loadPast() {
+    if (pastDb) return pastDb;
+    pastDb = {};
+    let files = [];
+    try { files = fs.readdirSync(path.join(__dirname, 'veri')).filter(f => /^\d{4}_[A-Z0-9]+\.csv$/i.test(f)); } catch (e) { return pastDb; }
+    files.forEach(f => {
+        const key = f.slice(5, -4).toUpperCase();
+        if (!CSV_LEAGUE[key]) return;
+        try {
+            const lines = fs.readFileSync(path.join(__dirname, 'veri', f), 'latin1').replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+            const head = lines[0].split(',').map(s => s.trim()), ix = n => head.indexOf(n);
+            const iD = ix('Date'), iH = ix('HomeTeam'), iA = ix('AwayTeam'), iHG = ix('FTHG'), iAG = ix('FTAG');
+            const list = pastDb[key] || (pastDb[key] = []);
+            lines.slice(1).forEach(l => {
+                const c = l.split(','); if (!c[iH] || c[iHG] === '' || c[iAG] === '' || c[iHG] == null) return;
+                let [d, m, y] = (c[iD] || '').split('/').map(Number); if (!y) return; if (y < 100) y += 2000;
+                list.push({ d: new Date(Date.UTC(y, m - 1, d, 12)).toISOString(), h: c[iH].trim(), a: c[iA].trim(), hs: +c[iHG], as: +c[iAG], s: f.slice(0, 4) });
+            });
+        } catch (e) { console.log('CSV okunamadı:', f, e.message); }
+    });
+    const n = Object.values(pastDb).reduce((s, x) => s + x.length, 0);
+    if (n) console.log(`H2H geçmişi: veri klasöründen ${n} maç yüklendi.`);
+    return pastDb;
+}
+// Bu ligin maçları için: takım adlarını CSV adlarıyla eşleştirir, sezon başından önceki karşılaşmaları verir
+// find: iki takımın geçmiş maçları; prior: geçen sezonun puanları (bu ligin takım adlarıyla)
+function pastFinder(code, matches) {
+    const db = loadPast();
+    const keys = code === '2001' ? CLUB_CSV : Object.keys(CSV_LEAGUE).filter(k => CSV_LEAGUE[k] === code);
+    const pool = keys.flatMap(k => db[k] || []);
+    if (!pool.length || !matches.length) return { find: () => [], prior: null };
+    const seasonStart = Math.min(...matches.map(m => new Date(m.utcDate).getTime()));
+    const before = pool.filter(x => new Date(x.d).getTime() < seasonStart - 7 * 864e5);
+    const names = [...new Set(before.flatMap(x => [x.h, x.a]))];
+    const nameMap = new Map();
+    const csvName = team => {
+        if (nameMap.has(team.shortName)) return nameMap.get(team.shortName);
+        let best = null, bs = 0;
+        names.forEach(n => { const s = n === team.shortName || n === team.name ? 2 : nameScore(team, n); if (s > bs) { bs = s; best = n; } });
+        const r = bs >= 0.5 ? best : null; nameMap.set(team.shortName, r); return r;
+    };
+    const find = (homeTeam, awayTeam) => {
+        const ch = csvName(homeTeam), ca = csvName(awayTeam);
+        if (!ch || !ca || ch === ca) return [];
+        return before.filter(x => (x.h === ch && x.a === ca) || (x.h === ca && x.a === ch))
+            .map(x => ({ d: x.d, h: x.h === ch ? homeTeam.shortName : awayTeam.shortName, a: x.h === ch ? awayTeam.shortName : homeTeam.shortName, hs: x.hs, as: x.as, past: 1 }));
+    };
+    // Şampiyonlar Ligi'nde takımlar farklı liglerden; Uluslar Ligi'nde A/B/C/D grupları birbiriyle oynamaz (geçen sezon B ligindeki takım şişik görünür):
+    // bu ikisinde puanlar kıyaslanamaz, prior kullanılmaz
+    let prior = null;
+    if (code !== '2001' && code !== 'uefa.nations' && before.length) {
+        const lastS = before.reduce((m, x) => x.s > m ? x.s : m, '');
+        const p = priorRatings(before.filter(x => x.s === lastS));
+        if (p) {
+            prior = {};
+            const teams = new Map(); matches.forEach(m => { teams.set(m.homeTeam.shortName, m.homeTeam); teams.set(m.awayTeam.shortName, m.awayTeam); });
+            teams.forEach((t, sn) => { const c = csvName(t); if (c && p[c]) prior[sn] = p[c]; });
+        }
+    }
+    return { find, prior };
+}
+
 const analyzedLeague = code => cached('a' + code, liveFlag[code] ? 60e3 : 5 * 60e3, async () => {
     const data = await leagueMatches(code);
-    let ms = analyzeMatches(data.matches, loadAdjustments());
+    let ms = analyzeMatches(data.matches, loadAdjustments(), pastFinder(code, data.matches || []));
     ms = await attachMarket(code, ms);
     ms = await attachInjuries(code, ms);
     return { competition: data.competition, resultSet: data.resultSet, matches: ms };
@@ -269,7 +336,13 @@ const MAX_GOALS = 10;
 const DC_RHO = -0.08;   // Dixon-Coles düşük skor düzeltmesi (0-0 ve 1-1 biraz artar)
 const HALF_LIFE_DAYS = parseFloat(process.env.HALF_LIFE_DAYS) || 0;  // 0 = kapalı. >0 ise eski maçların ağırlığı bu kadar günde yarıya düşer
 const SHRINK = 5;       // az maçı olan takımı lig ortalamasına doğru çeker
-const FORM_WEIGHT = 0.05; // son 5 maç formunun beklenen gole etkisi (en fazla ±%5)
+const FORM_WEIGHT = parseFloat(process.env.FORM_WEIGHT || '0.05'); // sezon boyu ivmenin beklenen gole etkisi (en fazla ±%5)
+const GOAL_CAP = parseFloat(process.env.GOAL_CAP || '5');      // puan hesabında bir maçta en fazla 5 gol sayılır (7-0 gibi uç skorlar tek başına modeli bozmasın)
+const MOM_ALPHA = 0.25;   // ivme: son maçlar daha ağır, ama sezon başındaki maçlar da hesaba girer
+// Değerler backtest ile seçildi (9.115 maç, Kasım 2026): eski modele göre Brier 0.6014 -> 0.5900
+const VENUE_BLEND = parseFloat(process.env.VENUE_BLEND || '0');    // ev/deplasman ayrımının payı (0 = sadece rakibe göre ayarlı sezon puanı; saha avantajı lig ortalamasından gelir)
+const PRIOR_KEEP = parseFloat(process.env.PRIOR_KEEP || '0.8');   // geçen sezonki gücün ne kadarı taşınır (0 = hiç, 1 = tamamı; kadrolar değiştiği için kısmen)
+const H2H_WEIGHT = parseFloat(process.env.H2H_WEIGHT || '0.3'); // aralarındaki maçların (önceki sezonlar dahil) beklenen gol farkına etkisi
 
 function poissonPmf(lambda) {
     const out = [Math.exp(-lambda)];
@@ -296,7 +369,16 @@ function scoreMatrix(lh, la) {
     return m;
 }
 
-function buildTeamStats(matches, refDate) {
+// Önceki sezonun maçlarından takım puanları (prior). rows: [{h, a, hs, as}]
+function priorRatings(rows) {
+    if (!rows || rows.length < 20) return null;
+    const ms = rows.map(x => ({ utcDate: x.d, homeTeam: { shortName: x.h }, awayTeam: { shortName: x.a }, score: { fullTime: { home: x.hs, away: x.as } } }));
+    const out = {}, fr = fitRatings(ms, () => 1, null).r;
+    Object.keys(fr).forEach(k => out[k] = { att: fr[k].att, def: fr[k].def });
+    return out;
+}
+
+function buildTeamStats(matches, refDate, prior) {
     const t = {}; let hg = 0, ag = 0, n = 0; const list = [];
     const ref = refDate ? new Date(refDate).getTime() : Date.now();
     const wOf = d => HALF_LIFE_DAYS > 0 ? Math.pow(0.5, Math.max(0, (ref - new Date(d).getTime()) / 864e5) / HALF_LIFE_DAYS) : 1;
@@ -313,16 +395,57 @@ function buildTeamStats(matches, refDate) {
         H.form.push(hs > as ? 'G' : hs < as ? 'M' : 'B');
         A.form.push(as > hs ? 'G' : as < hs ? 'M' : 'B');
         const ht = match.score.halfTime && match.score.halfTime.home != null && match.score.halfTime.away != null ? match.score.halfTime.home + match.score.halfTime.away : null;
-        H.games.push({ opp: match.awayTeam.shortName, gf: hs, ga: as, home: true, ht });
-        A.games.push({ opp: match.homeTeam.shortName, gf: as, ga: hs, home: false, ht });
+        H.games.push({ d: match.utcDate, opp: match.awayTeam.shortName, gf: hs, ga: as, home: true, ht });
+        A.games.push({ d: match.utcDate, opp: match.homeTeam.shortName, gf: as, ga: hs, home: false, ht });
         list.push({ d: match.utcDate, h: match.homeTeam.shortName, a: match.awayTeam.shortName, hs, as });
         hg += hs * w; ag += as * w; n += w;
     });
-    return { teams: t, avgHome: n ? hg / n : 1.5, avgAway: n ? ag / n : 1.2, finished: list };
+    const avgHome = n ? hg / n : 1.5, avgAway = n ? ag / n : 1.2;
+    const ratings = fitRatings(finished, wOf, prior);
+    // İvme: sezon başından bugüne her maçta "beklenene göre" ne yaptı (rakibin gücü hesaba katılır), üstel ortalama
+    Object.keys(t).forEach(name => {
+        const T = t[name], R = ratings.r[name]; let mom = 0, pts = 0;
+        T.games.forEach(g => {
+            const O = ratings.r[g.opp] || { att: 1, def: 1 };
+            const xgf = (g.home ? ratings.avgH : ratings.avgA) * R.att * O.def, xga = (g.home ? ratings.avgA : ratings.avgH) * O.att * R.def;
+            const perf = Math.min(g.gf, GOAL_CAP) - Math.min(g.ga, GOAL_CAP) - (xgf - xga);
+            mom = mom * (1 - MOM_ALPHA) + perf * MOM_ALPHA;
+            pts += g.gf > g.ga ? 3 : g.gf === g.ga ? 1 : 0;
+            g.perf = +perf.toFixed(2); g.mom = +mom.toFixed(2); g.pts = pts; g.d = g.d || null;
+        });
+        T.mom = mom; T.att = R.att; T.def = R.def;
+    });
+    return { teams: t, avgHome, avgAway, finished: list };
 }
 
-const formScore = form => form.slice(-5).reduce((s, r) => s + (r === 'G' ? 3 : r === 'B' ? 1 : 0), 0);
-const formFactor = fs => 1 + Math.max(-1, Math.min(1, (fs - 7) / 8)) * FORM_WEIGHT;
+// Rakip gücüne göre ayarlı hücum/savunma puanları (sezon başından itibaren TÜM maçlar).
+// 7-0 gibi tek bir uç skor her şeyi bozmasın diye goller GOAL_CAP ile sınırlanır; az maçlı takım lig ortalamasına çekilir.
+// prior: önceki sezondan gelen puanlar (varsa). Az maç oynanmışken takım lig ortalamasına değil, geçen sezonki seviyesine çekilir.
+function fitRatings(finished, wOf, prior) {
+    const r = {}; let hg = 0, ag = 0, n = 0;
+    const pr = x => { const p = prior && prior[x]; return p ? { att: Math.pow(p.att, PRIOR_KEEP), def: Math.pow(p.def, PRIOR_KEEP) } : { att: 1, def: 1 }; };
+    const rows = finished.map(m => {
+        const w = wOf(m.utcDate), hs = Math.min(m.score.fullTime.home, GOAL_CAP), as = Math.min(m.score.fullTime.away, GOAL_CAP);
+        hg += hs * w; ag += as * w; n += w;
+        [m.homeTeam.shortName, m.awayTeam.shortName].forEach(x => r[x] || (r[x] = { att: 1, def: 1, p: pr(x) }));
+        return { h: m.homeTeam.shortName, a: m.awayTeam.shortName, hs, as, w };
+    });
+    const avgH = n ? hg / n : 1.5, avgA = n ? ag / n : 1.2, g = (avgH + avgA) / 2;
+    for (let it = 0; it < 12; it++) {
+        const acc = {};
+        Object.keys(r).forEach(x => acc[x] = { gf: 0, ef: 0, ga: 0, ea: 0 });
+        rows.forEach(({ h, a, hs, as, w }) => {
+            acc[h].gf += hs * w; acc[h].ef += avgH * r[a].def * w; acc[h].ga += as * w; acc[h].ea += avgA * r[a].att * w;
+            acc[a].gf += as * w; acc[a].ef += avgA * r[h].def * w; acc[a].ga += hs * w; acc[a].ea += avgH * r[h].att * w;
+        });
+        Object.keys(r).forEach(x => { const c = acc[x], p = r[x].p; r[x] = { att: (c.gf + SHRINK * g * p.att) / (c.ef + SHRINK * g), def: (c.ga + SHRINK * g * p.def) / (c.ea + SHRINK * g), p }; });
+        const names = Object.keys(r), ma = names.reduce((s, x) => s + Math.log(r[x].att), 0) / (names.length || 1), md = names.reduce((s, x) => s + Math.log(r[x].def), 0) / (names.length || 1);
+        names.forEach(x => { r[x].att /= Math.exp(ma); r[x].def /= Math.exp(md); });
+    }
+    return { r, avgH, avgA };
+}
+
+const momFactor = mom => 1 + Math.max(-1, Math.min(1, (mom || 0) / 1.5)) * FORM_WEIGHT;
 const clampP = x => Math.max(1, Math.min(98, x));
 const pct = x => Math.round(x * 100);
 
@@ -339,18 +462,48 @@ function teamSummary(T) {
         cs: arr.filter(x => x.ga === 0).length
     });
     const g = T.games || [];
-    return { all: part(g), home: part(g.filter(x => x.home)), away: part(g.filter(x => !x.home)), last5: g.slice(-5) };
+    // season: sezon başından bugüne tüm maçlar (ivme grafiği için kısa biçim)
+    return { all: part(g), home: part(g.filter(x => x.home)), away: part(g.filter(x => !x.home)), last5: g.slice(-5),
+        season: g.map(x => ({ d: x.d ? x.d.slice(0, 10) : null, o: x.opp, gf: x.gf, ga: x.ga, h: x.home ? 1 : 0, m: x.mom, p: x.pts })) };
 }
 
-function predictMatch(home, away, league, homeStats, awayStats, adj) {
+// Aralarındaki maçlar (bu sezon + önceki sezonlar). Ev sahibinin gözünden, saha avantajı düzeltilmiş ortalama gol farkı
+function h2hEdge(home, list, avgHome, avgAway, refMs) {
+    let sw = 0, sgd = 0;
+    const ha = avgHome - avgAway;
+    list.forEach(x => {
+        const age = Math.max(0, (refMs - new Date(x.d).getTime()) / (365 * 864e5));
+        if (age > 6) return;
+        const w = Math.pow(0.5, age / 2);   // 2 yılda ağırlık yarıya iner
+        const gd = Math.max(-GOAL_CAP, Math.min(GOAL_CAP, x.h === home ? x.hs - x.as : x.as - x.hs));
+        sgd += w * (gd + (x.h === home ? -ha : ha)); sw += w;   // deplasmanda alınan sonuç saha avantajı kadar değerli sayılır
+    });
+    return sw ? { gd: sgd / sw, n: sw } : null;
+}
+
+function predictMatch(home, away, league, homeStats, awayStats, adj, past) {
     const { avgHome, avgAway } = league;
-    const strength = (sum, cnt, avg) => (sum + SHRINK * avg) / (cnt + SHRINK) / avg;
-    const empty = { form: [], games: [], hGF: 0, hGA: 0, hN: 0, aGF: 0, aGA: 0, aN: 0 };
+    const strength = (sum, cnt, avg, prior) => (sum + SHRINK * avg * prior) / (cnt + SHRINK) / avg;
+    const empty = { form: [], games: [], hGF: 0, hGA: 0, hN: 0, aGF: 0, aGA: 0, aN: 0, att: 1, def: 1, mom: 0 };
     const H = homeStats || empty, A = awayStats || empty;
-    const homeAtt = strength(H.hGF, H.hN, avgHome), homeDef = strength(H.hGA, H.hN, avgAway);
-    const awayAtt = strength(A.aGF, A.aN, avgAway), awayDef = strength(A.aGA, A.aN, avgHome);
-    let lh = avgHome * homeAtt * awayDef * formFactor(formScore(H.form));
-    let la = avgAway * awayAtt * homeDef * formFactor(formScore(A.form));
+    const rH = { att: H.att || 1, def: H.def || 1 }, rA = { att: A.att || 1, def: A.def || 1 };
+    // Ev/deplasman ayrımı tek başına az maça dayanır: rakibe göre ayarlı sezon puanıyla harmanlanır
+    const mix = (venue, overall) => Math.exp(VENUE_BLEND * Math.log(venue) + (1 - VENUE_BLEND) * Math.log(overall));
+    const homeAtt = mix(strength(H.hGF, H.hN, avgHome, rH.att), rH.att), homeDef = mix(strength(H.hGA, H.hN, avgAway, rH.def), rH.def);
+    const awayAtt = mix(strength(A.aGF, A.aN, avgAway, rA.att), rA.att), awayDef = mix(strength(A.aGA, A.aN, avgHome, rA.def), rA.def);
+    let lh = avgHome * homeAtt * awayDef * momFactor(H.mom);
+    let la = avgAway * awayAtt * homeDef * momFactor(A.mom);
+    // H2H: aralarındaki maçlar modelin gol farkından ayrışıyorsa beklenen golleri o yöne kaydır (sınırlı)
+    const seen = new Set(), h2hAll = [...(past || []), ...(league.finished || []).filter(x => (x.h === home && x.a === away) || (x.h === away && x.a === home))]
+        .filter(x => { const k = x.d.slice(0, 10) + x.h + x.a; if (seen.has(k)) return false; seen.add(k); return true; })
+        .sort((x, y) => new Date(x.d) - new Date(y.d));
+    const refMs = (league.finished && league.finished.length) ? new Date(league.finished[league.finished.length - 1].d).getTime() : Date.now();
+    const he = h2hEdge(home, h2hAll, avgHome, avgAway, refMs);
+    let h2hShift = 0;
+    if (he && H2H_WEIGHT > 0) {
+        h2hShift = Math.max(-0.5, Math.min(0.5, H2H_WEIGHT * he.n / (he.n + 2) * (he.gd - (lh - la))));
+        lh = lh + h2hShift / 2; la = la - h2hShift / 2;
+    }
     // Elle girilen düzeltmeler (duzeltmeler.json): sakat/cezalı, hava, saha durumu gibi. Backtest EDİLMEZ.
     const notes = [];
     const cl = x => Math.max(-0.3, Math.min(0.3, +x || 0));
@@ -383,7 +536,7 @@ function predictMatch(home, away, league, homeStats, awayStats, adj) {
         ms2_kg: joint((i, j) => j > i && i > 0), ms2_kgyok: joint((i, j) => j > i && i === 0)
     };
     Object.keys(combos).forEach(k => combos[k] = clampP(pct(combos[k])));
-    const h2h = (league.finished || []).filter(x => (x.h === home && x.a === away) || (x.h === away && x.a === home)).slice(-5);
+    const h2h = h2hAll.slice(-10);
 
     let ms1 = clampP(pct(pH)), msX = clampP(pct(pD)), ms2 = 100 - ms1 - msX;
     if (ms2 < 1) { ms2 = 1; ms1 = 100 - msX - 1; }
@@ -409,20 +562,23 @@ function predictMatch(home, away, league, homeStats, awayStats, adj) {
         kgVar, kgYok: 100 - kgVar,
         home05, away05,
         adjust: notes.length ? notes : undefined,
-        combos, stats: { home: teamSummary(H), away: teamSummary(A), h2h },
+        combos, stats: { home: teamSummary(H), away: teamSummary(A), h2h, h2hEdge: he ? +he.gd.toFixed(2) : null, h2hShift: +h2hShift.toFixed(2) },
+        momentum: { home: +(H.mom || 0).toFixed(2), away: +(A.mom || 0).toFixed(2) },
         expectedHomeGoals: lh.toFixed(1), expectedAwayGoals: la.toFixed(1),
         homeForm: H.form.slice(-5).join('') || '----',
         awayForm: A.form.slice(-5).join('') || '----'
     };
 }
 
-function analyzeMatches(matches, adj) {
-    const league = buildTeamStats(matches);
+function analyzeMatches(matches, adj, past) {
+    const findPast = past && past.find;
+    const league = buildTeamStats(matches, undefined, past && past.prior);
     return matches.map(match => {
         const home = match.homeTeam.shortName;
         const away = match.awayTeam.shortName;
         if (match.status === 'FINISHED') return { ...match, prediction: null, result: `${match.score.fullTime.home} - ${match.score.fullTime.away}` };
-        return { ...match, prediction: predictMatch(home, away, league, league.teams[home], league.teams[away], adj) };
+        const past = findPast ? findPast(match.homeTeam, match.awayTeam) : [];
+        return { ...match, prediction: predictMatch(home, away, league, league.teams[home], league.teams[away], adj, past) };
     });
 }
 
@@ -530,7 +686,10 @@ function idealReasons(pick, p, h, a) {
     if (pick.evidence) pick.evidence.texts.forEach(t => r.push(t));
     else r.push('Bu iki takımın bu sezon yeterli ev/deplasman maçı yok, sadece model tahmini kullanıldı.');
     r.push(`Model: ${pick.label} %${pick.prob}` + (pick.market != null ? `, bahis şirketleri ortalaması %${pick.market}` : '') + `. Beklenen gol ${p.expectedHomeGoals} - ${p.expectedAwayGoals}.`);
-    r.push(`Son 5 maç: ${h} ${p.homeForm}, ${a} ${p.awayForm}.`);
+    const mo = p.momentum, mt = x => x >= 0.3 ? 'yükselişte' : x <= -0.3 ? 'düşüşte' : 'dengeli';
+    r.push(`Son 5 maç: ${h} ${p.homeForm}, ${a} ${p.awayForm}.` + (mo ? ` Sezon ivmesi: ${h} ${mt(mo.home)} (${mo.home > 0 ? '+' : ''}${mo.home}), ${a} ${mt(mo.away)} (${mo.away > 0 ? '+' : ''}${mo.away}).` : ''));
+    const hh = p.stats && p.stats.h2h;
+    if (hh && hh.length) { const w = hh.filter(x => (x.h === h ? x.hs - x.as : x.as - x.hs) > 0).length, l = hh.filter(x => (x.h === h ? x.hs - x.as : x.as - x.hs) < 0).length; r.push(`Aralarındaki son ${hh.length} maç: ${h} ${w} galibiyet, ${hh.length - w - l} beraberlik, ${l} mağlubiyet.`); }
     const H = p.stats && p.stats.home.home, A = p.stats && p.stats.away.away;
     if (H && A && H.htn >= 4 && A.htn >= 4) r.push(`İlk yarıda gol görülme oranı (bilgi): ${h} evde %${Math.round(H.ht05 / H.htn * 100)}, ${a} deplasmanda %${Math.round(A.ht05 / A.htn * 100)}.`);
     const inj = p.injuries;

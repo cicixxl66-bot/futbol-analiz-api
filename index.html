@@ -277,6 +277,8 @@
         .st-g { padding:0 6px; border-radius:4px; font-weight:700; font-size:.74rem; color:var(--pit); }
         .st-g.w { background:var(--green); } .st-g.d { background:var(--yellow); } .st-g.l { background:var(--red); }
         .st-h2h { font-size:.78rem; margin-top:6px; } .st-h2h > div { color:#c5d2c9; }
+        .st-h2h .st-g { display:inline-block; width:8px; height:8px; min-width:0; padding:0; border-radius:50%; margin-right:6px; vertical-align:middle; }
+        .st-h2h small { color:var(--muted); margin-right:4px; } .st-h2h-sum { margin:4px 0 6px; color:var(--muted); }
         /* ===== Yayın eklemeleri: reklam, değerli etiketi, geçmiş başarı, mobil ===== */
         .ad-slot { margin:10px 0; text-align:center; overflow:hidden; }
         .ad-label { display:block; font-size:.62rem; color:var(--muted); margin-bottom:2px; }
@@ -983,10 +985,16 @@ function renderStatsBlock(m, p) {
     const row = (name, part, label) => `<tr><td>${name} <small>${label}</small></td><td>${part.n}</td><td>${part.w}-${part.d}-${part.l}</td><td>${avg(part.gf, part.n)} / ${avg(part.ga, part.n)}</td><td>${pc(part.o25, part.n)}</td><td>${pc(part.btts, part.n)}</td><td>${pc(part.cs, part.n)}</td></tr>`;
     const last = (name, t) => t.last5.length ? `<div class="st-last"><b>${name}</b>${t.last5.map(g => `<span class="st-g ${g.gf > g.ga ? 'w' : g.gf < g.ga ? 'l' : 'd'}" title="${g.home ? 'Ev' : 'Dep'}: ${g.opp}">${g.gf}-${g.ga}</span>`).join('')}</div>` : '';
     const h = m.homeTeam.shortName, a = m.awayTeam.shortName;
-    const h2h = s.h2h.length ? s.h2h.map(x => `<div>${x.h} <b>${x.hs}-${x.as}</b> ${x.a}</div>`).join('') : '<small>Bu sezon aralarında oynanmış maç yok.</small>';
-    return `<div class="analysis-section"><div class="analysis-title">📊 İstatistikler (bu sezon)</div>
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const hh = s.h2h.slice().reverse(), hres = x => { const d = x.h === h ? x.hs - x.as : x.as - x.hs; return d > 0 ? 'w' : d < 0 ? 'l' : 'd'; };
+    const hw = hh.filter(x => hres(x) === 'w').length, hl = hh.filter(x => hres(x) === 'l').length;
+    const h2h = hh.length ? `<div class="st-h2h-sum">${esc(h)} açısından: ${hw}G ${hh.length - hw - hl}B ${hl}M${s.h2hShift ? ` · tahmine etkisi: ${s.h2hShift > 0 ? esc(h) : esc(a)} lehine ${Math.abs(s.h2hShift).toFixed(2)} gol` : ''}</div>`
+        + hh.map(x => `<div><span class="st-g ${hres(x)}"></span><small>${x.d ? new Date(x.d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</small> ${esc(x.h)} <b>${x.hs}-${x.as}</b> ${esc(x.a)}</div>`).join('')
+        : '<small>Aralarında kayıtlı maç yok.</small>';
+    return `<div class="analysis-section"><div class="analysis-title">📈 İvme grafiği (sezon başından bugüne)</div>${momChart(m)}</div>
+        <div class="analysis-section"><div class="analysis-title">📊 İstatistikler (bu sezon)</div>
         <div class="table-wrap"><table class="st-table"><thead><tr><th></th><th>Maç</th><th>G-B-M</th><th>Gol at/ye</th><th>2.5 Üst</th><th>KG Var</th><th>Gol yemeden</th></tr></thead><tbody>${row(h, s.home.home, 'evde')}${row(h, s.home.all, 'genel')}${row(a, s.away.away, 'deplasmanda')}${row(a, s.away.all, 'genel')}</tbody></table></div>
-        ${last(h, s.home)}${last(a, s.away)}<div class="st-h2h"><b>Aynı sezon karşılaşmaları</b>${h2h}</div></div>`;
+        ${last(h, s.home)}${last(a, s.away)}<div class="st-h2h"><b>Aralarındaki maçlar (önceki sezonlar dahil)</b>${h2h}</div></div>`;
 }
 
 const ALL_BET_TYPES = [
@@ -1266,7 +1274,8 @@ function hdPick(pool) {
 function hdAiLine(m) {
     const p = m.prediction, h = m.homeTeam.shortName, a = m.awayTeam.shortName, hp = hdPts(p.homeForm), ap = hdPts(p.awayForm), tg = +p.expectedHomeGoals + +p.expectedAwayGoals;
     const s1 = p.ms1 >= p.ms2 + 15 ? `${h} modele göre belirgin favori (%${p.ms1}).` : p.ms2 >= p.ms1 + 15 ? `${a} deplasmanda öne çıkıyor (%${p.ms2}).` : 'Model iki takım arasında belirgin bir fark görmüyor.';
-    const s2 = hp > ap + 3 ? `${h} son 5 maçta daha formda (${hp}-${ap} puan).` : ap > hp + 3 ? `${a} son 5 maçta daha formda (${ap}-${hp} puan).` : `Son 5 maç formları yakın (${hp}-${ap} puan).`;
+    const mo = p.momentum || { home: 0, away: 0 }, dm = mo.home - mo.away;
+    const s2 = dm >= 0.4 ? `${h} sezon boyu ivmede önde (${hp}-${ap} son 5 maç puanı).` : dm <= -0.4 ? `${a} sezon boyu ivmede önde (${ap}-${hp} son 5 maç puanı).` : `İki takımın sezon ivmesi yakın (son 5 maç: ${hp}-${ap} puan).`;
     const s3 = tg >= 3 ? `Beklenen toplam gol ${tg.toFixed(1)}: gollü bir maç bekleniyor.` : tg <= 2.2 ? `Beklenen toplam gol ${tg.toFixed(1)}: düşük skorlu bir maç bekleniyor.` : `Beklenen toplam gol ${tg.toFixed(1)}.`;
     return `${s1} ${s2} ${s3}`;
 }
@@ -1288,24 +1297,38 @@ function hdAdd(id) {
     coupon.push({ matchId: id, matchName: `${x.m.homeTeam.shortName} - ${x.m.awayTeam.shortName}`.replace(/['"]/g, ''), betType: x.best.key, betLabel: x.best.label, pickName: x.best.pick, probability: x.best.prob / 100, realProbability: x.best.prob / 100, odd: calculateBookmakerOdd(x.best.prob), leagueName: x.m._leagueName || '', resultStatus: null });
     updateCouponUI(); showToast('🎫 Kupona eklendi.');
 }
-function hdChart(m) {
-    const s = m.prediction.stats;
-    if (!s || (!s.home.last5.length && !s.away.last5.length)) return '<div class="hd-empty">Bu maç için son 5 maç verisi yok.</div>';
-    const H = s.home.last5.map(g => g.gf), A = s.away.last5.map(g => g.gf), n = Math.max(H.length, A.length, 2), max = Math.max(3, ...H, ...A);
-    const X = i => 28 + i * (272 / (n - 1)), Y = v => 128 - v / max * 108;
-    const line = (arr, col) => arr.length ? `<polyline fill="none" stroke="${col}" stroke-width="2.5" points="${arr.map((v, i) => X(i) + ',' + Y(v)).join(' ')}"/>` + arr.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="${col}"/>`).join('') : '';
-    const grid = [...Array(max + 1).keys()].map(v => `<line x1="28" x2="300" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--border)" stroke-dasharray="3 4"/><text x="10" y="${Y(v) + 4}" fill="var(--muted)" font-size="10">${v}</text>`).join('');
-    const xl = [...Array(n).keys()].map(i => `<text x="${X(i)}" y="148" fill="var(--muted)" font-size="10" text-anchor="middle">${i + 1}</text>`).join('');
-    return `<div class="hd-sub">${escH(m.homeTeam.shortName)} - ${escH(m.awayTeam.shortName)} · son 5 maçta attığı gol</div><svg viewBox="0 0 320 156" class="hd-svg">${grid}${xl}${line(H, 'var(--accent)')}${line(A, '#e9eef0')}</svg><div class="hd-legend"><span style="color:var(--accent)">● ${escH(m.homeTeam.shortName)}</span><span>● ${escH(m.awayTeam.shortName)}</span></div>`;
+// İvme grafiği: sezon başından bugüne her maçta takım beklenenin (rakibin gücüne göre) üstünde mi altında mı oynadı, üstel ortalama
+function momChart(m) {
+    const s = m.prediction && m.prediction.stats;
+    const H = (s && s.home.season) || [], A = (s && s.away.season) || [];
+    if (H.length < 2 && A.length < 2) return '<div class="hd-empty">İvme grafiği için bu sezon yeterli maç yok.</div>';
+    const n = Math.max(H.length, A.length, 2), vals = [...H, ...A].map(g => g.m || 0);
+    const lim = Math.max(1, Math.ceil(Math.max(...vals.map(Math.abs)) * 2) / 2);
+    const W = 340, L = 30, R = 8, T = 10, B = 128;
+    const X = i => L + i * ((W - L - R) / (n - 1)), Y = v => T + (lim - v) / (2 * lim) * (B - T);
+    const res = g => g.gf > g.ga ? 'G' : g.gf < g.ga ? 'M' : 'B', rc = g => g.gf > g.ga ? 'var(--green)' : g.gf < g.ga ? '#e5484d' : '#f5a623';
+    const line = (arr, col, nm) => arr.length ? `<polyline fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" points="${arr.map((g, i) => X(i) + ',' + Y(g.m || 0)).join(' ')}"/>`
+        + arr.map((g, i) => `<circle cx="${X(i)}" cy="${Y(g.m || 0)}" r="4" fill="${rc(g)}" stroke="${col}" stroke-width="1.5"><title>${escH(nm)} · ${g.d || ''} ${g.h ? 'Ev' : 'Dep'}: ${escH(g.o)} ${g.gf}-${g.ga} (${res(g)}) · ivme ${g.m > 0 ? '+' : ''}${g.m}</title></circle>`).join('') : '';
+    const ticks = [lim, lim / 2, 0, -lim / 2, -lim].map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--border)" stroke-dasharray="${v === 0 ? '0' : '3 4'}"/><text x="${L - 4}" y="${Y(v) + 3}" fill="var(--muted)" font-size="9" text-anchor="end">${v > 0 ? '+' : ''}${v}</text>`).join('');
+    const xl = [...Array(n).keys()].filter(i => n <= 12 || i % 2 === 0 || i === n - 1).map(i => `<text x="${X(i)}" y="${B + 14}" fill="var(--muted)" font-size="9" text-anchor="middle">${i + 1}</text>`).join('');
+    const hn = m.homeTeam.shortName, an = m.awayTeam.shortName, mo = m.prediction.momentum || {};
+    const tr = v => v == null ? '' : v >= 0.3 ? '↗ yükselişte' : v <= -0.3 ? '↘ düşüşte' : '→ dengeli';
+    const first = [...H, ...A].map(g => g.d).filter(Boolean).sort()[0];
+    return `<div class="hd-sub">Sezon ivmesi${first ? ' · ' + new Date(first).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) + "'dan bugüne" : ''} · ${n} maç</div>
+        <svg viewBox="0 0 ${W} ${B + 20}" class="hd-svg" role="img" aria-label="İvme grafiği">${ticks}${xl}${line(H, 'var(--accent)', hn)}${line(A, '#9aa7ad', an)}</svg>
+        <div class="hd-legend"><span style="color:var(--accent)">● ${escH(hn)} ${tr(mo.home)}</span><span style="color:#9aa7ad">● ${escH(an)} ${tr(mo.away)}</span></div>
+        <small class="hd-note">0 çizgisinin üstü: rakibin gücüne göre beklenenden iyi oynuyor. Noktalar: yeşil galibiyet, sarı beraberlik, kırmızı mağlubiyet.</small>`;
 }
+function hdChart(m) { return momChart(m); }
 function hdCompare(m) {
     const s = m.prediction.stats; if (!s || !s.home.all.n || !s.away.all.n) return '<div class="hd-empty">Karşılaştırma için yeterli maç verisi yok.</div>';
     const cap = v => Math.max(0, Math.min(100, Math.round(v)));
     const att = t => cap(t.all.gf / t.all.n / 2.5 * 100), def = t => cap(100 - t.all.ga / t.all.n / 2.5 * 100);
+    const ivm = v => cap(50 + (v || 0) / 1.5 * 50);
     const frm = f => cap(hdPts(f) / 15 * 100), hw = s.home.home.n ? cap(s.home.home.w / s.home.home.n * 100) : 0, aw = s.away.away.n ? cap(s.away.away.w / s.away.away.n * 100) : 0;
     const row = (l, a, b) => `<div class="hd-cmp"><span>${l}</span><div class="hd-2"><i class="h" style="width:${a}%"></i><em>${a}%</em></div><div class="hd-2"><i class="a" style="width:${b}%"></i><em>${b}%</em></div></div>`;
     return `<div class="hd-legend"><span style="color:var(--accent)">● ${escH(m.homeTeam.shortName)}</span><span style="color:var(--green)">● ${escH(m.awayTeam.shortName)}</span></div>`
-        + row('Hücum gücü', att(s.home), att(s.away)) + row('Savunma gücü', def(s.home), def(s.away)) + row('Son 5 maç formu', frm(m.prediction.homeForm), frm(m.prediction.awayForm)) + row('Evde / deplasmanda galibiyet', hw, aw)
+        + row('Hücum gücü', att(s.home), att(s.away)) + row('Savunma gücü', def(s.home), def(s.away)) + row('Sezon ivmesi', ivm((m.prediction.momentum || {}).home), ivm((m.prediction.momentum || {}).away)) + row('Son 5 maç formu', frm(m.prediction.homeForm), frm(m.prediction.awayForm)) + row('Evde / deplasmanda galibiyet', hw, aw)
         + '<small class="hd-note">Bu sezonun gol ortalamalarına göre 0-100 ölçeği.</small>';
 }
 function hdFacts(m) {
@@ -1315,7 +1338,8 @@ function hdFacts(m) {
     if (s && s.away.away.n) f.push(`${a} deplasmanda ${s.away.away.w}-${s.away.away.d}-${s.away.away.l} (G-B-M).`);
     f.push(p.over25 >= 55 ? `Maçta 2.5 Üst olasılığı yüksek (%${p.over25}).` : `Maçta 2.5 Alt olasılığı %${p.under25}.`);
     f.push(`Ev sahibi kazanma ihtimali %${p.ms1}.`);
-    if (s && s.h2h.length) { const x = s.h2h[s.h2h.length - 1]; f.push(`Bu sezon son karşılaşma: ${x.h} ${x.hs}-${x.as} ${x.a}.`); }
+    if (s && s.h2h.length) { const x = s.h2h[s.h2h.length - 1]; f.push(`Aralarındaki son maç (${s.h2h.length} kayıt): ${x.h} ${x.hs}-${x.as} ${x.a}.`); }
+    const mo = p.momentum; if (mo) { const t = v => v >= 0.3 ? 'yükselişte' : v <= -0.3 ? 'düşüşte' : 'dengeli'; f.unshift(`Sezon ivmesi: ${h} ${t(mo.home)}, ${a} ${t(mo.away)}.`); }
     if (p.injuries && (p.injuries.home.length || p.injuries.away.length)) f.push(`Sakat/cezalı bildirimi var (${p.injuries.home.length + p.injuries.away.length} oyuncu).`);
     return f.slice(0, 5).map(t => `<div class="hd-fact">✔ ${escH(t)}</div>`).join('');
 }
