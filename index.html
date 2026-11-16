@@ -623,7 +623,22 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .tk-ch .sc-odd { margin-left:auto; }
         .tk-tg { font-size:.78rem; padding:8px 10px; border-radius:8px; margin-bottom:12px; background:rgba(26,127,180,.14); color:var(--text); border:1px solid rgba(26,127,180,.4); }
         .tk-tg.off { background:rgba(233,200,90,.1); border-color:rgba(233,200,90,.35); }
-</style>
+        /* ===== Kayıtlı kuponlarda kategori + Bu Sezon sekmesi ===== */
+        .sc-cat { display:inline-block; margin-left:8px; padding:2px 8px; border-radius:99px; font-size:.68rem; font-weight:700; border:1px solid var(--border); vertical-align:middle; }
+        .sc-cat.cat-banko { color:var(--green); border-color:var(--green); } .sc-cat.cat-guvenilir { color:var(--accent); border-color:var(--accent); } .sc-cat.cat-riskli { color:var(--yellow); border-color:var(--yellow); } .sc-cat.cat-cilgin { color:var(--red); border-color:var(--red); }
+        .sc-legcat { color:var(--muted); font-size:.68rem; margin-left:6px; }
+        .sc-cat-tbl { margin-top:10px; padding:8px 12px; background:var(--pit); border:1px solid var(--border); border-radius:6px; }
+        .sc-cat-row { display:grid; grid-template-columns:120px 1fr 1fr; gap:8px; padding:4px 0; border-top:1px dashed var(--border); font-size:.8rem; align-items:center; } .sc-cat-row small { color:var(--muted); }
+        .sx-ctl .sc-row-label { margin-top:8px; } .sx-ctl .sc-row-label:first-child { margin-top:0; }
+        .sx-coupon { border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin:8px 0; background:var(--pit); }
+        .sx-ch { display:flex; align-items:center; gap:10px; margin-bottom:6px; } .sx-ch b { flex:1; }
+        .sx-st { font-size:.75rem; font-weight:700; } .sx-won { color:var(--green); } .sx-lost { color:var(--red); } .sx-pending { color:var(--yellow); }
+        .sx-leg { display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--border); font-size:.82rem; }
+        .sx-leg-t { flex:1; min-width:0; } .sx-leg-t small { display:block; color:var(--accent); font-size:.74rem; }
+        .sx-leg-r { text-align:right; font-weight:700; } .sx-leg-r small { display:block; color:var(--muted); font-weight:400; }
+        .sx-act { display:flex; gap:8px; margin:8px 0 4px; flex-wrap:wrap; }
+        @media (max-width:640px) { .sc-cat-row { grid-template-columns:1fr; gap:2px; } }
+    </style>
 </head>
 <body>
 
@@ -640,6 +655,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <button class="main-tab active" data-tab="home" onclick="switchMainTab('home')">⌂ Ana Sayfa</button>
     <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')">⚽ Maçlar</button>
     <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
+    <button class="main-tab" data-tab="season" onclick="switchMainTab('season')">📅 Bu Sezon</button>
     <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
     <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')">🎟 Kuponlarım</button>
     <button class="main-tab" data-tab="takip" onclick="switchMainTab('takip')">📡 Kupon Takip</button>
@@ -695,6 +711,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
 </div>
 
 <div id="perfMain" class="hd-page" style="display:none;"></div>
+<div id="seasonMain" class="hd-page" style="display:none;"></div>
 <div id="settingsMain" class="hd-page" style="display:none;"></div>
 <div id="takipMain" class="hd-page" style="display:none;"></div>
 <div id="bildirimMain" class="hd-page" style="display:none;"></div>
@@ -862,7 +879,7 @@ function retryCurrent() {
 }
 
 // Geçmiş test sonuçları (tek maç başına tutma %). null bırakılan kategori için yazı gösterilmez.
-const BACKTEST_STATS = { banko: 86, guvenilir: 79.9, riskli: null, cilgin: null };
+const BACKTEST_STATS = { banko: 83.6, guvenilir: 76.9, riskli: 62.1, cilgin: 46.9 };   // 35 lig-sezon, 8.567 maç (varsayılan türler: MS, 1.5Ü, 2.5Ü, KG Var)
 function addTargetButton() {
     const grid = document.querySelector('.auto-coupon-grid');
     if (grid && !document.getElementById('targetBtn')) grid.insertAdjacentHTML('afterend', '<button id="targetBtn" class="coupon-action-btn save-btn" style="margin-top:8px;width:100%" onclick="targetCoupon()">🎯 Hedef oranlı kupon oluştur (ayarları Kayıtlı Kuponlarım > Kasa ve Hedef bölümünde)</button>');
@@ -1181,12 +1198,13 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    ['perfMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    ['perfMain', 'seasonMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
     if (view === 'home') {
         document.getElementById('homeMain').style.display = 'block';
         renderSmartOverview();
         if (selectedTab === 'analysis') setTimeout(() => document.getElementById('smartOverview')?.scrollIntoView({behavior:'smooth',block:'start'}), 80);
     } else if (view === 'performance') { document.getElementById('perfMain').style.display = 'block'; renderPerformance(); }
+    else if (view === 'season') { document.getElementById('seasonMain').style.display = 'block'; renderSeason(); }
     else if (view === 'settings') { document.getElementById('settingsMain').style.display = 'block'; renderSettings(); }
     else if (view === 'takip') { document.getElementById('takipMain').style.display = 'block'; openTakip(); }
     else if (view === 'bildirim') { document.getElementById('bildirimMain').style.display = 'block'; renderBildirim(); nfMarkRead(); }
@@ -1384,9 +1402,103 @@ async function renderSmartOverview() {
     renderHome();
 }
 
+// ========== BU SEZON SEKMESİ ==========
+// Sadece bu sezonun maçlarıyla, 1. haftadan itibaren hafta hafta kupon tekrarı: her hafta kuponu o haftadan ÖNCEKİ sonuçlarla kurulur, sonra gerçek sonuçla karşılaştırılır.
+const SEASON_CAT_META = { banko: ['🏆 Banko', '%85+'], guvenilir: ['✅ Güvenilir', '%70-85'], riskli: ['⚡ Riskli', '%50-70'], cilgin: ['🔥 Çılgın', '%35-50'] };
+let seasonLeague = '2021', seasonLegsN = 5, seasonTypesMode = 'default', seasonData = null, seasonReq = 0;
+const seasonOpen = new Set(), seasonCache = {};
+
+function setSeasonOpt(k, v) { if (k === 'league') seasonLeague = v; else if (k === 'legs') seasonLegsN = v; else if (k === 'types') seasonTypesMode = v; seasonOpen.clear(); renderSeason(); }
+function toggleSeasonWeek(w, open) { if (open) seasonOpen.add(w); else seasonOpen.delete(w); }
+
+async function renderSeason() {
+    const el = document.getElementById('seasonMain'); if (!el) return;
+    const chip = (on, label, fn) => `<button class="filter-btn ${on ? 'active' : ''}" onclick="${fn}">${label}</button>`;
+    const typesParam = seasonTypesMode === 'mine' ? [...selectedBetTypes].join(',') : '';
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">📅</div><div><span class="tab-hero-kicker">SEZON İÇİ ANALİZ</span><h2>Bu <em>Sezon</em></h2><p>Sadece bu sezonun maçları, 1. haftadan itibaren. Her haftanın kuponu o haftadan önceki sonuçlarla kurulur, sonra gerçek sonuçla karşılaştırılır.</p></div><div class="tab-hero-art" aria-hidden="true">📈</div></section>
+        <div class="hd-panel sx-ctl">
+            <div class="sc-row-label">Lig</div><div class="sc-chips">${LEAGUES.map(l => chip(l.code === seasonLeague, `${l.flag} ${l.name}`, `setSeasonOpt('league','${l.code}')`)).join('')}</div>
+            <div class="sc-row-label">Kupon maç sayısı</div><div class="sc-chips">${[3, 5, 8].map(n => chip(n === seasonLegsN, n + ' maç', `setSeasonOpt('legs',${n})`)).join('')}</div>
+            <div class="sc-row-label">Bahis türleri</div><div class="sc-chips">${chip(seasonTypesMode === 'default', 'Varsayılan (MS, 1.5Ü, 2.5Ü, KG)', `setSeasonOpt('types','default')`)}${chip(seasonTypesMode === 'mine', 'Tahminler sekmesinde seçtiklerim', `setSeasonOpt('types','mine')`)}</div>
+        </div>
+        <div id="seasonBody"><div class="loading">Sezon verisi yükleniyor...</div></div>`;
+    const key = seasonLeague + '|' + seasonLegsN + '|' + typesParam, my = ++seasonReq;
+    try {
+        let d = seasonCache[key] && Date.now() - seasonCache[key].t < 5 * 60e3 ? seasonCache[key].d : null;
+        if (!d) {
+            const res = await apiFetch(`${API_URL}/season/${seasonLeague}?legs=${seasonLegsN}` + (typesParam ? `&types=${encodeURIComponent(typesParam)}` : ''));
+            d = await res.json(); if (d.error) throw new Error(d.error);
+            seasonCache[key] = { t: Date.now(), d };
+        }
+        if (my !== seasonReq) return;
+        seasonData = d;
+        if (d.currentWeek && !seasonOpen.size) seasonOpen.add(d.currentWeek);
+        document.getElementById('seasonBody').innerHTML = seasonBodyHtml(d);
+    } catch (e) {
+        if (my !== seasonReq) return;
+        const b = document.getElementById('seasonBody');
+        if (b) b.innerHTML = `<div class="error">⚠️ ${e && e.message ? e.message : CONN_MSG}<br><button class="filter-btn" style="margin-top:10px" onclick="renderSeason()">🔄 Tekrar dene</button></div>`;
+    }
+}
+
+function seasonBodyHtml(d) {
+    const icon = r => r === 'won' ? '✅' : r === 'lost' ? '❌' : '⏳';
+    const bar = (v, c) => `<div class="hd-bar"><i class="${c}" style="width:${Math.min(100, v)}%"></i></div>`;
+    const fmt = iso => new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    if (!d.weeks.length) return `<div class="empty-saved"><span class="emoji">📭</span><h3 style="color:var(--text);margin-bottom:8px;">Bu lig için hafta bilgisi bulunamadı</h3><p style="font-size:0.85rem;">Başka bir lig seç.</p></div>`;
+    const perf = Object.keys(SEASON_CAT_META).map(c => {
+        const [name, range] = SEASON_CAT_META[c], s = d.summary[c];
+        if (!s || !s.n) return `<div class="hd-perf"><div><b>${name}</b><small>${range}</small></div><div class="hd-note">Sonuçlanan bahis yok</div></div>`;
+        return `<div class="hd-perf"><div><b>${name}</b><small>${s.n} bahis${s.n < 30 ? ' · az örnek' : ''} · hafta kuponu ${s.couponWon}/${s.couponN}</small></div><div class="hd-perf-bars"><span>Model %${s.avgProb}</span>${bar(s.avgProb, '')}<span>Gerçek tutma %${s.hit}</span>${bar(s.hit, 'g')}</div></div>`;
+    }).join('');
+    const shownWeeks = d.currentWeek ? d.weeks.filter(w => w.w <= d.currentWeek + 1) : d.weeks;   // ileri haftalar aynı veriyle aynı tahmini verir: sadece bu hafta + gelecek hafta
+    const weeks = shownWeeks.slice().reverse().map(w => {
+        const noData = w.skipped === w.total;
+        const state = w.w === d.currentWeek ? 'Bu hafta' : (w.done === w.total ? 'Oynandı' : `${w.done}/${w.total} oynandı`);
+        const cats = Object.keys(SEASON_CAT_META).filter(c => w.cats[c]).map(c => {
+            const k = w.cats[c], pend = k.legs.some(l => !l.res);
+            const legs = k.legs.map(l => `<div class="sx-leg"><span>${icon(l.res)}</span><div class="sx-leg-t"><b>${l.m}</b><small>${l.label} → ${l.pickName} (@${l.odd.toFixed(2)})</small></div><div class="sx-leg-r">%${l.p}${l.score ? `<small>${l.score}</small>` : ''}</div></div>`).join('');
+            const st = { won: '✅ Tuttu', lost: '❌ Yattı', pending: '⏳ Bekliyor' }[k.state];
+            return `<div class="sx-coupon"><div class="sx-ch"><b>${SEASON_CAT_META[c][0]}</b><span class="sx-st sx-${k.state}">${st}</span><span class="sc-odd">${k.odd.toFixed(2)}</span></div>${legs}
+                ${pend ? `<div class="sx-act"><button class="coupon-action-btn load-btn" onclick="seasonToCoupon(${w.w},'${c}')">➕ Kupona ekle</button><button class="coupon-action-btn save-btn" onclick="seasonSave(${w.w},'${c}')">💾 Kaydet</button></div>` : ''}
+                <div class="hd-note">Bu kategoride ${k.total} bahis vardı; en yüksek olasılıklı ${k.legs.length} tanesi seçildi.${pend ? ' Kupona yalnızca henüz oynanmamış maçlar eklenir.' : ''}</div></div>`;
+        }).join('');
+        const body = noData ? `<div class="hd-note">Bu hafta için yeterli sezon verisi yok (takımların en az ${d.minGames} maçı gerekir). Model sezon başında tahmin üretmez.</div>`
+            : (cats || `<div class="hd-note">Seçili bahis türlerinde bu hafta kritere uyan maç yok.</div>`);
+        return `<details class="saved-coupon-card sc-item" ${seasonOpen.has(w.w) ? 'open' : ''} ontoggle="toggleSeasonWeek(${w.w}, this.open)">
+            <summary><span class="sc-chev"></span><div class="sc-main"><div class="sc-date">📅 Hafta ${w.w}</div><div class="sc-sub">${fmt(w.from)} – ${fmt(w.to)} · ${w.total} maç${w.skipped && !noData ? ` · ${w.skipped} maç atlandı (az veri)` : ''}</div></div><span class="sc-status status-pending">${state}</span></summary>
+            <div class="sc-body">${body}</div></details>`;
+    }).join('');
+    return `<div class="hd-panel"><div class="hd-ptitle">Bu sezon, ${d.played} oynanmış maç: kategori başına gerçek tutma</div>
+        <div class="hd-note">Her maç, kendi haftasından ÖNCE oynananlarla tahmin edildi. Sadece bu sezon kullanıldı: önceki sezon verisi ve eski sezon H2H'si yok. Model %'si ile gerçek tutma birbirine yakınsa o kategori bu sezon tutarlı çalışıyor demektir. Sezon başında örnek küçüktür.</div>${perf}</div>
+        <h3 class="hd-h2" style="font-size:1.3rem;margin-top:14px;">Hafta hafta kuponlar</h3><div class="hd-note">Geçmiş haftalar: modelin o hafta kuracağı kupon ve gerçek sonucu. Bu hafta ve gelecek hafta: şimdi kurulacak kupon.</div>${weeks}`;
+}
+
+function seasonPending(w, c) {
+    const wk = seasonData && seasonData.weeks.find(x => x.w === w), k = wk && wk.cats[c]; if (!k) return null;
+    const ln = (LEAGUES.find(l => l.code === seasonLeague) || {}).name || '';
+    return k.legs.filter(l => !l.res).map(l => ({ matchId: l.id, matchName: l.m, betType: l.k, betLabel: l.label, pickName: l.pickName, probability: l.p / 100, realProbability: l.p / 100, odd: l.odd, leagueName: ln, resultStatus: null }));
+}
+function seasonToCoupon(w, c) {
+    const legs = seasonPending(w, c);
+    if (!legs || !legs.length) { showToast('⚠️ Bu kuponun maçları oynanmış, eklenecek maç yok.'); return; }
+    coupon = legs; updateCouponUI();
+    showToast(`✅ ${legs.length} maç kupona eklendi. Tahminler sekmesinden kaydedebilirsin.`);
+}
+function seasonSave(w, c) {
+    const legs = seasonPending(w, c);
+    if (!legs || !legs.length) { showToast('⚠️ Bu kuponun maçları oynanmış, kaydedilecek maç yok.'); return; }
+    const list = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
+    const matches = legs.map(l => ({ ...l, cat: scLegCat(l) }));
+    const sc = { id: Date.now(), matches, savedAt: new Date().toISOString(), totalOdd: matches.reduce((a, x) => a * x.odd, 1), totalProb: matches.reduce((a, x) => a * x.realProbability, 1) * 100, status: 'pending', stake: BK.stake || 0, src: 'season' };
+    sc.cat = scCouponCat(matches);
+    list.unshift(sc); localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(list));
+    showToast(`💾 Kaydedildi! (${matches.length} maç · ${SC_CATS[sc.cat][0]})`); updateSavedIndicator();
+}
+
 // ========== PERFORMANS ve AYARLAR SEKMELERİ ==========
 // node backtest.js sonucunu buraya işle (Tüm tekli bahisler tablosu): [kategori, bahis sayısı, model ort. %, gerçek tutma %]
-const BACKTEST_REPORT = { n: 330, dosya: 1, cats: [['Banko (%85+)', 237, 89.0, 86.1], ['Güvenilir (%70-85)', 328, 79.8, 79.9], ['Riskli (%50-70)', 330, 64.4, 68.2], ['Çılgın (%35-50)', 330, 46.1, 44.5]], brier: [0.6107, 0.5805], fav: [50.9, 55.2] };
+const BACKTEST_REPORT = { n: 8567, dosya: 35, cats: [['Banko (%85+)', 4784, 88.6, 88.0], ['Güvenilir (%70-85)', 8567, 80.4, 79.3], ['Riskli (%50-70)', 8567, 64.8, 65.5], ['Çılgın (%35-50)', 8564, 46.9, 46.1]], brier: [0.6014, 0.5680], fav: [50.6, 55.1] };
 function renderPerformance() {
     const el = document.getElementById('perfMain'); if (!el) return;
     const list = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
@@ -1905,11 +2017,12 @@ function restoreSelectedButtons() {
 function saveCouponToSaved() {
     if (coupon.length === 0) { showToast('⚠️ Kupon boş!'); return; }
     const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
-    const newCoupon = { id: Date.now(), matches: [...coupon], savedAt: new Date().toISOString(), totalOdd: coupon.reduce((acc, c) => acc * c.odd, 1), totalProb: coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100, status: 'pending' };
+    const newCoupon = { id: Date.now(), matches: coupon.map(c => ({ ...c, cat: scLegCat(c) })), savedAt: new Date().toISOString(), totalOdd: coupon.reduce((acc, c) => acc * c.odd, 1), totalProb: coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100, status: 'pending' };
     newCoupon.stake = BK.stake || 0;
+    newCoupon.cat = scCouponCat(newCoupon.matches);
     savedList.unshift(newCoupon);
     localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(savedList));
-    showToast(`💾 Kaydedildi! (${coupon.length} maç)`);
+    showToast(`💾 Kaydedildi! (${coupon.length} maç · ${SC_CATS[newCoupon.cat][0]})`);
     updateSavedIndicator();
 }
 
@@ -1930,7 +2043,7 @@ function updateSavedIndicator() {
     document.querySelectorAll('[id^="savedIndicator"]').forEach(el => el.innerHTML = badge);
 }
 
-let savedDateFilter = 'all', savedStatusFilter = 'all';
+let savedDateFilter = 'all', savedStatusFilter = 'all', savedCatFilter = 'all';
 const savedOpenIds = new Set();
 function scDateKey(iso) { const d = new Date(iso); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function scDateLabel(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }); }
@@ -1944,6 +2057,33 @@ function scInfo(sc) {
 function pct(a, b) { return b > 0 ? Math.round(a / b * 100) : null; }
 function setSavedDate(k) { savedDateFilter = k; renderSavedCoupons(); }
 function setSavedStatus(k) { savedStatusFilter = k; renderSavedCoupons(); }
+// ========== KAYITLI KUPONLAR: KATEGORİ (Banko / Güvenilir / Riskli / Çılgın) ==========
+// Maçın kategorisi modelin o bahis için verdiği olasılığa göre; kuponun kategorisi EN ZAYIF maçına göre belirlenir.
+const SC_CATS = { banko: ['🏆 Banko', 85], guvenilir: ['✅ Güvenilir', 70], riskli: ['⚡ Riskli', 50], cilgin: ['🔥 Çılgın', 35] };   // [ad, alt sınır %]
+const scLegProb = m => ((m.realProbability || m.probability) || 0) * 100;
+const scProbCat = p => p >= 85 ? 'banko' : p >= 70 ? 'guvenilir' : p >= 50 ? 'riskli' : 'cilgin';
+const scLegCat = m => scProbCat(scLegProb(m));
+const scCouponCat = matches => scProbCat(Math.min(...matches.map(scLegProb)));
+const scCat = sc => (sc.cat && SC_CATS[sc.cat]) ? sc.cat : scCouponCat(sc.matches);   // eski kayıtlarda cat yoksa maçlardan hesaplanır
+function setSavedCat(k) { savedCatFilter = k; renderSavedCoupons(); }
+function scCatTable(list) {
+    const rows = Object.keys(SC_CATS).map(k => {
+        let cw = 0, cl = 0, lw = 0, ll = 0, ps = 0, ln = 0;
+        list.forEach(sc => {
+            const i = scInfo(sc); if (scCat(sc) === k) { if (i.state === 'won') cw++; else if (i.state === 'lost') cl++; }
+            sc.matches.forEach(m => { if (scLegCat(m) !== k) return; if (m.resultStatus === 'won') lw++; else if (m.resultStatus === 'lost') ll++; else return; ps += scLegProb(m); ln++; });
+        });
+        return { k, cw, cn: cw + cl, lw, ln, model: ln ? ps / ln : null };
+    });
+    if (!rows.some(r => r.cn || r.ln)) return '';
+    const html = rows.map(r => {
+        const lr = r.ln ? Math.round(r.lw / r.ln * 100) : null, cr = r.cn ? Math.round(r.cw / r.cn * 100) : null;
+        const lc = lr === null ? '' : (lr >= SC_CATS[r.k][1] ? 'c-green' : 'c-red');
+        return `<div class="sc-cat-row"><b>${SC_CATS[r.k][0]}</b><span>Maç: ${lr === null ? '–' : `<b class="${lc}">%${lr}</b>`} <small>${r.lw}/${r.ln}${r.ln && r.ln < 20 ? ' · az örnek' : ''}${r.ln >= 20 ? ' · model %' + Math.round(r.model) : ''}</small></span><span>Kupon: ${cr === null ? '–' : `<b>%${cr}</b>`} <small>${r.cw}/${r.cn}</small></span></div>`;
+    }).join('');
+    return `<div class="sc-cat-tbl"><div class="sc-row-label">Kategoriye göre gerçek tutma (kendi kuponların)</div>${html}<div class="hd-note">Maç = o kategorideki tek tek bahisler (yeşil: kategori alt sınırının üstünde). Kupon = kuponun kategorisi en zayıf maçına göre. 20'den az sonuçlanan bahiste yüzdeye güvenme.</div></div>`;
+}
+
 function toggleSavedOpen(id, open) { if (open) savedOpenIds.add(id); else savedOpenIds.delete(id); }
 
 function renderSavedCoupons() {
@@ -1959,9 +2099,13 @@ try { if (localStorage.getItem('futbolTema') === 'gray') document.body.classList
     const dateKeys = Object.keys(dateCounts).sort().reverse();
     if (savedDateFilter !== 'all' && !dateCounts[savedDateFilter]) savedDateFilter = 'all';
     const byDate = savedDateFilter === 'all' ? savedList : savedList.filter(sc => scDateKey(sc.savedAt) === savedDateFilter);
+    const catCounts = {}; byDate.forEach(sc => { const k = scCat(sc); catCounts[k] = (catCounts[k] || 0) + 1; });
+    if (savedCatFilter !== 'all' && !catCounts[savedCatFilter]) savedCatFilter = 'all';
+    const byCat = savedCatFilter === 'all' ? byDate : byDate.filter(sc => scCat(sc) === savedCatFilter);
+    const catBtn = (k, label, n) => `<button class="filter-btn ${savedCatFilter === k ? 'active' : ''}" onclick="setSavedCat('${k}')">${label}<small>${n}</small></button>`;
 
     let cWon = 0, cLost = 0, cPend = 0, mWon = 0, mLost = 0;
-    byDate.forEach(sc => { const i = scInfo(sc); if (i.state === 'won') cWon++; else if (i.state === 'lost') cLost++; else cPend++; mWon += i.won; mLost += i.lost; });
+    byCat.forEach(sc => { const i = scInfo(sc); if (i.state === 'won') cWon++; else if (i.state === 'lost') cLost++; else cPend++; mWon += i.won; mLost += i.lost; });
     const cRate = pct(cWon, cWon + cLost), mRate = pct(mWon, mWon + mLost);
     const rateColor = r => r === null ? '' : (r >= 50 ? 'c-green' : 'c-red');
     const dateBtn = (k, label, n) => `<button class="filter-btn ${savedDateFilter === k ? 'active' : ''}" onclick="setSavedDate('${k}')">${label}<small>${n}</small></button>`;
@@ -1969,15 +2113,16 @@ try { if (localStorage.getItem('futbolTema') === 'gray') document.body.classList
 
     toolbar.innerHTML = `<div class="sc-toolbar">
         <div><div class="sc-row-label">Kayıt tarihi</div><div class="sc-chips">${dateBtn('all', 'Tüm tarihler', savedList.length)}${dateKeys.map(k => dateBtn(k, scDateLabel(k), dateCounts[k])).join('')}</div></div>
-        <div><div class="sc-row-label">Durum</div><div class="sc-chips">${statusBtn('all', 'Tümü', byDate.length)}${statusBtn('won', '✅ Kazanan', cWon)}${statusBtn('lost', '❌ Kaybeden', cLost)}${statusBtn('pending', '⏳ Bekleyen', cPend)}</div></div>
+        <div><div class="sc-row-label">Durum</div><div class="sc-chips">${statusBtn('all', 'Tümü', byCat.length)}${statusBtn('won', '✅ Kazanan', cWon)}${statusBtn('lost', '❌ Kaybeden', cLost)}${statusBtn('pending', '⏳ Bekleyen', cPend)}</div></div>
+        <div><div class="sc-row-label">Kategori (en zayıf maça göre)</div><div class="sc-chips">${catBtn('all', 'Tümü', byDate.length)}${Object.keys(SC_CATS).map(k => catBtn(k, SC_CATS[k][0], catCounts[k] || 0)).join('')}</div></div>
         <div class="sc-stats">
             <div class="sc-stat"><b class="c-green">${cWon}</b><span>Tutan kupon</span></div>
             <div class="sc-stat"><b class="c-red">${cLost}</b><span>Kayıp kupon</span></div>
             <div class="sc-stat"><b class="${rateColor(cRate)}">${cRate === null ? '–' : '%' + cRate}</b><span>Kupon tutma · ${cWon}/${cWon + cLost} sonuçlanan</span></div>
             <div class="sc-stat"><b class="${rateColor(mRate)}">${mRate === null ? '–' : '%' + mRate}</b><span>Maç tutma · ${mWon} tuttu, ${mLost} yattı</span></div>
-        </div></div>`;
+        </div>${scCatTable(byDate)}</div>`;
 
-    const shown = savedStatusFilter === 'all' ? byDate : byDate.filter(sc => scInfo(sc).state === savedStatusFilter);
+    const shown = savedStatusFilter === 'all' ? byCat : byCat.filter(sc => scInfo(sc).state === savedStatusFilter);
     if (shown.length === 0) { container.innerHTML = `<div class="empty-saved"><h3 style="color:var(--text);margin-bottom:6px;">Bu filtrede kupon yok</h3><p style="font-size:0.85rem;">Başka bir tarih veya durum seç.</p></div>`; return; }
 
     container.innerHTML = shown.map(sc => {
@@ -1990,11 +2135,11 @@ try { if (localStorage.getItem('futbolTema') === 'gray') document.body.classList
             let matchStatus = '⏳', statusColor = 'var(--yellow)', statusLabel = 'Bekliyor';
             if (m.resultStatus === 'won') { matchStatus = '✅'; statusColor = 'var(--green)'; statusLabel = 'Tuttu'; }
             else if (m.resultStatus === 'lost') { matchStatus = '❌'; statusColor = 'var(--red)'; statusLabel = 'Yattı'; }
-            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:0.82rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. ${m.matchName}</div><div style="font-size:0.75rem;color:var(--accent);margin-top:1px;">${m.betLabel} → ${m.pickName} (@${m.odd})</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-size:0.95rem;">${matchStatus}</div><div style="font-size:0.68rem;color:${statusColor};font-weight:700;">${statusLabel}</div></div></div>`;
+            return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);"><div style="flex:1;min-width:0;"><div style="font-size:0.82rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. ${m.matchName}</div><div style="font-size:0.75rem;color:var(--accent);margin-top:1px;">${m.betLabel} → ${m.pickName} (@${m.odd})<span class="sc-legcat">${SC_CATS[scLegCat(m)][0]} %${Math.round(scLegProb(m))}</span></div></div><div style="text-align:right;flex-shrink:0;"><div style="font-size:0.95rem;">${matchStatus}</div><div style="font-size:0.68rem;color:${statusColor};font-weight:700;">${statusLabel}</div></div></div>`;
         }).join('');
         return `<details class="saved-coupon-card sc-item" ${savedOpenIds.has(sc.id) ? 'open' : ''} ontoggle="toggleSavedOpen(${sc.id}, this.open)">
             <summary><span class="sc-chev"></span>
-                <div class="sc-main"><div class="sc-date">📅 ${dt}</div><div class="sc-sub">${sc.matches.length} maç${sc.stake ? ' · ' + money(sc.stake) : ''}</div></div>
+                <div class="sc-main"><div class="sc-date">📅 ${dt}</div><div class="sc-sub">${sc.matches.length} maç${sc.stake ? ' · ' + money(sc.stake) : ''}<span class="sc-cat cat-${scCat(sc)}">${SC_CATS[scCat(sc)][0]}</span></div></div>
                 <div class="sc-counts"><span class="c-green">✅ ${info.won} tuttu</span><span class="c-red">❌ ${info.lost} yattı</span><span class="c-yellow">⏳ ${info.pending}</span>${rateHtml}</div>
                 <span class="sc-odd">${sc.totalOdd.toFixed(2)}</span>
                 <span class="sc-status status-${info.state}">${stText}</span>
@@ -2108,7 +2253,9 @@ async function autoCoupon(type) {
             OVER45: { label: '4.5 Üst', pick: 'Üst', prob: p.over45 },
             UNDER45: { label: '4.5 Alt', pick: 'Alt', prob: p.under45 },
             KG: { label: 'KG Var', pick: 'KG Var', prob: p.kgVar },
-            KG_YOK: { label: 'KG Yok', pick: 'KG Yok', prob: p.kgYok }
+            KG_YOK: { label: 'KG Yok', pick: 'KG Yok', prob: p.kgYok },
+            HOME05: { label: 'Ev 0.5 Üst', pick: homePick + ' gol atar', prob: p.home05 },
+            AWAY05: { label: 'Dep 0.5 Üst', pick: awayPick + ' gol atar', prob: p.away05 }
         };
         if (p.combos) COMBO_DEFS.forEach(d => { if (p.combos[d.pk] !== undefined) allBets[d.key] = { label: d.label, pick: d.label.replace('MS 1', homePick).replace('MS 2', awayPick), prob: p.combos[d.pk] }; });
         

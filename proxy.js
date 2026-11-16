@@ -739,6 +739,87 @@ function buildIdealCoupons(leagues, mode, nowMs) {
 }
 
 
+// ========== BU SEZON: sezon içi kupon tekrarı (walk-forward) ==========
+// Sadece bu sezonun maçları kullanılır: önceki sezon puanı ve eski sezon H2H'si YOK.
+// Her hafta, o haftanın ilk maçından ÖNCE oynanan maçlarla tahmin edilir (geleceği bilmeden), sonra gerçek sonuçla karşılaştırılır.
+const SEASON_MIN_GAMES = 3;                      // iki takımın da bu sezon en az bu kadar maçı olmalı, yoksa o maç atlanır
+const SEASON_CATS = { banko: [85, 101], guvenilir: [70, 85], riskli: [50, 70], cilgin: [35, 50] };
+const SEASON_BETS = {
+    MS1: ['MS 1', p => p.ms1], MSX: ['MS X', p => p.msX], MS2: ['MS 2', p => p.ms2],
+    DC1X: ['1X', p => p.doubleChance1X], DC12: ['12', p => p.doubleChance12], DCX2: ['X2', p => p.doubleChanceX2],
+    OVER15: ['1.5 Üst', p => p.over15], UNDER15: ['1.5 Alt', p => p.under15],
+    OVER25: ['2.5 Üst', p => p.over25], UNDER25: ['2.5 Alt', p => p.under25],
+    OVER35: ['3.5 Üst', p => p.over35], UNDER35: ['3.5 Alt', p => p.under35],
+    KG: ['KG Var', p => p.kgVar], KG_YOK: ['KG Yok', p => p.kgYok],
+    HOME05: ['Ev 0.5 Üst', p => p.home05], AWAY05: ['Dep 0.5 Üst', p => p.away05]
+};
+const SEASON_DEFAULT_TYPES = ['MS1', 'MSX', 'MS2', 'OVER15', 'OVER25', 'KG'];   // Tahminler sekmesindeki varsayılan seçimle aynı
+const seasonOdd = prob => +Math.max(1.01, 1 / (Math.min(99, Math.max(1, prob)) / 100 * 1.06)).toFixed(2);   // index.html BOOKMAKER_MARGIN (%6) ile aynı
+const seasonDone = m => m.status === 'FINISHED' && m.score && m.score.fullTime && m.score.fullTime.home !== null && m.score.fullTime.away !== null;
+function seasonPickName(k, h, a, label) {
+    if (k === 'MS1') return h; if (k === 'MS2') return a; if (k === 'MSX') return 'Beraberlik';
+    if (k === 'HOME05') return h + ' gol atar'; if (k === 'AWAY05') return a + ' gol atar';
+    if (k.startsWith('OVER')) return 'Üst'; if (k.startsWith('UNDER')) return 'Alt';
+    return label;
+}
+
+async function seasonReplay(code, types, legsN) {
+    const data = await leagueMatches(code);
+    const all = (data.matches || []).slice().sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    const weeksMap = new Map();
+    all.forEach(m => { if (!(m.matchday > 0)) return; if (!weeksMap.has(m.matchday)) weeksMap.set(m.matchday, []); weeksMap.get(m.matchday).push(m); });
+    const sum = {}; Object.keys(SEASON_CATS).forEach(c => sum[c] = { n: 0, won: 0, probSum: 0, cn: 0, cw: 0 });
+    const weeks = [], nowMs = Date.now();
+    [...weeksMap.keys()].sort((a, b) => a - b).forEach(w => {
+        const ms = weeksMap.get(w), start = new Date(ms[0].utcDate).getTime();
+        const prior = all.filter(m => seasonDone(m) && new Date(m.utcDate).getTime() < start);   // haftanın ilk maçından önceki sonuçlar
+        const league = buildTeamStats(prior, new Date(start).toISOString(), null);               // prior = null: önceki sezon etkisi yok
+        const picks = []; let skipped = 0;
+        ms.forEach(m => {
+            const h = m.homeTeam.shortName, a = m.awayTeam.shortName, H = league.teams[h], A = league.teams[a];
+            if (!H || !A || H.games.length < SEASON_MIN_GAMES || A.games.length < SEASON_MIN_GAMES) { skipped++; return; }
+            const p = predictMatch(h, a, league, H, A, null, []);
+            const fin = seasonDone(m), hs = fin ? m.score.fullTime.home : null, as = fin ? m.score.fullTime.away : null;
+            const cand = types.map(k => ({ k, label: SEASON_BETS[k][0], prob: SEASON_BETS[k][1](p) })).filter(x => x.prob != null && !isNaN(x.prob));
+            Object.keys(SEASON_CATS).forEach(c => {
+                const [lo, hi] = SEASON_CATS[c];
+                const best = cand.filter(x => x.prob >= lo && x.prob < hi).sort((x, y) => y.prob - x.prob)[0];
+                if (!best) return;
+                picks.push({ c, id: m.id, m: `${h} - ${a}`.replace(/['"]/g, ''), k: best.k, label: best.label, pickName: seasonPickName(best.k, h, a, best.label).replace(/['"]/g, ''),
+                    p: best.prob, odd: seasonOdd(best.prob), res: fin ? (betWonSrv(best.k, hs, as) ? 'won' : 'lost') : null, score: fin ? `${hs}-${as}` : null, t: m.utcDate });
+            });
+        });
+        const cats = {};
+        Object.keys(SEASON_CATS).forEach(c => {
+            const pc = picks.filter(x => x.c === c);
+            pc.forEach(x => { if (x.res) { sum[c].n++; sum[c].probSum += x.p; if (x.res === 'won') sum[c].won++; } });   // tek maç istatistiği: kategorideki TÜM bahisler
+            if (!pc.length) return;
+            const legs = pc.slice().sort((x, y) => y.p - x.p).slice(0, legsN).sort((x, y) => new Date(x.t) - new Date(y.t));   // hafta kuponu: en yüksek olasılıklı N bahis
+            const lost = legs.filter(x => x.res === 'lost').length, won = legs.filter(x => x.res === 'won').length;
+            const state = lost ? 'lost' : (won === legs.length ? 'won' : 'pending');
+            if (state !== 'pending') { sum[c].cn++; if (state === 'won') sum[c].cw++; }
+            cats[c] = { legs: legs.map(({ c: _c, ...x }) => x), odd: +legs.reduce((s, x) => s * x.odd, 1).toFixed(2), state, total: pc.length };
+        });
+        weeks.push({ w, from: ms[0].utcDate, to: ms[ms.length - 1].utcDate, total: ms.length, done: ms.filter(seasonDone).length, skipped, cats });
+    });
+    const summary = {};
+    Object.keys(sum).forEach(c => { const s = sum[c]; summary[c] = { n: s.n, won: s.won, hit: s.n ? +(s.won / s.n * 100).toFixed(1) : null, avgProb: s.n ? +(s.probSum / s.n).toFixed(1) : null, couponN: s.cn, couponWon: s.cw }; });
+    const cur = weeks.find(x => new Date(x.to).getTime() > nowMs - 12 * 3600e3) || weeks[weeks.length - 1];
+    return { code, competition: data.competition, types, legs: legsN, minGames: SEASON_MIN_GAMES, generated: new Date().toISOString(),
+        played: all.filter(seasonDone).length, currentWeek: cur ? cur.w : null, weeks, summary };
+}
+
+app.get('/api/season/:leagueId', async (req, res) => {
+    if (!okLeague(req, res)) return;
+    let types = String(req.query.types || '').split(',').filter(k => SEASON_BETS[k]);
+    if (!types.length) types = SEASON_DEFAULT_TYPES;
+    types = [...new Set(types)].sort();
+    const legsN = Math.max(1, Math.min(12, parseInt(req.query.legs) || 5));
+    try { res.json(await cached('season' + req.params.leagueId + types.join('') + legsN, 10 * 60e3, () => seasonReplay(req.params.leagueId, types, legsN))); }
+    catch (error) { res.status(502).json({ error: error.message }); }
+});
+
+
 // ---------- Telegram (yalnızca TELEGRAM_ENABLED=true ise; herkese açık sitede kapalı kalır) ----------
 const tgOff = res => res.status(403).json({ success: false, ok: false, disabled: true, error: 'Telegram bu sunucuda kapalı.' });
 
