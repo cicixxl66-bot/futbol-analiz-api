@@ -881,6 +881,7 @@ async function gameInfo(code, id) {
     const rosters = (sum && sum.rosters) || [];
     const lineup = s => { const r = rosters.find(x => x.homeAway === s); return r ? (r.roster || []).map(p => mkPlayer({ ...(p.athlete || {}), position: p.position || (p.athlete && p.athlete.position), jersey: p.jersey || (p.athlete && p.athlete.jersey) }, { starter: !!p.starter })) : []; };
     const L = { home: lineup('home'), away: lineup('away') };
+    const fmOf = s => { const r = rosters.find(x => x.homeAway === s), f = r && r.formation, d = String((f && (f.name || f.displayName)) || f || '').replace(/\D/g, ''); return d.length >= 3 ? d.split('').join('-') : null; };   // "4-2-3-1" ya da "4231" -> "4-2-3-1"
     const squadOf = async (tid, s) => {
         let sq = []; try { const d = await cached(`roster${slug}${tid}`, 6 * 3600e3, () => espnGet(`/site/v2/sports/soccer/${slug}/teams/${tid}/roster`)); sq = flatAthletes(d).filter(a => a && a.id != null).map(a => mkPlayer(a)); } catch (e) {}
         if (!sq.length) sq = L[s];
@@ -897,7 +898,7 @@ async function gameInfo(code, id) {
     return { ok: true, source: 'espn', eventId: ev.eid, finished, started: finished || isLiveStatus(m.status) || !!(state && state.state && state.state !== 'pre'),
         match: { id: m.id, home: m.homeTeam.shortName, away: m.awayTeam.shortName, utcDate: m.utcDate, status: m.status },
         lineupsKnown: H.starters.length >= 11 && A.starters.length >= 11,
-        home: { name: m.homeTeam.shortName, squad: H.squad, starters: H.starters }, away: { name: m.awayTeam.shortName, squad: A.squad, starters: A.starters }, scorers,
+        home: { name: m.homeTeam.shortName, squad: H.squad, starters: H.starters, formation: fmOf('home') }, away: { name: m.awayTeam.shortName, squad: A.squad, starters: A.starters, formation: fmOf('away') }, scorers,
         _debug: { summaryKeys: Object.keys(sum || {}), rosterTeams: rosters.length, keyEvents: ((sum && sum.keyEvents) || []).length, firstEvent: first ? JSON.stringify(first).slice(0, 280) : null } };
 }
 app.get('/api/game/info', async (req, res) => {

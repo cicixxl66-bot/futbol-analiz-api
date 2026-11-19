@@ -655,6 +655,17 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .pk-g { margin:6px 0; }
         .pk-p { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:99px; padding:5px 11px; font-size:.78rem; cursor:pointer; }
         .pk-p:hover:not(:disabled) { border-color:var(--accent); } .pk-p.on { background:var(--accent); color:#0b1410; border-color:var(--accent); font-weight:700; } .pk-p:disabled { opacity:.55; cursor:default; }
+            /* ===== Tahmin oyunu: saha ===== */
+        .pk-forms { margin:6px 0; }
+        .pk-pitch { position:relative; max-width:460px; margin:10px auto; padding:14px 6px; border-radius:12px; border:2px solid rgba(232,241,234,.45); min-height:440px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; overflow:hidden;
+            background:repeating-linear-gradient(0deg,#1f7a42 0 46px,#1b6e3b 46px 92px); }
+        .pk-pitch:before { content:''; position:absolute; left:0; right:0; top:50%; height:2px; background:rgba(255,255,255,.4); }
+        .pk-pitch:after { content:''; position:absolute; left:50%; top:50%; width:90px; height:90px; margin:-45px 0 0 -45px; border:2px solid rgba(255,255,255,.4); border-radius:50%; }
+        .pk-row { display:flex; justify-content:space-around; gap:4px; position:relative; z-index:1; }
+        .pk-slot { width:66px; background:none; border:none; color:#fff; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:0; } .pk-slot:disabled { cursor:default; }
+        .pk-sh { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); border:2px dashed rgba(255,255,255,.75); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; }
+        .pk-slot.on .pk-sh { background:var(--accent); color:#0b1410; border:2px solid #fff; } .pk-slot.act .pk-sh { box-shadow:0 0 0 3px #ffd54a; }
+        .pk-nm { font-size:.64rem; max-width:66px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 2px #000; font-weight:700; }
     </style>
 </head>
 <body>
@@ -1601,10 +1612,14 @@ function pgSave(c) {
 
 // ========== TAHMİN OYUNU: İLK 11 + KİM GOL ATAR (puanlar bu tarayıcıda saklanır, para/bahis yok) ==========
 // Puan: tahmin yapıp maç bitince +1. Gol atarsa oyuncunun puanı: forvet 3, orta saha 5, defans/kaleci 7 (kendi kalesine gol sayılmaz).
-// İlk 11: bilinen her oyuncu +1, 10/11 için +5 bonus, 11/11 için +10 bonus.
+// İlk 11: bilinen her oyuncu +1, 10/11 için +5 bonus, 11/11 için +10 bonus, formasyon doğruysa +2.
 const PK_KEY = 'futbolTahminOyunu';
 const PK_GRP = { FWD: ['Forvet', 3], MID: ['Orta saha', 5], DEF: ['Defans', 7], GK: ['Kaleci', 7] };
-let pkLeague = '2021', pkMatches = [], pkSel = null, pkInfo = null, pkMode = 'scorer', pkTeam = 'home', pkScorer = null, pkXI = new Set(), pkReq = 0, pkBusy = false;
+// Formasyonlar: kaleci dışındaki hatlar (savunma, orta saha hatları, hücum). Yuva sırası: kaleci, savunma, orta saha, forvet
+const PK_FORMS = { '4-4-2': [4, 4, 2], '4-3-3': [4, 3, 3], '4-2-3-1': [4, 2, 3, 1], '3-5-2': [3, 5, 2], '3-4-3': [3, 4, 3], '5-3-2': [5, 3, 2], '4-5-1': [4, 5, 1], '4-1-4-1': [4, 1, 4, 1], '3-4-1-2': [3, 4, 1, 2] };
+const pkLines = form => { const a = PK_FORMS[form] || PK_FORMS['4-4-2'], L = [{ g: 'GK', n: 1 }, ...a.map((n, i) => ({ g: i === 0 ? 'DEF' : i === a.length - 1 ? 'FWD' : 'MID', n }))]; let st = 0; L.forEach(l => { l.start = st; st += l.n; }); return L; };
+const pkShort = n => { const t = String(n || '').trim().split(/\s+/); return (t.length > 1 ? t[t.length - 1] : t[0]) || '?'; };
+let pkLeague = '2021', pkMatches = [], pkSel = null, pkInfo = null, pkMode = 'scorer', pkTeam = 'home', pkScorer = null, pkForm = '4-4-2', pkSlots = Array(11).fill(null), pkActive = null, pkAll = false, pkReq = 0, pkBusy = false;
 const pkEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pkSafe = s => String(s).replace(/[^0-9A-Za-z_-]/g, '');
 function pkLoad() { try { const d = JSON.parse(localStorage.getItem(PK_KEY) || '{}'); return { preds: Array.isArray(d.preds) ? d.preds : [] }; } catch (e) { return { preds: [] }; } }
@@ -1643,7 +1658,7 @@ async function renderPick() {
 }
 async function pkOpen(id) {
     const m = pkMatches.find(x => +x.id === +id); if (!m) return;
-    pkSel = m; pkInfo = null; pkScorer = null; pkXI = new Set(); pkMode = 'scorer'; pkTeam = 'home';
+    pkSel = m; pkInfo = null; pkScorer = null; pkSlots = Array(11).fill(null); pkActive = null; pkAll = false; pkForm = '4-4-2'; pkMode = 'scorer'; pkTeam = 'home';
     const p = document.getElementById('pkPanel'); if (!p) return;
     p.innerHTML = `<div class="hd-panel"><div class="loading">Kadrolar yükleniyor...</div></div>`; p.scrollIntoView({ behavior: 'smooth', block: 'start' });
     try {
@@ -1669,22 +1684,60 @@ function pkRenderPanel() {
     } else {
         const done = pkMine('xi', pkTeam), lock = pkLockXI(), T = I[pkTeam];
         body = `<div class="sc-chips" style="margin-bottom:6px">${['home', 'away'].map(k => `<button class="filter-btn ${pkTeam === k ? 'active' : ''}" onclick="pkSetTeam('${k}')">${pkEsc(I[k].name)}</button>`).join('')}</div>`;
-        body += done ? `<div class="hd-note">✅ ${pkEsc(T.name)} için ilk 11 tahminin kayıtlı (${done.picks.length} oyuncu). Maç bitince sonucu görürsün.</div>`
-            : lock ? `<div class="hd-note">⏱ İlk 11 tahmini kapandı (maçtan 1 saat önce ya da kadro açıklanınca kapanır).</div>`
-            : `<div class="hd-note">Tam 11 oyuncu seç: <b id="pkCount">${pkXI.size}</b>/11. Her doğru oyuncu +1 puan, 10/11 için +5, 11/11 için +10 bonus.</div>`;
-        const mark = id => done ? done.picks.some(x => x.id === id) : pkXI.has(id);
-        body += `<div class="pk-team">${grp(T.squad, 'pkToggleXI', mark, lock || !!done)}</div>`;
-        if (!done && !lock) body += `<div class="sx-act"><button class="coupon-action-btn save-btn" id="pkSubmitXI" onclick="pkSubmitXI()" ${pkXI.size === 11 ? '' : 'disabled'}>💾 İlk 11'i kaydet</button></div>`;
+        if (done) {
+            body += `<div class="hd-note">✅ ${pkEsc(T.name)} için ${pkEsc(done.form || '')} ilk 11 tahminin kayıtlı. Maç bitince sonucu görürsün.</div>` + pkPitchHtml(done.form || '4-4-2', done.picks.map(x => x.id), T.squad, null, false, done.picks);
+        } else {
+            const filled = pkSlots.filter(Boolean).length;
+            body += lock ? `<div class="hd-note">⏱ İlk 11 tahmini kapandı (maçtan 1 saat önce ya da kadro açıklanınca kapanır).</div>`
+                : `<div class="hd-note">Formasyonu seç, sonra sahadaki bir yuvaya tıklayıp oyuncu yerleştir. Her doğru oyuncu +1 puan, 10/11 için +5, 11/11 için +10, formasyonu bilirsen +2.</div>`;
+            body += `<div class="sc-chips pk-forms">${Object.keys(PK_FORMS).map(f => `<button class="filter-btn ${pkForm === f ? 'active' : ''}" ${lock ? 'disabled' : ''} onclick="pkSetForm('${f}')">${f}</button>`).join('')}</div>`;
+            body += pkPitchHtml(pkForm, pkSlots, T.squad, pkActive, !lock);
+            if (!lock) body += pkPickerHtml(T.squad) + `<div class="sx-act"><span class="hd-note" style="align-self:center;margin:0">${filled}/11 yerleşti</span><button class="coupon-action-btn save-btn" id="pkSubmitXI" onclick="pkSubmitXI()" ${filled === 11 ? '' : 'disabled'}>💾 İlk 11'i kaydet</button><button class="coupon-action-btn load-btn" onclick="pkClear()">🧹 Temizle</button></div>`;
+        }
     }
     p.innerHTML = `<div class="hd-panel"><div class="hd-ptitle">${pkEsc(m.homeTeam.shortName)} - ${pkEsc(m.awayTeam.shortName)}</div><div class="sc-chips" style="margin-bottom:8px">${tabBtn('scorer', '⚽ Kim gol atar')}${tabBtn('xi', '📋 İlk 11')}</div>${body}</div>`;
 }
 function pkSetMode(k) { pkMode = k; pkRenderPanel(); }
-function pkSetTeam(k) { pkTeam = k; pkXI = new Set(); pkRenderPanel(); }
+function pkSetTeam(k) { pkTeam = k; pkSlots = Array(11).fill(null); pkActive = null; pkAll = false; pkRenderPanel(); }
 function pkPickScorer(id) { if (pkLockScorer() || pkMine('scorer')) return; pkScorer = pkScorer === id ? null : id; pkRenderPanel(); }
-function pkToggleXI(id) {
-    if (pkLockXI() || pkMine('xi', pkTeam)) return;
-    if (pkXI.has(id)) pkXI.delete(id); else if (pkXI.size < 11) pkXI.add(id); else { showToast('⚠️ En fazla 11 oyuncu seçebilirsin.'); return; }
-    pkRenderPanel();
+function pkSlotGroup(i) { const L = pkLines(pkForm).find(l => i >= l.start && i < l.start + l.n); return L ? L.g : 'MID'; }
+function pkPitchHtml(form, slots, squad, active, editable, fallback) {
+    const find = id => squad.find(x => x.id === id) || (fallback || []).find(x => x.id === id) || null;
+    const rows = pkLines(form).slice().reverse().map(L => `<div class="pk-row">${Array.from({ length: L.n }, (_, k) => {
+        const i = L.start + k, pl = slots[i] ? find(slots[i]) : null;
+        return `<button class="pk-slot ${pl ? 'on' : ''} ${active === i ? 'act' : ''}" ${editable ? `onclick="pkSlot(${i})"` : 'disabled'} aria-label="${pl ? pkEsc(pl.name) : PK_GRP[L.g][0] + ' yuvası'}"><span class="pk-sh">${pl ? pkEsc(pl.jersey || '✓') : '+'}</span><span class="pk-nm">${pl ? pkEsc(pkShort(pl.name)) : PK_GRP[L.g][0]}</span></button>`;
+    }).join('')}</div>`).join('');
+    return `<div class="pk-pitch">${rows}</div>`;
+}
+function pkPickerHtml(squad) {
+    const used = new Set(pkSlots.filter(Boolean)), free = squad.filter(x => !used.has(x.id));
+    if (!free.length) return '';
+    const ag = pkActive != null ? pkSlotGroup(pkActive) : null, only = ag && !pkAll;
+    const groups = only ? [ag] : ['GK', 'DEF', 'MID', 'FWD'];
+    const chips = groups.map(g => { const ps = free.filter(x => x.grp === g); if (!ps.length) return '';
+        return `<div class="pk-g"><div class="sc-row-label">${PK_GRP[g][0]}</div><div class="sc-chips">${ps.map(x => `<button class="pk-p" onclick="pkAssign('${pkSafe(x.id)}')">${x.jersey ? pkEsc(x.jersey) + ' · ' : ''}${pkEsc(x.name)}</button>`).join('')}</div></div>`; }).join('');
+    const hint = ag ? `Seçili yuva: <b>${PK_GRP[ag][0]}</b>. Listeden oyuncuya dokun.` : 'Bir yuvaya tıkla ya da doğrudan oyuncuya dokun, uygun yuvaya kendisi yerleşir.';
+    return `<div class="pk-team"><div class="hd-note">${hint}${ag ? ` <button class="filter-btn" onclick="pkToggleAll()">${pkAll ? 'Sadece bu pozisyon' : 'Tüm oyuncuları göster'}</button>` : ''}</div>${chips || '<div class="hd-note">Bu pozisyonda başka oyuncu kalmadı. “Tüm oyuncuları göster”e bas.</div>'}</div>`;
+}
+function pkSlot(i) { if (pkLockXI() || pkMine('xi', pkTeam)) return; if (pkSlots[i]) pkSlots[i] = null; pkActive = i; pkAll = false; pkRenderPanel(); }
+function pkToggleAll() { pkAll = !pkAll; pkRenderPanel(); }
+function pkClear() { pkSlots = Array(11).fill(null); pkActive = null; pkAll = false; pkRenderPanel(); }
+function pkAssign(id) {
+    if (pkLockXI() || pkMine('xi', pkTeam) || !pkInfo) return;
+    const pl = pkInfo[pkTeam].squad.find(x => x.id === id); if (!pl || pkSlots.includes(id)) return;
+    let i = pkActive != null && !pkSlots[pkActive] ? pkActive : -1;
+    if (i < 0) for (const l of pkLines(pkForm).filter(l => l.g === pl.grp)) { for (let k = 0; k < l.n; k++) if (!pkSlots[l.start + k]) { i = l.start + k; break; } if (i >= 0) break; }
+    if (i < 0) i = pkSlots.findIndex(x => !x);
+    if (i < 0) { showToast('⚠️ Saha dolu. Birini çıkarmak için yuvasına tıkla.'); return; }
+    pkSlots[i] = id; const nx = pkSlots.findIndex(x => !x); pkActive = nx >= 0 ? nx : null; pkRenderPanel();
+}
+// Formasyon değişince yerleştirdiğin oyuncular aynı pozisyondaki yeni yuvalara taşınır
+function pkSetForm(f) {
+    if (!PK_FORMS[f] || pkLockXI() || pkMine('xi', pkTeam)) return;
+    const placed = {}; pkLines(pkForm).forEach(L => { for (let k = 0; k < L.n; k++) { const id = pkSlots[L.start + k]; if (id) (placed[L.g] = placed[L.g] || []).push(id); } });
+    pkForm = f; pkSlots = Array(11).fill(null);
+    pkLines(f).forEach(L => { for (let k = 0; k < L.n; k++) { const q = placed[L.g]; if (q && q.length) pkSlots[L.start + k] = q.shift(); } });
+    pkActive = null; pkAll = false; pkRenderPanel();
 }
 function pkAdd(pred) { const d = pkLoad(); d.preds.unshift({ id: Date.now() + '-' + Math.floor(Math.random() * 1e4), league: pkLeague, matchId: +pkSel.id, home: pkSel.homeTeam.shortName, away: pkSel.awayTeam.shortName, utcDate: pkSel.utcDate, settled: false, pts: 0, savedAt: new Date().toISOString(), ...pred }); pkSave(d); }
 function pkSubmitScorer() {
@@ -1694,18 +1747,18 @@ function pkSubmitScorer() {
     showToast(`✅ Tahmin kaydedildi: ${pl.name}`); pkRenderPanel(); pkRenderMine();
 }
 function pkSubmitXI() {
-    if (!pkInfo || pkXI.size !== 11 || pkLockXI() || pkMine('xi', pkTeam)) return;
-    const T = pkInfo[pkTeam], picks = T.squad.filter(x => pkXI.has(x.id)).map(x => ({ id: x.id, name: x.name, grp: x.grp }));
+    if (!pkInfo || pkLockXI() || pkMine('xi', pkTeam) || pkSlots.some(x => !x)) return;
+    const T = pkInfo[pkTeam], picks = pkSlots.map(id => T.squad.find(x => x.id === id)).filter(Boolean).map(x => ({ id: x.id, name: x.name, grp: x.grp, jersey: x.jersey }));
     if (picks.length !== 11) { showToast('⚠️ Seçimlerde sorun var, tekrar dene.'); return; }
-    pkAdd({ type: 'xi', side: pkTeam, picks });
-    showToast(`✅ ${T.name} ilk 11 tahmini kaydedildi`); pkXI = new Set(); pkRenderPanel(); pkRenderMine();
+    pkAdd({ type: 'xi', side: pkTeam, form: pkForm, picks });
+    showToast(`✅ ${T.name} ilk 11 tahmini kaydedildi (${pkForm})`); pkSlots = Array(11).fill(null); pkActive = null; pkRenderPanel(); pkRenderMine();
 }
 function pkRenderMine() {
     const box = document.getElementById('pickMine') || document.getElementById('pkMine'); if (!box) return;
     const d = pkLoad();
     if (!d.preds.length) { box.innerHTML = ''; return; }
     const rows = d.preds.slice(0, 40).map(p => {
-        const what = p.type === 'scorer' ? `⚽ Gol atar: <b>${pkEsc(p.picks[0].name)}</b>` : `📋 İlk 11 (${pkEsc(p.side === 'home' ? p.home : p.away)})`;
+        const what = p.type === 'scorer' ? `⚽ Gol atar: <b>${pkEsc(p.picks[0].name)}</b>` : `📋 İlk 11 ${pkEsc(p.form || '')} (${pkEsc(p.side === 'home' ? p.home : p.away)})`;
         const st = p.settled ? `<span class="${p.pts > 1 ? 'c-green' : ''}"><b>+${p.pts}</b> puan</span> <small>${pkEsc(p.note || '')}</small>` : `<span class="c-yellow">⏳ Bekliyor</span>`;
         return `<div class="pk-m"><div class="pk-mt"><b>${pkEsc(p.home)} - ${pkEsc(p.away)}</b><small>${what} · ${new Date(p.utcDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</small></div><div class="pk-res">${st}</div></div>`;
     }).join('');
@@ -1730,8 +1783,8 @@ async function pkSettle(manual) {
                 } else {
                     const st = (info[p.side] && info[p.side].starters) || [];
                     if (st.length < 11) { p.note = 'Kadro verisi alınamadı'; return; }
-                    const hits = p.picks.filter(x => st.includes(x.id)).length;
-                    p.pts = hits + (hits === 11 ? 10 : hits === 10 ? 5 : 0); p.note = `${hits}/11 doğru`; p.settled = true;
+                    const hits = p.picks.filter(x => st.includes(x.id)).length, fOk = !!(p.form && info[p.side].formation && info[p.side].formation === p.form);
+                    p.pts = hits + (hits === 11 ? 10 : hits === 10 ? 5 : 0) + (fOk ? 2 : 0); p.note = `${hits}/11 doğru` + (fOk ? ' · formasyon doğru (+2)' : ''); p.settled = true;
                 }
                 n++; pts += p.pts;
             });
