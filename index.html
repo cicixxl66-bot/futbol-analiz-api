@@ -638,6 +638,16 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .sx-leg-r { text-align:right; font-weight:700; } .sx-leg-r small { display:block; color:var(--muted); font-weight:400; }
         .sx-act { display:flex; gap:8px; margin:8px 0 4px; flex-wrap:wrap; }
         @media (max-width:640px) { .sc-cat-row { grid-template-columns:1fr; gap:2px; } }
+            /* ===== Mini oyun: penaltı ===== */
+        .pg-wrap { max-width:640px; margin:0 auto; text-align:center; }
+        .pg-score { font-family:var(--display); font-size:1.7rem; } .pg-score span { font-size:.9rem; color:var(--muted); font-family:inherit; } .pg-score b { margin:0 6px; }
+        .pg-dots { margin:4px 0 8px; letter-spacing:2px; font-size:.8rem; } .pg-dots i { margin:0 10px; color:var(--muted); font-style:normal; }
+        .pg-stage { position:relative; width:100%; max-width:560px; aspect-ratio:16/11; margin:10px auto; border-radius:10px; overflow:hidden; border:1px solid var(--border); background:linear-gradient(#0b1f2a 0 64%, #1d6b3a 64% 100%); user-select:none; touch-action:manipulation; }
+        .pg-goal { position:absolute; left:8%; width:84%; top:6%; height:56%; border:5px solid #eef2f3; border-bottom:none; border-radius:4px 4px 0 0; background-image:linear-gradient(rgba(255,255,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.16) 1px,transparent 1px); background-size:14px 14px; }
+        .pg-zone { position:absolute; background:transparent; border:1px dashed rgba(255,255,255,.18); color:#fff; font-size:1.4rem; cursor:pointer; padding:0; z-index:3; transition:background .15s; }
+        .pg-zone:hover:not(:disabled) { background:rgba(255,255,255,.16); } .pg-zone:disabled { cursor:default; }
+        .pg-keeper, .pg-ball { position:absolute; transform:translate(-50%,-50%); pointer-events:none; line-height:1; } .pg-keeper { font-size:2.4rem; z-index:2; } .pg-ball { font-size:1.7rem; z-index:4; }
+        .pg-msg { min-height:2.6em; font-weight:700; margin:6px 0; }
     </style>
 </head>
 <body>
@@ -656,6 +666,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')">⚽ Maçlar</button>
     <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
     <button class="main-tab" data-tab="season" onclick="switchMainTab('season')">📅 Bu Sezon</button>
+    <button class="main-tab" data-tab="game" onclick="switchMainTab('game')">🎮 Penaltı</button>
     <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
     <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')">🎟 Kuponlarım</button>
     <button class="main-tab" data-tab="takip" onclick="switchMainTab('takip')">📡 Kupon Takip</button>
@@ -712,6 +723,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
 
 <div id="perfMain" class="hd-page" style="display:none;"></div>
 <div id="seasonMain" class="hd-page" style="display:none;"></div>
+<div id="gameMain" class="hd-page" style="display:none;"></div>
 <div id="settingsMain" class="hd-page" style="display:none;"></div>
 <div id="takipMain" class="hd-page" style="display:none;"></div>
 <div id="bildirimMain" class="hd-page" style="display:none;"></div>
@@ -1198,12 +1210,13 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    ['perfMain', 'seasonMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    ['perfMain', 'seasonMain', 'gameMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
     if (view === 'home') {
         document.getElementById('homeMain').style.display = 'block';
         renderSmartOverview();
         if (selectedTab === 'analysis') setTimeout(() => document.getElementById('smartOverview')?.scrollIntoView({behavior:'smooth',block:'start'}), 80);
     } else if (view === 'performance') { document.getElementById('perfMain').style.display = 'block'; renderPerformance(); }
+    else if (view === 'game') { document.getElementById('gameMain').style.display = 'block'; renderGame(); }
     else if (view === 'season') { document.getElementById('seasonMain').style.display = 'block'; renderSeason(); }
     else if (view === 'settings') { document.getElementById('settingsMain').style.display = 'block'; renderSettings(); }
     else if (view === 'takip') { document.getElementById('takipMain').style.display = 'block'; openTakip(); }
@@ -1494,6 +1507,86 @@ function seasonSave(w, c) {
     sc.cat = scCouponCat(matches);
     list.unshift(sc); localStorage.setItem(SAVED_COUPONS_KEY, JSON.stringify(list));
     showToast(`💾 Kaydedildi! (${matches.length} maç · ${SC_CATS[sc.cat][0]})`); updateSavedIndicator();
+}
+
+// ========== MİNİ OYUN: PENALTI ATIŞLARI (para/bahis yok, sadece eğlence) ==========
+// 5'er atış, sırayla: önce sen şutu çekersin (köşe seç), sonra kaleci olursun (kanat seç). Berabere kalırsa seri penaltı.
+const PG_X = [17, 50, 83], PG_Y = [22, 68];                     // kale içi hedef noktaları (% olarak)
+const pgGx = x => 8 + 84 * x / 100, pgGy = y => 6 + 56 * y / 100;   // kale içi % -> sahne %
+let pg = null, pgTimer = null;
+const pgEl = id => document.getElementById(id);
+function pgStats() { try { return JSON.parse(localStorage.getItem('futbolPenalti') || '{}'); } catch (e) { return {}; } }
+function pgStore(win) { try { const b = pgStats(); b.p = (b.p || 0) + 1; b.w = (b.w || 0) + (win ? 1 : 0); localStorage.setItem('futbolPenalti', JSON.stringify(b)); } catch (e) {} }
+const pgHint = () => pg.i % 2 === 0 ? 'Sıra sende: kalede bir bölgeye tıkla ve şutunu çek. Üst köşeler kurtarılması zor ama auta gidebilir.' : 'Rakip şut çekecek: kalecin hangi yöne uçsun? Bir kanat seç.';
+function pgNew() { clearTimeout(pgTimer); pg = { me: 0, op: 0, i: 0, res: [], busy: false, over: false, msg: '' }; pg.msg = 'Penaltı atışları başlıyor! ' + pgHint(); renderGame(); }
+function pgDone() {
+    const mt = pg.res.filter(x => x.side === 'me').length, ot = pg.res.filter(x => x.side === 'op').length;
+    if (mt <= 5 && ot <= 5) {
+        if (pg.me > pg.op + (5 - ot) || pg.op > pg.me + (5 - mt)) return true;   // kalan atışlar durumu değiştiremez
+        return mt === 5 && ot === 5 && pg.me !== pg.op;
+    }
+    return mt === ot && pg.me !== pg.op;                                      // seri penaltı: her turdan sonra bakılır
+}
+function renderGame() {
+    const el = pgEl('gameMain'); if (!el) return;
+    if (!pg) { pgNew(); return; }
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎮</div><div><span class="tab-hero-kicker">MOLA VER</span><h2>Penaltı <em>Atışları</em></h2><p>Kupon hazırlarken kafa dağıt. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🥅</div></section>
+        <div class="hd-panel pg-wrap">
+            <div class="pg-score"><span>Sen</span> <b id="pgMe">0</b> - <b id="pgOp">0</b> <span>Rakip</span></div>
+            <div class="pg-dots"><span id="pgDotsMe"></span><i>•</i><span id="pgDotsOp"></span></div>
+            <div class="pg-stage" id="pgStage"><div class="pg-goal"><div id="pgZones"></div></div><div class="pg-keeper" id="pgKeeper">🧤</div><div class="pg-ball" id="pgBall">⚽</div></div>
+            <div class="pg-msg" id="pgMsg"></div><div id="pgAct"></div>
+            <div class="hd-note" id="pgStats"></div>
+        </div>`;
+    pgReset(); pgUi();
+}
+function pgReset() {
+    const b = pgEl('pgBall'), k = pgEl('pgKeeper'); if (!b || !k) return;
+    b.style.transition = k.style.transition = 'none'; b.style.left = '50%'; b.style.top = '88%'; k.style.left = '50%'; k.style.top = pgGy(66) + '%'; k.style.transform = 'translate(-50%,-50%) rotate(0deg)';
+    void b.offsetWidth;   // geçişi sıfırla
+}
+function pgUi() {
+    if (!pg || !pgEl('pgMe')) return;
+    const dots = side => { const r = pg.res.filter(x => x.side === side).map(x => x.ok ? '🟢' : '🔴'); while (r.length < 5) r.push('⚪'); return r.join(''); };
+    pgEl('pgMe').textContent = pg.me; pgEl('pgOp').textContent = pg.op; pgEl('pgDotsMe').textContent = dots('me'); pgEl('pgDotsOp').textContent = dots('op');
+    pgEl('pgMsg').textContent = pg.msg;
+    const shoot = pg.i % 2 === 0, dis = pg.busy ? 'disabled' : '';
+    pgEl('pgZones').innerHTML = pg.over ? '' : shoot
+        ? [0, 1].map(r => [0, 1, 2].map(c => `<button class="pg-zone" ${dis} style="left:${c * 33.33}%;top:${r * 50}%;width:33.33%;height:50%" aria-label="Şut: ${r ? 'alt' : 'üst'} ${['sol', 'orta', 'sağ'][c]}" onclick="pgShoot(${c},${r})"></button>`).join('')).join('')
+        : [0, 1, 2].map(c => `<button class="pg-zone pg-dive" ${dis} style="left:${c * 33.33}%;top:0;width:33.33%;height:100%" aria-label="Kaleci: ${['sol', 'orta', 'sağ'][c]}" onclick="pgSave(${c})">${['⬅', '⬆', '➡'][c]}</button>`).join('');
+    pgEl('pgAct').innerHTML = pg.over ? `<button class="coupon-action-btn save-btn" style="margin-top:10px" onclick="pgNew()">🔄 Tekrar oyna</button>` : '';
+    const s = pgStats(); pgEl('pgStats').textContent = s.p ? `Toplam ${s.p} oyun, ${s.w || 0} galibiyet.` : '';
+}
+function pgAnimate(o, done) {
+    const b = pgEl('pgBall'), k = pgEl('pgKeeper'); if (!b || !k) { done(); return; }
+    b.style.transition = 'left .45s ease-out, top .45s ease-out'; k.style.transition = 'left .4s ease-out, transform .4s ease-out';
+    const bx = o.wide ? (o.bx > 50 ? o.bx + 24 : o.bx < 50 ? o.bx - 24 : 50) : o.bx;
+    b.style.left = pgGx(bx) + '%'; b.style.top = (o.wide ? -8 : pgGy(o.by)) + '%';
+    k.style.left = pgGx(PG_X[o.kc]) + '%'; k.style.transform = `translate(-50%,-50%) rotate(${[-50, 0, 50][o.kc]}deg)`;
+    setTimeout(done, 700);
+}
+function pgResolve(side, ok, text) {
+    pg.res.push({ side, ok }); if (ok) { if (side === 'me') pg.me++; else pg.op++; }
+    pg.i++; pg.msg = text; pgUi();
+    if (pgDone()) {
+        pg.over = true; const win = pg.me > pg.op; pgStore(win);
+        pg.msg = (win ? '🏆 Kazandın! ' : '😔 Kaybettin. ') + `Skor ${pg.me}-${pg.op}.`; setTimeout(pgUi, 1200); return;
+    }
+    pgTimer = setTimeout(() => { pgReset(); pg.busy = false; pg.msg = pgHint(); pgUi(); }, 1300);
+}
+function pgShoot(c, r) {
+    if (!pg || pg.busy || pg.over || pg.i % 2) return; pg.busy = true; pgUi();
+    const kc = Math.floor(Math.random() * 3);
+    const wide = Math.random() < (r === 0 ? (c === 1 ? 0.08 : 0.16) : 0.04);
+    const saved = !wide && kc === c && Math.random() < (r === 0 ? 0.6 : 0.85);
+    pgAnimate({ bx: PG_X[c], by: PG_Y[r], wide, kc }, () => pgResolve('me', !wide && !saved, wide ? '🙈 Auta gitti!' : saved ? '🧤 Kaleci çıkardı!' : '⚽ GOOOL!'));
+}
+function pgSave(c) {
+    if (!pg || pg.busy || pg.over || !(pg.i % 2)) return; pg.busy = true; pgUi();
+    const sc = Math.floor(Math.random() * 3), sr = Math.random() < 0.45 ? 0 : 1;
+    const wide = Math.random() < (sr === 0 ? 0.14 : 0.05);
+    const saved = !wide && sc === c && Math.random() < 0.8;
+    pgAnimate({ bx: PG_X[sc], by: PG_Y[sr], wide, kc: c }, () => pgResolve('op', !wide && !saved, wide ? '😅 Rakip auta attı!' : saved ? '🧤 Harika kurtarış!' : '😬 Gol yedin...'));
 }
 
 // ========== PERFORMANS ve AYARLAR SEKMELERİ ==========
