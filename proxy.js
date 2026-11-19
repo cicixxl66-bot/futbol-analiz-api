@@ -820,6 +820,97 @@ app.get('/api/season/:leagueId', async (req, res) => {
 });
 
 
+// ========== TAHMİN OYUNU: ilk 11 + kim gol atar ==========
+// Veri kaynağı: ESPN (anahtarsız, resmi olmayan uç nokta). football-data.org ücretsiz planı kadro ve gol atan vermez.
+// Oyuncu rating verisi ücretsiz olmadığından puan pozisyona göre: forvet 3, orta saha 5, defans/kaleci 7.
+const ESPN_SLUG = { '2021': 'eng.1', '2014': 'esp.1', '2002': 'ger.1', '2019': 'ita.1', '2015': 'fra.1', '2003': 'ned.1', '2017': 'por.1', '2001': 'uefa.champions', '2016': 'eng.2', '2013': 'bra.1' };
+const gameSlug = code => isEspn(code) ? code : (ESPN_SLUG[code] || null);
+const POS_PTS = { FWD: 3, MID: 5, DEF: 7, GK: 7 };
+function posGroup(abbr, name) {
+    const a = String(abbr || name || '').toUpperCase().trim();
+    if (/^(G|GK|GOALKEEPER)/.test(a)) return 'GK';
+    if (/^(DM|CDM|AM|CAM|CM|LM|RM|M)/.test(a)) return 'MID';
+    if (/^(D|CB|CD|LB|RB|WB|LWB|RWB|SW)/.test(a)) return 'DEF';
+    if (/^(F|ST|CF|SS|LW|RW|LF|RF|W)/.test(a)) return 'FWD';
+    return 'MID';
+}
+const flatAthletes = d => ((d && d.athletes) || []).flatMap(x => x && x.items ? x.items : [x]);
+function mkPlayer(a, extra) {
+    const pos = (a && a.position) || {}, g = posGroup(pos.abbreviation, pos.name);
+    return { id: String(a.id), name: a.displayName || a.fullName || a.shortName || '?', jersey: a.jersey || '', pos: pos.abbreviation || '', grp: g, pts: POS_PTS[g], ...(extra || {}) };
+}
+// football-data maçının ESPN karşılığını bul (ESPN liglerinde maç numarası zaten ESPN etkinlik numarasıdır)
+async function espnFindEvent(slug, m) {
+    const base = new Date(m.utcDate).getTime();
+    for (const off of [0, -1, 1]) {
+        const day = new Date(base + off * 864e5).toISOString().slice(0, 10).replace(/-/g, '');
+        const sb = await cached(`sb${slug}${day}`, 30 * 60e3, () => espnGet(`/site/v2/sports/soccer/${slug}/scoreboard?dates=${day}`));
+        for (const e of (sb.events || [])) {
+            const c = e.competitions && e.competitions[0]; if (!c) continue;
+            const H = c.competitors.find(x => x.homeAway === 'home'), A = c.competitors.find(x => x.homeAway === 'away');
+            if (!H || !A) continue;
+            if (nameScore(m.homeTeam, H.team.displayName) >= 0.4 && nameScore(m.awayTeam, A.team.displayName) >= 0.4) return { eid: String(e.id), hid: String(H.team.id), aid: String(A.team.id) };
+        }
+    }
+    return null;
+}
+function parseGoals(sum, comps, hid, aid) {
+    const list = (sum && sum.keyEvents && sum.keyEvents.length ? sum.keyEvents : (comps && comps.details) || []);
+    const out = [];
+    list.forEach(e => {
+        const txt = String((e.type && (e.type.text || e.type.type)) || e.text || '').toLowerCase();
+        const isGoal = typeof e.scoringPlay === 'boolean' ? e.scoringPlay : /goal|penalty - scored/.test(txt);
+        if (!isGoal || /missed|saved|disallow|cancel|no goal/.test(txt)) return;
+        const ath = (e.participants && e.participants[0] && e.participants[0].athlete) || (e.athletesInvolved && e.athletesInvolved[0]) || null;
+        if (!ath || ath.id == null) return;
+        const tid = e.team && e.team.id != null ? String(e.team.id) : null;
+        out.push({ id: String(ath.id), name: ath.displayName || ath.fullName || '?', side: tid === hid ? 'home' : tid === aid ? 'away' : null,
+            kind: /own/.test(txt) ? 'own' : /penalty/.test(txt) ? 'pen' : 'goal', min: (e.clock && e.clock.displayValue) || '' });
+    });
+    return out;
+}
+async function gameInfo(code, id) {
+    const slug = gameSlug(code); if (!slug) throw new Error('Bu lig için oyun verisi yok.');
+    const data = await leagueMatches(code);
+    const m = (data.matches || []).find(x => String(x.id) === String(id)); if (!m) throw new Error('Maç bulunamadı.');
+    let ev;
+    if (isEspn(code)) ev = { eid: String(m.id), hid: String(m.homeTeam.id), aid: String(m.awayTeam.id) };
+    else { ev = await espnFindEvent(slug, m); if (!ev) throw new Error('Bu maç oyun veri kaynağında bulunamadı.'); }
+    let sum = null; try { sum = await espnGet(`/site/v2/sports/soccer/${slug}/summary?event=${ev.eid}`); } catch (e) {}
+    const comps = sum && sum.header && sum.header.competitions && sum.header.competitions[0];
+    const rosters = (sum && sum.rosters) || [];
+    const lineup = s => { const r = rosters.find(x => x.homeAway === s); return r ? (r.roster || []).map(p => mkPlayer({ ...(p.athlete || {}), position: p.position || (p.athlete && p.athlete.position), jersey: p.jersey || (p.athlete && p.athlete.jersey) }, { starter: !!p.starter })) : []; };
+    const L = { home: lineup('home'), away: lineup('away') };
+    const squadOf = async (tid, s) => {
+        let sq = []; try { const d = await cached(`roster${slug}${tid}`, 6 * 3600e3, () => espnGet(`/site/v2/sports/soccer/${slug}/teams/${tid}/roster`)); sq = flatAthletes(d).filter(a => a && a.id != null).map(a => mkPlayer(a)); } catch (e) {}
+        if (!sq.length) sq = L[s];
+        const starters = L[s].filter(p => p.starter).map(p => p.id);
+        const ss = new Set(starters);
+        return { squad: sq.map(p => ({ ...p, starter: ss.has(p.id) })), starters };
+    };
+    const [H, A] = [await squadOf(ev.hid, 'home'), await squadOf(ev.aid, 'away')];
+    if (!H.squad.length && !A.squad.length) throw new Error('Bu maç için kadro verisi henüz yok.');
+    const state = comps && comps.status && comps.status.type;
+    const finished = m.status === 'FINISHED' || !!(state && (state.completed === true || state.state === 'post'));
+    const scorers = parseGoals(sum, comps, ev.hid, ev.aid);
+    const first = (sum && sum.keyEvents && sum.keyEvents[0]) || null;
+    return { ok: true, source: 'espn', eventId: ev.eid, finished, started: finished || isLiveStatus(m.status) || !!(state && state.state && state.state !== 'pre'),
+        match: { id: m.id, home: m.homeTeam.shortName, away: m.awayTeam.shortName, utcDate: m.utcDate, status: m.status },
+        lineupsKnown: H.starters.length >= 11 && A.starters.length >= 11,
+        home: { name: m.homeTeam.shortName, squad: H.squad, starters: H.starters }, away: { name: m.awayTeam.shortName, squad: A.squad, starters: A.starters }, scorers,
+        _debug: { summaryKeys: Object.keys(sum || {}), rosterTeams: rosters.length, keyEvents: ((sum && sum.keyEvents) || []).length, firstEvent: first ? JSON.stringify(first).slice(0, 280) : null } };
+}
+app.get('/api/game/info', async (req, res) => {
+    const code = String(req.query.league || ''), id = String(req.query.id || '');
+    if (!LEAGUE_CODES.includes(code) || !/^\d+$/.test(id)) { res.status(400).json({ error: 'Geçersiz istek' }); return; }
+    try {
+        const data = await leagueMatches(code), m = (data.matches || []).find(x => String(x.id) === id);
+        const ttl = !m ? 60e3 : m.status === 'FINISHED' ? 3600e3 : isLiveStatus(m.status) ? 30e3 : 5 * 60e3;
+        res.json(await cached('game' + code + id, ttl, () => gameInfo(code, id)));
+    } catch (error) { res.status(502).json({ error: error.message }); }
+});
+
+
 // ---------- Telegram (yalnızca TELEGRAM_ENABLED=true ise; herkese açık sitede kapalı kalır) ----------
 const tgOff = res => res.status(403).json({ success: false, ok: false, disabled: true, error: 'Telegram bu sunucuda kapalı.' });
 

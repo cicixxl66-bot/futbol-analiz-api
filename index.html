@@ -648,6 +648,13 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .pg-zone:hover:not(:disabled) { background:rgba(255,255,255,.16); } .pg-zone:disabled { cursor:default; }
         .pg-keeper, .pg-ball { position:absolute; transform:translate(-50%,-50%); pointer-events:none; line-height:1; } .pg-keeper { font-size:2.4rem; z-index:2; } .pg-ball { font-size:1.7rem; z-index:4; }
         .pg-msg { min-height:2.6em; font-weight:700; margin:6px 0; }
+            /* ===== Tahmin oyunu ===== */
+        .pk-m { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px dashed var(--border); } .pk-m:first-of-type { border-top:none; }
+        .pk-mt { flex:1; min-width:0; } .pk-mt b { display:block; font-size:.9rem; } .pk-mt small { color:var(--muted); font-size:.74rem; } .pk-res { text-align:right; font-size:.82rem; } .pk-res small { display:block; color:var(--muted); }
+        .pk-team { margin:10px 0; padding:8px 10px; background:var(--pit); border:1px solid var(--border); border-radius:8px; } .pk-team > b { display:block; margin-bottom:4px; }
+        .pk-g { margin:6px 0; }
+        .pk-p { background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:99px; padding:5px 11px; font-size:.78rem; cursor:pointer; }
+        .pk-p:hover:not(:disabled) { border-color:var(--accent); } .pk-p.on { background:var(--accent); color:#0b1410; border-color:var(--accent); font-weight:700; } .pk-p:disabled { opacity:.55; cursor:default; }
     </style>
 </head>
 <body>
@@ -666,6 +673,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')">⚽ Maçlar</button>
     <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
     <button class="main-tab" data-tab="season" onclick="switchMainTab('season')">📅 Bu Sezon</button>
+    <button class="main-tab" data-tab="pick" onclick="switchMainTab('pick')">🎯 Tahmin Oyunu</button>
     <button class="main-tab" data-tab="game" onclick="switchMainTab('game')">🎮 Penaltı</button>
     <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
     <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')">🎟 Kuponlarım</button>
@@ -724,6 +732,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
 <div id="perfMain" class="hd-page" style="display:none;"></div>
 <div id="seasonMain" class="hd-page" style="display:none;"></div>
 <div id="gameMain" class="hd-page" style="display:none;"></div>
+<div id="pickMain" class="hd-page" style="display:none;"></div>
 <div id="settingsMain" class="hd-page" style="display:none;"></div>
 <div id="takipMain" class="hd-page" style="display:none;"></div>
 <div id="bildirimMain" class="hd-page" style="display:none;"></div>
@@ -1210,12 +1219,13 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    ['perfMain', 'seasonMain', 'gameMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    ['perfMain', 'seasonMain', 'gameMain', 'pickMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
     if (view === 'home') {
         document.getElementById('homeMain').style.display = 'block';
         renderSmartOverview();
         if (selectedTab === 'analysis') setTimeout(() => document.getElementById('smartOverview')?.scrollIntoView({behavior:'smooth',block:'start'}), 80);
     } else if (view === 'performance') { document.getElementById('perfMain').style.display = 'block'; renderPerformance(); }
+    else if (view === 'pick') { document.getElementById('pickMain').style.display = 'block'; renderPick(); }
     else if (view === 'game') { document.getElementById('gameMain').style.display = 'block'; renderGame(); }
     else if (view === 'season') { document.getElementById('seasonMain').style.display = 'block'; renderSeason(); }
     else if (view === 'settings') { document.getElementById('settingsMain').style.display = 'block'; renderSettings(); }
@@ -1587,6 +1597,148 @@ function pgSave(c) {
     const wide = Math.random() < (sr === 0 ? 0.14 : 0.05);
     const saved = !wide && sc === c && Math.random() < 0.8;
     pgAnimate({ bx: PG_X[sc], by: PG_Y[sr], wide, kc: c }, () => pgResolve('op', !wide && !saved, wide ? '😅 Rakip auta attı!' : saved ? '🧤 Harika kurtarış!' : '😬 Gol yedin...'));
+}
+
+// ========== TAHMİN OYUNU: İLK 11 + KİM GOL ATAR (puanlar bu tarayıcıda saklanır, para/bahis yok) ==========
+// Puan: tahmin yapıp maç bitince +1. Gol atarsa oyuncunun puanı: forvet 3, orta saha 5, defans/kaleci 7 (kendi kalesine gol sayılmaz).
+// İlk 11: bilinen her oyuncu +1, 10/11 için +5 bonus, 11/11 için +10 bonus.
+const PK_KEY = 'futbolTahminOyunu';
+const PK_GRP = { FWD: ['Forvet', 3], MID: ['Orta saha', 5], DEF: ['Defans', 7], GK: ['Kaleci', 7] };
+let pkLeague = '2021', pkMatches = [], pkSel = null, pkInfo = null, pkMode = 'scorer', pkTeam = 'home', pkScorer = null, pkXI = new Set(), pkReq = 0, pkBusy = false;
+const pkEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pkSafe = s => String(s).replace(/[^0-9A-Za-z_-]/g, '');
+function pkLoad() { try { const d = JSON.parse(localStorage.getItem(PK_KEY) || '{}'); return { preds: Array.isArray(d.preds) ? d.preds : [] }; } catch (e) { return { preds: [] }; } }
+function pkSave(d) { try { localStorage.setItem(PK_KEY, JSON.stringify(d)); } catch (e) {} }
+function pkRank(p) { return p >= 160 ? '🏆 Efsane' : p >= 80 ? '🎓 Teknik Direktör' : p >= 30 ? '📊 Analist' : p >= 10 ? '🎽 Taraftar' : '🌱 Çaylak'; }
+const pkTotals = d => { let pts = 0, n = 0, open = 0; d.preds.forEach(p => { if (p.settled) { pts += p.pts; n++; } else open++; }); return { pts, n, open }; };
+// kilit: gol tahmini maç başlayana kadar, ilk 11 maçtan 1 saat önce ya da kadro açıklanınca kapanır
+const pkKickoff = () => pkSel ? new Date(pkSel.utcDate).getTime() : 0;
+const pkLockScorer = () => Date.now() >= pkKickoff() || !!(pkInfo && pkInfo.started);
+const pkLockXI = () => Date.now() >= pkKickoff() - 3600e3 || !!(pkInfo && (pkInfo.lineupsKnown || pkInfo.started));
+
+function setPkLeague(c) { pkLeague = c; pkSel = null; pkInfo = null; renderPick(); }
+async function renderPick() {
+    const el = document.getElementById('pickMain'); if (!el) return;
+    const d = pkLoad(), t = pkTotals(d);
+    const chip = (on, label, fn) => `<button class="filter-btn ${on ? 'active' : ''}" onclick="${fn}">${label}</button>`;
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎯</div><div><span class="tab-hero-kicker">PUANLI OYUN</span><h2>Tahmin <em>Oyunu</em></h2><p>İlk 11'i tahmin et, kim gol atar seç. Doğru bildikçe puan topla. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🏅</div></section>
+        <div class="hd-panel"><div class="hd-stats4"><div class="sc-stat"><b>${t.pts}</b><span>Toplam puan</span></div><div class="sc-stat"><b>${pkRank(t.pts)}</b><span>Rütben</span></div><div class="sc-stat"><b>${t.n}</b><span>Sonuçlanan tahmin</span></div><div class="sc-stat"><b>${t.open}</b><span>Bekleyen tahmin</span></div></div>
+        <div class="hd-note" style="margin-top:8px">Puanlar sadece bu tarayıcıda saklanır. Oyuncu rating verisi ücretsiz olmadığı için puan pozisyona göre verilir: forvet 3, orta saha 5, defans ve kaleci 7. Tahmin yapıp maç bitince +1 puan da alırsın.</div></div>
+        <div class="hd-panel sx-ctl"><div class="sc-row-label">Lig</div><div class="sc-chips">${LEAGUES.map(l => chip(l.code === pkLeague, `${l.flag} ${l.name}`, `setPkLeague('${l.code}')`)).join('')}</div></div>
+        <div id="pkMatches"><div class="loading">Maçlar yükleniyor...</div></div>
+        <div id="pkPanel"></div>
+        <div id="pkMine"></div>`;
+    pkRenderMine();
+    const my = ++pkReq;
+    try {
+        const res = await apiFetch(`${API_URL}/matches/${pkLeague}`); const data = await res.json();
+        if (my !== pkReq) return;
+        const now = Date.now();
+        pkMatches = (data.matches || []).filter(m => (m.status === 'TIMED' || m.status === 'SCHEDULED') && new Date(m.utcDate).getTime() > now && new Date(m.utcDate).getTime() < now + 7 * 864e5).sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate)).slice(0, 24);
+        const box = document.getElementById('pkMatches'); if (!box) return;
+        box.innerHTML = pkMatches.length ? `<div class="hd-panel"><div class="hd-ptitle">Önümüzdeki 7 günün maçları</div>${pkMatches.map(m => `<div class="pk-m"><div class="pk-mt"><b>${pkEsc(m.homeTeam.shortName)} - ${pkEsc(m.awayTeam.shortName)}</b><small>${new Date(m.utcDate).toLocaleString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div><button class="coupon-action-btn save-btn" onclick="pkOpen(${+m.id})">🎯 Oyna</button></div>`).join('')}</div>`
+            : `<div class="empty-saved"><span class="emoji">📭</span><h3 style="color:var(--text);margin-bottom:8px;">Önümüzdeki 7 günde maç yok</h3><p style="font-size:0.85rem;">Başka bir lig seç.</p></div>`;
+    } catch (e) { if (my !== pkReq) return; const b = document.getElementById('pkMatches'); if (b) b.innerHTML = `<div class="error">⚠️ ${pkEsc(e && e.message ? e.message : CONN_MSG)}<br><button class="filter-btn" style="margin-top:10px" onclick="renderPick()">🔄 Tekrar dene</button></div>`; }
+    pkSettle(false);
+}
+async function pkOpen(id) {
+    const m = pkMatches.find(x => +x.id === +id); if (!m) return;
+    pkSel = m; pkInfo = null; pkScorer = null; pkXI = new Set(); pkMode = 'scorer'; pkTeam = 'home';
+    const p = document.getElementById('pkPanel'); if (!p) return;
+    p.innerHTML = `<div class="hd-panel"><div class="loading">Kadrolar yükleniyor...</div></div>`; p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+        const res = await apiFetch(`${API_URL}/game/info?league=${encodeURIComponent(pkLeague)}&id=${+m.id}`); const d = await res.json();
+        if (d.error) throw new Error(d.error);
+        if (!pkSel || +pkSel.id !== +id) return;
+        pkInfo = d; pkRenderPanel();
+    } catch (e) { p.innerHTML = `<div class="hd-panel"><div class="error">⚠️ ${pkEsc(e && e.message ? e.message : CONN_MSG)}<br><small>Bu maç için kadro verisi alınamadı. Başka bir maç dene.</small></div></div>`; }
+}
+function pkMine(type, side) { return pkLoad().preds.find(p => p.matchId === +pkSel.id && p.league === pkLeague && p.type === type && (type === 'scorer' || p.side === side)); }
+function pkRenderPanel() {
+    const p = document.getElementById('pkPanel'); if (!p || !pkSel || !pkInfo) return;
+    const m = pkSel, I = pkInfo, tabBtn = (k, l) => `<button class="filter-btn ${pkMode === k ? 'active' : ''}" onclick="pkSetMode('${k}')">${l}</button>`;
+    const grp = (list, pickFn, isOn, dis) => ['FWD', 'MID', 'DEF', 'GK'].map(g => { const ps = list.filter(x => x.grp === g); if (!ps.length) return '';
+        return `<div class="pk-g"><div class="sc-row-label">${PK_GRP[g][0]} · ${PK_GRP[g][1]} puan</div><div class="sc-chips">${ps.map(x => `<button class="pk-p ${isOn(x.id) ? 'on' : ''}" ${dis ? 'disabled' : ''} onclick="${pickFn}('${pkSafe(x.id)}')">${x.jersey ? pkEsc(x.jersey) + ' · ' : ''}${pkEsc(x.name)}</button>`).join('')}</div></div>`; }).join('');
+    let body = '';
+    if (pkMode === 'scorer') {
+        const done = pkMine('scorer'), lock = pkLockScorer();
+        const side = (key, name) => `<div class="pk-team"><b>${pkEsc(name)}</b>${grp(I[key].squad, 'pkPickScorer', id => pkScorer === id || (done && done.picks[0].id === id), lock || !!done)}</div>`;
+        body = done ? `<div class="hd-note">✅ Bu maç için tahminin: <b>${pkEsc(done.picks[0].name)}</b> (gol atarsa ${done.picks[0].pts} puan). Sonuç için maç bitince bu sekmeyi aç.</div>` : lock ? `<div class="hd-note">⏱ Maç başladı, tahmin kapalı.</div>` : `<div class="hd-note">Maçta gol atacağını düşündüğün oyuncuyu seç. Forvet 3, orta saha 5, defans ve kaleci 7 puan.</div>`;
+        body += side('home', I.home.name) + side('away', I.away.name);
+        if (!done && !lock) body += `<div class="sx-act"><button class="coupon-action-btn save-btn" onclick="pkSubmitScorer()" ${pkScorer ? '' : 'disabled'}>💾 Tahmini kaydet</button></div>`;
+    } else {
+        const done = pkMine('xi', pkTeam), lock = pkLockXI(), T = I[pkTeam];
+        body = `<div class="sc-chips" style="margin-bottom:6px">${['home', 'away'].map(k => `<button class="filter-btn ${pkTeam === k ? 'active' : ''}" onclick="pkSetTeam('${k}')">${pkEsc(I[k].name)}</button>`).join('')}</div>`;
+        body += done ? `<div class="hd-note">✅ ${pkEsc(T.name)} için ilk 11 tahminin kayıtlı (${done.picks.length} oyuncu). Maç bitince sonucu görürsün.</div>`
+            : lock ? `<div class="hd-note">⏱ İlk 11 tahmini kapandı (maçtan 1 saat önce ya da kadro açıklanınca kapanır).</div>`
+            : `<div class="hd-note">Tam 11 oyuncu seç: <b id="pkCount">${pkXI.size}</b>/11. Her doğru oyuncu +1 puan, 10/11 için +5, 11/11 için +10 bonus.</div>`;
+        const mark = id => done ? done.picks.some(x => x.id === id) : pkXI.has(id);
+        body += `<div class="pk-team">${grp(T.squad, 'pkToggleXI', mark, lock || !!done)}</div>`;
+        if (!done && !lock) body += `<div class="sx-act"><button class="coupon-action-btn save-btn" id="pkSubmitXI" onclick="pkSubmitXI()" ${pkXI.size === 11 ? '' : 'disabled'}>💾 İlk 11'i kaydet</button></div>`;
+    }
+    p.innerHTML = `<div class="hd-panel"><div class="hd-ptitle">${pkEsc(m.homeTeam.shortName)} - ${pkEsc(m.awayTeam.shortName)}</div><div class="sc-chips" style="margin-bottom:8px">${tabBtn('scorer', '⚽ Kim gol atar')}${tabBtn('xi', '📋 İlk 11')}</div>${body}</div>`;
+}
+function pkSetMode(k) { pkMode = k; pkRenderPanel(); }
+function pkSetTeam(k) { pkTeam = k; pkXI = new Set(); pkRenderPanel(); }
+function pkPickScorer(id) { if (pkLockScorer() || pkMine('scorer')) return; pkScorer = pkScorer === id ? null : id; pkRenderPanel(); }
+function pkToggleXI(id) {
+    if (pkLockXI() || pkMine('xi', pkTeam)) return;
+    if (pkXI.has(id)) pkXI.delete(id); else if (pkXI.size < 11) pkXI.add(id); else { showToast('⚠️ En fazla 11 oyuncu seçebilirsin.'); return; }
+    pkRenderPanel();
+}
+function pkAdd(pred) { const d = pkLoad(); d.preds.unshift({ id: Date.now() + '-' + Math.floor(Math.random() * 1e4), league: pkLeague, matchId: +pkSel.id, home: pkSel.homeTeam.shortName, away: pkSel.awayTeam.shortName, utcDate: pkSel.utcDate, settled: false, pts: 0, savedAt: new Date().toISOString(), ...pred }); pkSave(d); }
+function pkSubmitScorer() {
+    if (!pkInfo || !pkScorer || pkLockScorer() || pkMine('scorer')) return;
+    const pl = [...pkInfo.home.squad.map(x => ({ ...x, side: 'home' })), ...pkInfo.away.squad.map(x => ({ ...x, side: 'away' }))].find(x => x.id === pkScorer); if (!pl) return;
+    pkAdd({ type: 'scorer', picks: [{ id: pl.id, name: pl.name, grp: pl.grp, pts: pl.pts, side: pl.side }] });
+    showToast(`✅ Tahmin kaydedildi: ${pl.name}`); pkRenderPanel(); pkRenderMine();
+}
+function pkSubmitXI() {
+    if (!pkInfo || pkXI.size !== 11 || pkLockXI() || pkMine('xi', pkTeam)) return;
+    const T = pkInfo[pkTeam], picks = T.squad.filter(x => pkXI.has(x.id)).map(x => ({ id: x.id, name: x.name, grp: x.grp }));
+    if (picks.length !== 11) { showToast('⚠️ Seçimlerde sorun var, tekrar dene.'); return; }
+    pkAdd({ type: 'xi', side: pkTeam, picks });
+    showToast(`✅ ${T.name} ilk 11 tahmini kaydedildi`); pkXI = new Set(); pkRenderPanel(); pkRenderMine();
+}
+function pkRenderMine() {
+    const box = document.getElementById('pickMine') || document.getElementById('pkMine'); if (!box) return;
+    const d = pkLoad();
+    if (!d.preds.length) { box.innerHTML = ''; return; }
+    const rows = d.preds.slice(0, 40).map(p => {
+        const what = p.type === 'scorer' ? `⚽ Gol atar: <b>${pkEsc(p.picks[0].name)}</b>` : `📋 İlk 11 (${pkEsc(p.side === 'home' ? p.home : p.away)})`;
+        const st = p.settled ? `<span class="${p.pts > 1 ? 'c-green' : ''}"><b>+${p.pts}</b> puan</span> <small>${pkEsc(p.note || '')}</small>` : `<span class="c-yellow">⏳ Bekliyor</span>`;
+        return `<div class="pk-m"><div class="pk-mt"><b>${pkEsc(p.home)} - ${pkEsc(p.away)}</b><small>${what} · ${new Date(p.utcDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</small></div><div class="pk-res">${st}</div></div>`;
+    }).join('');
+    box.innerHTML = `<div class="hd-panel"><div class="hd-ptitle">Tahminlerim</div>${rows}<div class="sx-act"><button class="coupon-action-btn load-btn" onclick="pkSettle(true)">🔍 Sonuçları kontrol et</button></div></div>`;
+}
+// Sonuçlanmış maçların tahminlerini puanla (maç bittikten sonra ESPN verisi gelince)
+async function pkSettle(manual) {
+    if (pkBusy) return; const d = pkLoad(), now = Date.now();
+    const open = d.preds.filter(p => !p.settled && now > new Date(p.utcDate).getTime() + 100 * 60e3);
+    if (!open.length) { if (manual) showToast('ℹ️ Sonuçlanacak tahmin yok (maç bitince tekrar dene).'); return; }
+    pkBusy = true; let n = 0, pts = 0;
+    try {
+        const keys = [...new Set(open.map(p => p.league + '|' + p.matchId))];
+        for (const k of keys) {
+            const [lg, id] = k.split('|'); let info;
+            try { const res = await apiFetch(`${API_URL}/game/info?league=${encodeURIComponent(lg)}&id=${+id}`); info = await res.json(); } catch (e) { continue; }
+            if (!info || info.error || !info.finished) continue;
+            d.preds.filter(p => !p.settled && p.league === lg && p.matchId === +id).forEach(p => {
+                if (p.type === 'scorer') {
+                    const pk = p.picks[0], scored = (info.scorers || []).some(s => s.id === pk.id && s.kind !== 'own');
+                    p.pts = 1 + (scored ? pk.pts : 0); p.note = scored ? `Gol attı! (+${pk.pts})` : 'Gol atmadı'; p.settled = true;
+                } else {
+                    const st = (info[p.side] && info[p.side].starters) || [];
+                    if (st.length < 11) { p.note = 'Kadro verisi alınamadı'; return; }
+                    const hits = p.picks.filter(x => st.includes(x.id)).length;
+                    p.pts = hits + (hits === 11 ? 10 : hits === 10 ? 5 : 0); p.note = `${hits}/11 doğru`; p.settled = true;
+                }
+                n++; pts += p.pts;
+            });
+        }
+        if (n) { pkSave(d); showToast(`🏅 ${n} tahmin sonuçlandı, +${pts} puan`); renderPick(); }
+        else if (manual) showToast('ℹ️ Henüz sonuçlanan maç yok.');
+    } finally { pkBusy = false; }
 }
 
 // ========== PERFORMANS ve AYARLAR SEKMELERİ ==========
