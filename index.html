@@ -666,6 +666,15 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .pk-sh { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); border:2px dashed rgba(255,255,255,.75); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; }
         .pk-slot.on .pk-sh { background:var(--accent); color:#0b1410; border:2px solid #fff; } .pk-slot.act .pk-sh { box-shadow:0 0 0 3px #ffd54a; }
         .pk-nm { font-size:.64rem; max-width:66px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-shadow:0 1px 2px #000; font-weight:700; }
+            /* ===== Takım formu + kara liste ===== */
+        .bl-mark { font-size:.8em; } .fm-scroll { overflow-x:auto; } .fm-tbl { border-collapse:collapse; width:100%; min-width:560px; font-size:.8rem; }
+        .fm-tbl th { text-align:center; color:var(--muted); font-weight:600; padding:6px 4px; border-bottom:1px solid var(--border); white-space:nowrap; } .fm-tbl td { text-align:center; padding:6px 4px; border-bottom:1px dashed var(--border); white-space:nowrap; }
+        .fm-tbl td.fm-name, .fm-tbl th:first-child { text-align:left; font-weight:700; } .fm-tbl td.fm-full { color:var(--green); font-weight:800; }
+        .fm-f { display:inline-flex; gap:2px; } .fm-f i { font-style:normal; width:17px; height:17px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:800; color:#0b1410; }
+        .fm-W { background:var(--green); } .fm-D { background:var(--yellow); } .fm-L { background:var(--red); color:#fff !important; }
+        .fm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:10px; } .fm-blk .hd-ptitle small { color:var(--muted); font-weight:400; }
+        .fm-r { display:flex; align-items:center; gap:10px; padding:6px 0; border-top:1px dashed var(--border); font-size:.84rem; } .fm-r:first-of-type { border-top:none; } .fm-r b { flex:1; } .fm-r > span:not(.fm-f) { color:var(--muted); font-size:.76rem; }
+        .fm-cand small { display:block; color:var(--muted); font-size:.74rem; margin-top:2px; } .fm-bad .hd-ptitle { color:var(--red); }
     </style>
 </head>
 <body>
@@ -684,6 +693,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')">⚽ Maçlar</button>
     <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
     <button class="main-tab" data-tab="season" onclick="switchMainTab('season')">📅 Bu Sezon</button>
+    <button class="main-tab" data-tab="forma" onclick="switchMainTab('forma')">📈 Takım Formu</button>
     <button class="main-tab" data-tab="pick" onclick="switchMainTab('pick')">🎯 Tahmin Oyunu</button>
     <button class="main-tab" data-tab="game" onclick="switchMainTab('game')">🎮 Penaltı</button>
     <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
@@ -742,6 +752,7 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
 
 <div id="perfMain" class="hd-page" style="display:none;"></div>
 <div id="seasonMain" class="hd-page" style="display:none;"></div>
+<div id="formaMain" class="hd-page" style="display:none;"></div>
 <div id="gameMain" class="hd-page" style="display:none;"></div>
 <div id="pickMain" class="hd-page" style="display:none;"></div>
 <div id="settingsMain" class="hd-page" style="display:none;"></div>
@@ -1230,7 +1241,7 @@ function switchMainTab(tab) {
     document.getElementById('predictionsMain').style.display = 'none';
     document.getElementById('standingsMain').classList.remove('active');
     document.getElementById('savedMain').classList.remove('active');
-    ['perfMain', 'seasonMain', 'gameMain', 'pickMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+    ['perfMain', 'seasonMain', 'formaMain', 'gameMain', 'pickMain', 'settingsMain', 'takipMain', 'bildirimMain'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
     if (view === 'home') {
         document.getElementById('homeMain').style.display = 'block';
         renderSmartOverview();
@@ -1238,6 +1249,7 @@ function switchMainTab(tab) {
     } else if (view === 'performance') { document.getElementById('perfMain').style.display = 'block'; renderPerformance(); }
     else if (view === 'pick') { document.getElementById('pickMain').style.display = 'block'; renderPick(); }
     else if (view === 'game') { document.getElementById('gameMain').style.display = 'block'; renderGame(); }
+    else if (view === 'forma') { document.getElementById('formaMain').style.display = 'block'; renderForma(); }
     else if (view === 'season') { document.getElementById('seasonMain').style.display = 'block'; renderSeason(); }
     else if (view === 'settings') { document.getElementById('settingsMain').style.display = 'block'; renderSettings(); }
     else if (view === 'takip') { document.getElementById('takipMain').style.display = 'block'; openTakip(); }
@@ -1794,6 +1806,93 @@ async function pkSettle(manual) {
     } finally { pkBusy = false; }
 }
 
+// ========== KARA LİSTE + TAKIM FORMU ==========
+// Kara liste bu tarayıcıda saklanır. Listedeki takımlar maç kartında ⛔ ile işaretlenir, kupona eklerken uyarı çıkar, otomatik kuponlarda ve editör/hedef seçimlerinde dışarıda bırakılır.
+const BL_KEY = 'futbolKaraListe';
+const blNorm = s => String(s || '').replace(/['"]/g, '').trim().toLowerCase();
+let blCache = null;
+function blLoad() { if (blCache) return blCache; try { const d = JSON.parse(localStorage.getItem(BL_KEY) || '[]'); blCache = Array.isArray(d) ? d : []; } catch (e) { blCache = []; } return blCache; }
+function blStore(list) { blCache = list; try { localStorage.setItem(BL_KEY, JSON.stringify(list)); } catch (e) {} }
+const blGet = name => { const k = blNorm(name); return k ? (blLoad().find(x => blNorm(x.name) === k) || null) : null; };
+const blMark = name => { const e = blGet(name); return e ? ` <b class="bl-mark" title="Kara listede: ${escH(e.reason)}">⛔</b>` : ''; };
+const blInMatch = matchName => { const [h, a] = String(matchName).split(' - '); return [blGet(h), blGet(a)].filter(Boolean); };
+const blHasMatch = m => !!(blGet(m.homeTeam.shortName) || blGet(m.awayTeam.shortName));
+const blWarnText = list => `⛔ KARA LİSTE UYARISI\n\n${list.map(e => `${e.name}: ${e.reason}`).join('\n')}\n\nBu takımı bir daha oynamayacaktın. Yine de devam edilsin mi?`;
+function blAdd(name, league, reason) { if (blGet(name)) return false; blStore([{ name, league, reason, addedAt: new Date().toISOString() }, ...blLoad()]); return true; }
+function blRemoveAt(i) { const e = blLoad()[i]; if (e) blRemove(e.name); }
+function blRemove(name) { const k = blNorm(name); blStore(blLoad().filter(x => blNorm(x.name) !== k)); showToast(`✅ ${name} kara listeden çıkarıldı`); fmRender(); }
+
+let fmLeague = '2021', fmN = 10, fmView = 'goals', fmSort = 's1', fmData = null, fmReq = 0, fmCands = [];
+const fmCache = {};
+const FM_SORTS = { s1: ['1+ gol', 's1'], s2: ['2+ gol', 's2'], s3: ['3+ gol', 's3'], o15: ['1.5 Üst', 'o15'], o25: ['2.5 Üst', 'o25'], btts: ['KG Var', 'btts'] };
+const FM_STREAKS = [
+    ['win', '🏆 Galibiyet serisi', 2, 'maç üst üste galibiyet', false], ['unbeaten', '🛡 Yenilmezlik serisi', 4, 'maçtır yenilmiyor', false],
+    ['score', '⚽ Gol atma serisi', 6, 'maçtır gol atıyor', false], ['score2', '🔥 2+ gol serisi', 3, 'maçtır 2+ gol atıyor', false], ['over15', '📈 1.5 Üst serisi', 5, 'maçtır 1.5 Üst', false],
+    ['loss', '💀 Yenilgi serisi', 2, 'maç üst üste yenilgi', true], ['noScore', '🚫 Gol atamama serisi', 2, 'maçtır gol yok', true]
+];
+function setFm(k, v) { if (k === 'league') { fmLeague = v; renderForma(); return; } if (k === 'n') { fmN = v; renderForma(); return; } if (k === 'view') fmView = v; if (k === 'sort') fmSort = v; fmRender(); }
+const fmFormHtml = f => `<span class="fm-f">${[...f].map(c => `<i class="fm-${c}">${c === 'W' ? 'G' : c === 'D' ? 'B' : 'M'}</i>`).join('')}</span>`;
+async function renderForma() {
+    const el = document.getElementById('formaMain'); if (!el) return;
+    const chip = (on, label, fn) => `<button class="filter-btn ${on ? 'active' : ''}" onclick="${fn}">${label}</button>`;
+    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">📈</div><div><span class="tab-hero-kicker">TAKIM FORMU</span><h2>Seriler ve <em>Kara Liste</em></h2><p>Maç değil takım listesi: son maçlarda sürekli gol atanlar, galibiyet ve yenilmezlik serileri, kaybeden takımlar.</p></div><div class="tab-hero-art" aria-hidden="true">📊</div></section>
+        <div class="hd-panel sx-ctl">
+            <div class="sc-row-label">Lig</div><div class="sc-chips">${LEAGUES.map(l => chip(l.code === fmLeague, `${l.flag} ${l.name}`, `setFm('league','${l.code}')`)).join('')}</div>
+            <div class="sc-row-label">Son kaç maça bakılsın</div><div class="sc-chips">${[5, 8, 10, 15].map(n => chip(n === fmN, 'Son ' + n, `setFm('n',${n})`)).join('')}</div>
+            <div class="sc-row-label">Görünüm</div><div class="sc-chips">${chip(fmView === 'goals', '⚽ Gol atanlar', `setFm('view','goals')`)}${chip(fmView === 'streaks', '🔥 Seriler', `setFm('view','streaks')`)}${chip(fmView === 'black', `⛔ Kara liste (${blLoad().length})`, `setFm('view','black')`)}</div>
+        </div><div id="fmBody"><div class="loading">Takım verisi yükleniyor...</div></div>`;
+    const key = fmLeague + '|' + fmN, my = ++fmReq;
+    try {
+        let d = fmCache[key] && Date.now() - fmCache[key].t < 5 * 60e3 ? fmCache[key].d : null;
+        if (!d) { const res = await apiFetch(`${API_URL}/forma/${fmLeague}?n=${fmN}`); d = await res.json(); if (d.error) throw new Error(d.error); fmCache[key] = { t: Date.now(), d }; }
+        if (my !== fmReq) return;
+        fmData = d; fmRender();
+    } catch (e) { if (my !== fmReq) return; const b = document.getElementById('fmBody'); if (b) b.innerHTML = `<div class="error">⚠️ ${escH(e && e.message ? e.message : CONN_MSG)}<br><button class="filter-btn" style="margin-top:10px" onclick="renderForma()">🔄 Tekrar dene</button></div>`; }
+}
+function fmRender() {
+    const body = document.getElementById('fmBody'); if (!body || !fmData) return;
+    // sekme üstündeki görünüm düğmeleri ve kara liste sayacı güncel kalsın
+    const chips = document.querySelectorAll('#formaMain .sx-ctl .sc-chips');
+    if (chips[2]) chips[2].innerHTML = [['goals', '⚽ Gol atanlar'], ['streaks', '🔥 Seriler'], ['black', `⛔ Kara liste (${blLoad().length})`]].map(([k, l]) => `<button class="filter-btn ${fmView === k ? 'active' : ''}" onclick="setFm('view','${k}')">${l}</button>`).join('');
+    body.innerHTML = fmView === 'goals' ? fmGoalsHtml(fmData) : fmView === 'streaks' ? fmStreaksHtml(fmData) : fmBlackHtml(fmData);
+}
+function fmGoalsHtml(d) {
+    const n = d.n, T = d.teams.filter(t => t.n >= Math.min(5, n));
+    if (!T.length) return `<div class="empty-saved"><span class="emoji">📭</span><h3 style="color:var(--text)">Bu lig için yeterli maç yok</h3></div>`;
+    const names = f => { const a = T.filter(f).map(t => escH(t.name) + blMark(t.name)); return a.length ? a.join(', ') : '<span style="color:var(--muted)">yok</span>'; };
+    const key = FM_SORTS[fmSort][1], rows = T.slice().sort((a, b) => b[key] - a[key] || b.s1 - a.s1 || b.gf - a.gf);
+    const cell = (v, t) => `<td class="${v === t.n ? 'fm-full' : ''}">${v}/${t.n}</td>`;
+    return `<div class="hd-panel"><div class="hd-ptitle">Son ${n} maçta (sezon içi, lig maçları)</div>
+        <div class="hd-note">⚽ <b>Her maçta gol atan:</b> ${names(t => t.s1 === t.n)}</div>
+        <div class="hd-note">🔥 <b>Her maçta 2+ gol atan:</b> ${names(t => t.s2 === t.n)}</div>
+        <div class="hd-note">💥 <b>Her maçta 3+ gol atan:</b> ${names(t => t.s3 === t.n)}</div></div>
+        <div class="hd-panel"><div class="hd-ptitle">Tüm takımlar</div><div class="sc-chips" style="margin-bottom:8px">${Object.keys(FM_SORTS).map(k => `<button class="filter-btn ${fmSort === k ? 'active' : ''}" onclick="setFm('sort','${k}')">${FM_SORTS[k][0]}</button>`).join('')}</div>
+        <div class="fm-scroll"><table class="fm-tbl"><thead><tr><th>Takım</th><th>1+ gol</th><th>2+ gol</th><th>3+ gol</th><th>1.5 Üst</th><th>2.5 Üst</th><th>KG</th><th>Ort. gol</th><th>Form</th></tr></thead><tbody>${rows.map(t =>
+            `<tr><td class="fm-name">${escH(t.name)}${blMark(t.name)}</td>${cell(t.s1, t)}${cell(t.s2, t)}${cell(t.s3, t)}${cell(t.o15, t)}${cell(t.o25, t)}${cell(t.btts, t)}<td>${(t.gf / t.n).toFixed(1)}</td><td>${fmFormHtml(t.form)}</td></tr>`).join('')}</tbody></table></div>
+        <div class="hd-note">Yeşil: son ${n} maçın hepsinde. Form: G galibiyet, B beraberlik, M mağlubiyet (soldan sağa eskiden yeniye). Geçmiş seri geleceği garanti etmez.</div></div>`;
+}
+function fmStreaksHtml(d) {
+    const blocks = FM_STREAKS.map(([k, title, min, unit, bad]) => {
+        const L = d.teams.filter(t => t.st[k] >= min).sort((a, b) => b.st[k] - a.st[k]).slice(0, 8);
+        return `<div class="hd-panel fm-blk ${bad ? 'fm-bad' : ''}"><div class="hd-ptitle">${title} <small>(en az ${min})</small></div>${L.length ? L.map(t => `<div class="fm-r"><b>${escH(t.name)}${blMark(t.name)}</b><span>${t.st[k]} ${unit}</span>${fmFormHtml(t.form.slice(-6))}</div>`).join('') : '<div class="hd-note">Şu an bu kritere uyan takım yok.</div>'}</div>`;
+    }).join('');
+    return `<div class="fm-grid">${blocks}</div><div class="hd-note">Seri, en son oynanan maçtan geriye doğru kesintisiz devam eden dizidir; sezonun tüm lig maçlarına bakılır.</div>`;
+}
+function fmBlackHtml(d) {
+    fmCands = d.teams.filter(t => t.risk).sort((a, b) => b.risk.score - a.risk.score || a.pts - b.pts);
+    const lg = (LEAGUES.find(l => l.code === fmLeague) || {}).name || '';
+    const cand = fmCands.length ? fmCands.map((t, i) => `<div class="fm-r fm-cand"><div style="flex:1;min-width:0"><b>${escH(t.name)}</b> ${fmFormHtml(t.form.slice(-8))}<small>${t.risk.reasons.map(escH).join(' · ')}</small></div>${blGet(t.name) ? '<span class="c-red">⛔ Listede</span>' : `<button class="coupon-action-btn save-btn" onclick="fmBlAdd(${i})">⛔ Ekle</button>`}</div>`).join('')
+        : '<div class="hd-note">Bu ligde şu an kara liste ölçütüne uyan takım yok.</div>';
+    const mine = blLoad(), mineHtml = mine.length ? mine.map((e, i) => `<div class="fm-r fm-cand"><div style="flex:1;min-width:0"><b>⛔ ${escH(e.name)}</b><small>${escH(e.league || '')} · ${escH(e.reason)} · ${new Date(e.addedAt).toLocaleDateString('tr-TR')}</small></div><button class="coupon-action-btn load-btn" onclick="blRemoveAt(${i})">Çıkar</button></div>`).join('')
+        : '<div class="hd-note">Kara listen boş.</div>';
+    return `<div class="hd-panel fm-bad"><div class="hd-ptitle">${escH(lg)}: kara liste adayları</div>
+        <div class="hd-note">Ölçüt (son ${d.n} maç ve sezon geneli): 3+ maç üst üste yenilgi, 2+ maçtır gol atamama, son maçların 4+'ında gol atamama, çok yenilgi ya da çok düşük puan, 6+ maçtır galibiyetsizlik.</div>${cand}
+        ${fmCands.length ? `<div class="sx-act"><button class="coupon-action-btn save-btn" onclick="fmBlAddAll()">⛔ Hepsini kara listeye ekle</button></div>` : ''}</div>
+        <div class="hd-panel"><div class="hd-ptitle">Kara listem (${mine.length})</div><div class="hd-note">Listedeki takımlar maç kartında ⛔ ile görünür, kupona eklerken uyarı çıkar, otomatik kuponlarda ve editör/hedef seçimlerinde yer almaz.</div>${mineHtml}</div>`;
+}
+function fmBlAdd(i) { const t = fmCands[i]; if (!t) return; const lg = (LEAGUES.find(l => l.code === fmLeague) || {}).name || ''; if (blAdd(t.name, lg, t.risk.reasons.join(' · '))) showToast(`⛔ ${t.name} kara listeye eklendi`); fmRender(); }
+function fmBlAddAll() { const lg = (LEAGUES.find(l => l.code === fmLeague) || {}).name || ''; let n = 0; fmCands.forEach(t => { if (blAdd(t.name, lg, t.risk.reasons.join(' · '))) n++; }); showToast(n ? `⛔ ${n} takım kara listeye eklendi` : 'ℹ️ Hepsi zaten listede'); fmRender(); }
+
 // ========== PERFORMANS ve AYARLAR SEKMELERİ ==========
 // node backtest.js sonucunu buraya işle (Tüm tekli bahisler tablosu): [kategori, bahis sayısı, model ort. %, gerçek tutma %]
 const BACKTEST_REPORT = { n: 8567, dosya: 35, cats: [['Banko (%85+)', 4784, 88.6, 88.0], ['Güvenilir (%70-85)', 8567, 80.4, 79.3], ['Riskli (%50-70)', 8567, 64.8, 65.5], ['Çılgın (%35-50)', 8564, 46.9, 46.1]], brier: [0.6014, 0.5680], fav: [50.6, 55.1] };
@@ -1959,7 +2058,7 @@ function starFor(m) { const b = bestBetFor(m); return b && b.prob >= STAR_MIN ? 
 
 function renderEditorCard(list) {
     const box = document.getElementById('editorCard'); if (!box) return;
-    const cands = list.filter(m => m.prediction && !isLiveSt(m.status)).map(m => ({ m, b: bestBetFor(m) }))
+    const cands = list.filter(m => m.prediction && !isLiveSt(m.status) && !blHasMatch(m)).map(m => ({ m, b: bestBetFor(m) }))
         .filter(x => x.b && x.b.prob >= EDITOR_MIN).sort((x, y) => y.b.prob - x.b.prob).slice(0, EDITOR_COUNT);
     window.__editorPicks = [];
     if (!cands.length) {
@@ -2050,7 +2149,7 @@ function stakeBoxHtml(totalOdd, totalProb) {
 // Hedef oranlı kupon: seçili günlerdeki maçlardan, toplam oran hedefe ulaşana kadar bacak ekler
 function targetCoupon() {
     const T = BK.targetOdd > 1 ? BK.targetOdd : 1000;
-    let pool = getPredictionPool().filter(m => m.prediction && !isLiveSt(m.status));
+    let pool = getPredictionPool().filter(m => m.prediction && !isLiveSt(m.status) && !blHasMatch(m));
     if (selectedDays.size) pool = pool.filter(m => selectedDays.has(predDayKey(m.utcDate)));
     const legs = [];
     pool.forEach(m => {
@@ -2122,7 +2221,7 @@ function renderMatchCard(m) {
     const lg = LEAGUES.find(l => l.code === currentLeagueCode);
     const leagueName = m._leagueName || (lg ? lg.name : '');
     const crest = u => u ? `<img src="${u}" alt="">` : '';
-    const teams = `<div class="mrow-teams"><div>${crest(m.homeTeam.crest)}<span>${m.homeTeam.shortName}</span></div><div>${crest(m.awayTeam.crest)}<span>${m.awayTeam.shortName}</span></div></div>`;
+    const teams = `<div class="mrow-teams"><div>${crest(m.homeTeam.crest)}<span>${m.homeTeam.shortName}${blMark(m.homeTeam.shortName)}</span></div><div>${crest(m.awayTeam.crest)}<span>${m.awayTeam.shortName}${blMark(m.awayTeam.shortName)}</span></div></div>`;
     const lgTag = m._leagueFlag ? `<small title="${leagueName}">${m._leagueFlag}</small>` : `<small>H${m.matchday}</small>`;
     const timeBox = `<div class="mrow-time"><b>${time}</b>${lgTag}</div>`;
     if (['IN_PLAY', 'PAUSED', 'LIVE'].includes(m.status)) {
@@ -2271,7 +2370,7 @@ function updateCouponUI() {
             summary.style.display = 'none';
             return;
         }
-        items.innerHTML = coupon.map(c => `<div class="coupon-item"><div class="coupon-item-info"><div class="match-name">${c.matchName}</div><div class="bet-name">${c.betLabel} → ${c.pickName} (@${c.odd})</div>${c.leagueName ? `<span class="league-tag">${c.leagueName}</span>` : ''}</div><button class="coupon-remove" aria-label="Kupondan çıkar" onclick="removeFromCoupon(${c.matchId}, '${c.betType}')">×</button></div>`).join('');
+        items.innerHTML = coupon.map(c => `<div class="coupon-item"><div class="coupon-item-info"><div class="match-name">${c.matchName}${blInMatch(c.matchName).map(e => ` <b class="bl-mark" title="Kara listede: ${escH(e.reason)}">⛔ ${escH(e.name)}</b>`).join('')}</div><div class="bet-name">${c.betLabel} → ${c.pickName} (@${c.odd})</div>${c.leagueName ? `<span class="league-tag">${c.leagueName}</span>` : ''}</div><button class="coupon-remove" aria-label="Kupondan çıkar" onclick="removeFromCoupon(${c.matchId}, '${c.betType}')">×</button></div>`).join('');
         summary.style.display = 'block';
         document.getElementById('totalOdd' + sfx).textContent = totalOdd.toFixed(2);
         document.getElementById('totalProb' + sfx).textContent = '%' + totalProb.toFixed(1);
@@ -2289,6 +2388,7 @@ function updateCouponUI() {
 function toggleCoupon(matchId, matchName, betType, betLabel, probability, pickName, leagueName, realOdd) {
     const existingIdx = coupon.findIndex(c => c.matchId === matchId && c.betType === betType);
     if (existingIdx !== -1) { coupon.splice(existingIdx, 1); updateCouponUI(); return; }
+    { const bl = blInMatch(matchName); if (bl.length && !confirm(blWarnText(bl))) return; }
     const sameMatchIdx = coupon.findIndex(c => c.matchId === matchId);
     if (sameMatchIdx !== -1) coupon.splice(sameMatchIdx, 1);
     coupon.push({ matchId, matchName, betType, betLabel, pickName, probability: probability / 100, odd: realOdd, realProbability: probability / 100, leagueName, resultStatus: null });
@@ -2314,6 +2414,7 @@ function restoreSelectedButtons() {
 
 function saveCouponToSaved() {
     if (coupon.length === 0) { showToast('⚠️ Kupon boş!'); return; }
+    { const bl = []; coupon.forEach(c => blInMatch(c.matchName).forEach(e => { if (!bl.includes(e)) bl.push(e); })); if (bl.length && !confirm(blWarnText(bl))) return; }
     const savedList = JSON.parse(localStorage.getItem(SAVED_COUPONS_KEY) || '[]');
     const newCoupon = { id: Date.now(), matches: coupon.map(c => ({ ...c, cat: scLegCat(c) })), savedAt: new Date().toISOString(), totalOdd: coupon.reduce((acc, c) => acc * c.odd, 1), totalProb: coupon.reduce((acc, c) => acc * (c.realProbability || c.probability), 1) * 100, status: 'pending' };
     newCoupon.stake = BK.stake || 0;
@@ -2525,9 +2626,10 @@ async function autoCoupon(type) {
     if (sourceMatches.length === 0) { showToast('⚠️ Maç bulunamadı!'); return; }
     
     // 2. Seçili bahis türlerine göre tüm olasılıkları topla
-    const allPredictions = [];
+    const allPredictions = []; let blSkipped = 0;
     sourceMatches.forEach(m => {
         if (!m.prediction) return;
+        if (blHasMatch(m)) { blSkipped++; return; }
         const p = m.prediction;
         const mname = `${m.homeTeam.shortName} - ${m.awayTeam.shortName}`.replace(/['"]/g, '');
         const leagueName = m._leagueName || '';
@@ -2580,6 +2682,7 @@ async function autoCoupon(type) {
         });
     });
     
+    if (blSkipped) setTimeout(() => showToast(`⛔ ${blSkipped} maç kara listedeki takım yüzünden dışarıda bırakıldı`), 2300);
     if (allPredictions.length === 0) { showToast('⚠️ Seçili bahis türlerinde bu kritere uyan maç yok, kupon değişmedi.'); return; }
     
     // 3. Kategoriye göre filtrele

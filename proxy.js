@@ -912,6 +912,50 @@ app.get('/api/game/info', async (req, res) => {
 });
 
 
+// ========== TAKIM FORMU: son N lig maçı, seriler ve kara liste adayları ==========
+// Sadece bu sezonun BİTMİŞ maçları. Seri = en son maçtan geriye doğru kesintisiz devam eden dizi.
+const formRun = (games, pred) => { let n = 0; for (let i = games.length - 1; i >= 0 && pred(games[i]); i--) n++; return n; };
+const formRes = g => g.gf > g.ga ? 'W' : g.gf === g.ga ? 'D' : 'L';
+async function teamForm(code, N) {
+    const data = await leagueMatches(code);
+    const fin = (data.matches || []).filter(seasonDone).sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+    const T = new Map();
+    const add = (t, g) => { const k = t.shortName; if (!T.has(k)) T.set(k, []); T.get(k).push(g); };
+    fin.forEach(m => {
+        const h = m.score.fullTime.home, a = m.score.fullTime.away;
+        add(m.homeTeam, { gf: h, ga: a, home: true, opp: m.awayTeam.shortName });
+        add(m.awayTeam, { gf: a, ga: h, home: false, opp: m.homeTeam.shortName });
+    });
+    const teams = [...T.entries()].map(([name, all]) => {
+        const last = all.slice(-N), n = last.length, c = f => last.filter(f).length, sum = f => last.reduce((s, g) => s + f(g), 0);
+        const w = c(g => formRes(g) === 'W'), d = c(g => formRes(g) === 'D'), l = c(g => formRes(g) === 'L');
+        const st = { win: formRun(all, g => formRes(g) === 'W'), unbeaten: formRun(all, g => formRes(g) !== 'L'), loss: formRun(all, g => formRes(g) === 'L'), winless: formRun(all, g => formRes(g) !== 'W'),
+            score: formRun(all, g => g.gf >= 1), score2: formRun(all, g => g.gf >= 2), noScore: formRun(all, g => g.gf === 0), over15: formRun(all, g => g.gf + g.ga >= 2), over25: formRun(all, g => g.gf + g.ga >= 3) };
+        const t = { name, played: all.length, n, w, d, l, pts: w * 3 + d, gf: sum(g => g.gf), ga: sum(g => g.ga), s1: c(g => g.gf >= 1), s2: c(g => g.gf >= 2), s3: c(g => g.gf >= 3), blank: c(g => g.gf === 0),
+            o15: c(g => g.gf + g.ga >= 2), o25: c(g => g.gf + g.ga >= 3), btts: c(g => g.gf > 0 && g.ga > 0), cs: c(g => g.ga === 0), form: last.map(formRes).join(''), st,
+            recent: all.slice(-5).reverse().map(g => ({ opp: g.opp, home: g.home, gf: g.gf, ga: g.ga, r: formRes(g) })) };
+        const why = [];   // kara liste adayı nedenleri
+        if (n >= 5) {
+            if (st.loss >= 3) why.push(`${st.loss} maç üst üste yenildi`);
+            if (st.noScore >= 2) why.push(`${st.noScore} maçtır gol atamıyor`);
+            if (t.blank >= 4) why.push(`Son ${n} maçta ${t.blank} kez gol atamadı`);
+            if (n >= 8 && l >= 6) why.push(`Son ${n} maçta ${l} yenilgi`);
+            if (n >= 8 && t.pts <= 0.7 * n) why.push(`Son ${n} maçta sadece ${t.pts} puan`);
+            if (st.winless >= 6) why.push(`${st.winless} maçtır galibiyet yok`);
+        }
+        t.risk = why.length ? { score: why.length, reasons: why } : null;
+        return t;
+    });
+    return { code, competition: data.competition, n: N, generated: new Date().toISOString(), played: fin.length, teams };
+}
+app.get('/api/forma/:leagueId', async (req, res) => {
+    if (!okLeague(req, res)) return;
+    const N = Math.max(5, Math.min(20, parseInt(req.query.n) || 10));
+    try { res.json(await cached('forma' + req.params.leagueId + N, 10 * 60e3, () => teamForm(req.params.leagueId, N))); }
+    catch (error) { res.status(502).json({ error: error.message }); }
+});
+
+
 // ---------- Telegram (yalnızca TELEGRAM_ENABLED=true ise; herkese açık sitede kapalı kalır) ----------
 const tgOff = res => res.status(403).json({ success: false, ok: false, disabled: true, error: 'Telegram bu sunucuda kapalı.' });
 
