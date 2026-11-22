@@ -676,6 +676,55 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
         .fm-r { display:flex; align-items:center; gap:10px; padding:6px 0; border-top:1px dashed var(--border); font-size:.84rem; } .fm-r:first-of-type { border-top:none; } .fm-r b { flex:1; } .fm-r > span:not(.fm-f) { color:var(--muted); font-size:.76rem; }
         .fm-cand small { display:block; color:var(--muted); font-size:.74rem; margin-top:2px; } .fm-bad .hd-ptitle { color:var(--red); }
     </style>
+<style id="shell-v2">
+/* ===== Kabuk v2: sol menü (masaüstü) / alt çubuk + menü (telefon), yatay kaydırma yok ===== */
+:root { --sb: 232px; --hdr: 60px; }
+html, body { max-width:100%; overflow-x:clip; }   /* hidden değil clip: yapışkan üst çubuğu bozmaz */
+.header { position:sticky !important; top:0 !important; height:var(--hdr); padding:0 18px !important; flex-wrap:nowrap !important; gap:10px; box-sizing:border-box; align-items:center; }
+.header h1 { font-size:1.4rem !important; gap:9px; white-space:nowrap; }
+.header h1 .logo-icon { width:34px !important; height:34px !important; font-size:1.05rem !important; border-width:1px !important; }
+.header-right { flex-wrap:nowrap !important; gap:8px; min-width:0; }
+.header-info, .bot-status { padding:5px 11px !important; font-size:.74rem !important; white-space:nowrap; }
+.main-tabs { overflow:visible !important; }
+.nav-title { font-size:.66rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#6f8a7a; padding:0 12px 5px; }
+.nav-items { display:flex; flex-direction:column; gap:2px; }
+.nav-grp { margin-bottom:14px; }
+.nav-games { padding:8px 4px 6px; border:1px solid rgba(58,219,126,.22); border-radius:14px; background:linear-gradient(160deg,rgba(34,180,99,.09),rgba(5,12,10,0)); }
+.nav-games .nav-title { color:#7ce7a5; }
+.main-tab { display:flex !important; align-items:center; gap:11px; width:100%; text-align:left; padding:9px 12px !important; border:1px solid transparent !important; border-radius:10px !important; background:none !important; color:#a9bcb0 !important; font-size:.9rem !important; font-weight:600; box-shadow:none !important; transform:none !important; white-space:nowrap; }
+.main-tab i { width:22px; text-align:center; font-style:normal; font-size:1.05rem; flex:0 0 22px; }
+.main-tab:hover { background:rgba(44,130,79,.14) !important; color:#fff !important; }
+.main-tab.active { background:linear-gradient(135deg,rgba(34,180,99,.26),rgba(12,65,37,.4)) !important; border-color:rgba(58,219,126,.5) !important; color:#eaffef !important; }
+.bottom-nav { display:none; }
+@media (min-width:1280px) {
+    body { padding-left:var(--sb); }
+    .header { margin-left:calc(var(--sb) * -1); }
+    .main-tabs { position:fixed !important; left:0; top:var(--hdr); bottom:0; width:var(--sb); z-index:110; display:flex !important; flex-direction:column; justify-content:flex-start !important; gap:0 !important; padding:16px 12px 24px !important; overflow-y:auto !important; background:rgba(5,12,10,.97) !important; border-bottom:none !important; border-right:1px solid rgba(67,160,103,.22); box-sizing:border-box; }
+    .coupon-fab { display:none !important; }
+}
+@media (max-width:1279px) {
+    body { padding-bottom:calc(66px + env(safe-area-inset-bottom)); }
+    .header { padding:0 12px !important; } .header h1 { font-size:1.2rem !important; }
+    .main-tabs { position:fixed !important; left:0; right:0; top:var(--hdr); bottom:calc(58px + env(safe-area-inset-bottom)); z-index:140; display:none !important; flex-direction:column; padding:14px 14px 20px !important; overflow-y:auto !important; background:rgba(4,10,8,.985) !important; backdrop-filter:blur(14px); border:none !important; }
+    body.nav-open .main-tabs { display:flex !important; }
+    .nav-items { display:grid; grid-template-columns:1fr 1fr; gap:6px; } .main-tab { padding:12px !important; border-color:rgba(67,160,103,.22) !important; background:rgba(16,29,22,.8) !important; }
+    .bottom-nav { position:fixed; left:0; right:0; bottom:0; z-index:150; height:calc(58px + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); display:grid; grid-template-columns:repeat(5,1fr); background:rgba(5,12,10,.98); border-top:1px solid rgba(67,160,103,.28); }
+    .bn-item { background:none; border:none; color:#8fa89a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:.64rem; font-weight:700; cursor:pointer; padding:0; }
+    .bn-item i { font-style:normal; font-size:1.2rem; line-height:1; } .bn-item.active { color:#7ce7a5; } body.nav-open .bn-menu { color:#7ce7a5; }
+    .coupon-fab { bottom:calc(70px + env(safe-area-inset-bottom)) !important; }
+    .toast { bottom:calc(74px + env(safe-area-inset-bottom)) !important; }
+}
+.games-bar { margin:0 0 10px; }
+@media (max-width:700px) {   /* puan durumu telefona sığsın: atılan/yenilen gol sütunları gizlenir, averaj kalır */
+    .standings-table { min-width:0 !important; width:100% !important; }
+    .standings-table th, .standings-table td { padding:7px 4px !important; font-size:.76rem !important; }
+    .standings-table th:nth-child(n+7):nth-child(-n+8), .standings-table td:nth-child(n+7):nth-child(-n+8) { display:none; }
+    .standings-table .team-name { max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+}
+body:not([data-tab="home"]):not([data-tab="matches"]):not([data-tab="predictions"]) .coupon-fab { display:none !important; }
+@media (max-width:700px) { .header-info { display:none !important; } }
+@media (min-width:600px) and (max-width:1279px) { .nav-items { grid-template-columns:repeat(3,1fr); } }
+</style>
 </head>
 <body>
 
@@ -688,22 +737,39 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(21,92,75,.38),transpare
     </div>
 </div>
 
-<div class="main-tabs">
-    <button class="main-tab active" data-tab="home" onclick="switchMainTab('home')">⌂ Ana Sayfa</button>
-    <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')">⚽ Maçlar</button>
-    <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')">▥ Tahminler</button>
-    <button class="main-tab" data-tab="season" onclick="switchMainTab('season')">📅 Bu Sezon</button>
-    <button class="main-tab" data-tab="forma" onclick="switchMainTab('forma')">📈 Takım Formu</button>
-    <button class="main-tab" data-tab="pick" onclick="switchMainTab('pick')">🎯 Tahmin Oyunu</button>
-    <button class="main-tab" data-tab="game" onclick="switchMainTab('game')">🎮 Penaltı</button>
-    <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')">🏆 Puan Durumu</button>
-    <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')">🎟 Kuponlarım</button>
-    <button class="main-tab" data-tab="takip" onclick="switchMainTab('takip')">📡 Kupon Takip</button>
-    <button class="main-tab" data-tab="bildirim" onclick="switchMainTab('bildirim')">🔔 Bildirimler <b class="nf-badge" id="nfBadge" hidden></b></button>
-    <button class="main-tab" data-tab="analysis" onclick="switchMainTab('analysis')">✧ AI Analiz Merkezi</button>
-    <button class="main-tab" data-tab="performance" onclick="switchMainTab('performance')">📈 Performans</button>
-    <button class="main-tab" data-tab="settings" onclick="switchMainTab('settings')">⚙️ Ayarlar</button>
+<div class="main-tabs" id="mainNav">
+    <div class="nav-grp"><div class="nav-title">Genel</div><div class="nav-items">
+        <button class="main-tab active" data-tab="home" onclick="switchMainTab('home')"><i>⌂</i><span>Ana Sayfa</span></button>
+        <button class="main-tab" data-tab="matches" onclick="switchMainTab('matches')"><i>⚽</i><span>Maçlar</span></button>
+        <button class="main-tab" data-tab="standings" onclick="switchMainTab('standings')"><i>🏆</i><span>Puan Durumu</span></button>
+    </div></div>
+    <div class="nav-grp"><div class="nav-title">Analiz</div><div class="nav-items">
+        <button class="main-tab" data-tab="predictions" onclick="switchMainTab('predictions')"><i>▥</i><span>Tahminler</span></button>
+        <button class="main-tab" data-tab="season" onclick="switchMainTab('season')"><i>📅</i><span>Bu Sezon</span></button>
+        <button class="main-tab" data-tab="forma" onclick="switchMainTab('forma')"><i>📈</i><span>Takım Formu</span></button>
+        <button class="main-tab" data-tab="analysis" onclick="switchMainTab('analysis')"><i>✧</i><span>AI Analiz</span></button>
+        <button class="main-tab" data-tab="performance" onclick="switchMainTab('performance')"><i>📊</i><span>Performans</span></button>
+    </div></div>
+    <div class="nav-grp"><div class="nav-title">Kuponlar</div><div class="nav-items">
+        <button class="main-tab" data-tab="saved" onclick="switchMainTab('saved')"><i>🎟</i><span>Kuponlarım</span></button>
+        <button class="main-tab" data-tab="takip" onclick="switchMainTab('takip')"><i>📡</i><span>Kupon Takip</span></button>
+        <button class="main-tab" data-tab="bildirim" onclick="switchMainTab('bildirim')"><i>🔔</i><span>Bildirimler</span> <b class="nf-badge" id="nfBadge" hidden></b></button>
+    </div></div>
+    <div class="nav-grp nav-games"><div class="nav-title">🎮 Oyunlar</div><div class="nav-items">
+        <button class="main-tab" data-tab="pick" onclick="switchMainTab('pick')"><i>🎯</i><span>Tahmin Oyunu</span></button>
+        <button class="main-tab" data-tab="game" onclick="switchMainTab('game')"><i>🥅</i><span>Penaltı</span></button>
+    </div></div>
+    <div class="nav-grp"><div class="nav-title">Sistem</div><div class="nav-items">
+        <button class="main-tab" data-tab="settings" onclick="switchMainTab('settings')"><i>⚙️</i><span>Ayarlar</span></button>
+    </div></div>
 </div>
+<nav class="bottom-nav" id="bottomNav" aria-label="Ana menü">
+    <button class="bn-item active" data-tab="home" onclick="switchMainTab('home')"><i>⌂</i><span>Ana</span></button>
+    <button class="bn-item" data-tab="matches" onclick="switchMainTab('matches')"><i>⚽</i><span>Maçlar</span></button>
+    <button class="bn-item" data-tab="predictions" onclick="switchMainTab('predictions')"><i>▥</i><span>Tahmin</span></button>
+    <button class="bn-item" data-tab="saved" onclick="switchMainTab('saved')"><i>🎟</i><span>Kuponlarım</span></button>
+    <button class="bn-item bn-menu" onclick="toggleNav()"><i>☰</i><span>Menü</span></button>
+</nav>
 
 <div id="homeMain" class="home-shell">
     <div class="home-layout">
@@ -987,8 +1053,8 @@ const LEAGUES = [
     { code: '2003', country: 'Hollanda', name: 'Eredivisie', flag: '🇳🇱' },
     { code: '2017', country: 'Portekiz', name: 'Primeira Liga', flag: '🇵🇹' },
     { code: 'tur.1', country: 'Türkiye', name: 'Süper Lig', flag: '🇹🇷' },
-    { code: '2016', country: 'İngiltere', name: 'Championship', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-    { code: '2013', country: 'Brezilya', name: 'Brasileirão', flag: '🇧🇷' },
+    { code: 'bel.1', country: 'Belçika', name: 'Pro Lig', flag: '🇧🇪' },
+    { code: 'nor.1', country: 'Norveç', name: 'Eliteserien', flag: '🇳🇴' },
     { code: 'uefa.europa', country: 'Avrupa', name: 'Avrupa Ligi', flag: '🇪🇺' },
     { code: 'uefa.europa.conf', country: 'Avrupa', name: 'Konferans Ligi', flag: '🇪🇺' },
     { code: 'uefa.nations', country: 'Avrupa', name: 'Uluslar Ligi', flag: '🇪🇺' }
@@ -1236,6 +1302,8 @@ function switchMainTab(tab) {
     const selectedTab = tab;
     const view = tab === 'analysis' ? 'home' : tab;
     document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === selectedTab));
+    document.querySelectorAll('.bn-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === selectedTab));
+    document.body.classList.remove('nav-open'); document.body.dataset.tab = selectedTab; try { window.scrollTo(0, 0); } catch (e) {}
     document.getElementById('homeMain').style.display = 'none';
     document.getElementById('matchesMain').style.display = 'none';
     document.getElementById('predictionsMain').style.display = 'none';
@@ -1563,7 +1631,7 @@ function pgDone() {
 function renderGame() {
     const el = pgEl('gameMain'); if (!el) return;
     if (!pg) { pgNew(); return; }
-    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎮</div><div><span class="tab-hero-kicker">MOLA VER</span><h2>Penaltı <em>Atışları</em></h2><p>Kupon hazırlarken kafa dağıt. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🥅</div></section>
+    el.innerHTML = gamesBarHtml('game') + `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎮</div><div><span class="tab-hero-kicker">MOLA VER</span><h2>Penaltı <em>Atışları</em></h2><p>Kupon hazırlarken kafa dağıt. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🥅</div></section>
         <div class="hd-panel pg-wrap">
             <div class="pg-score"><span>Sen</span> <b id="pgMe">0</b> - <b id="pgOp">0</b> <span>Rakip</span></div>
             <div class="pg-dots"><span id="pgDotsMe"></span><i>•</i><span id="pgDotsOp"></span></div>
@@ -1648,7 +1716,7 @@ async function renderPick() {
     const el = document.getElementById('pickMain'); if (!el) return;
     const d = pkLoad(), t = pkTotals(d);
     const chip = (on, label, fn) => `<button class="filter-btn ${on ? 'active' : ''}" onclick="${fn}">${label}</button>`;
-    el.innerHTML = `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎯</div><div><span class="tab-hero-kicker">PUANLI OYUN</span><h2>Tahmin <em>Oyunu</em></h2><p>İlk 11'i tahmin et, kim gol atar seç. Doğru bildikçe puan topla. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🏅</div></section>
+    el.innerHTML = gamesBarHtml('pick') + `<section class="tab-hero saved-hero"><div class="tab-hero-icon">🎯</div><div><span class="tab-hero-kicker">PUANLI OYUN</span><h2>Tahmin <em>Oyunu</em></h2><p>İlk 11'i tahmin et, kim gol atar seç. Doğru bildikçe puan topla. Para ya da bahis yok, sadece eğlence.</p></div><div class="tab-hero-art" aria-hidden="true">🏅</div></section>
         <div class="hd-panel"><div class="hd-stats4"><div class="sc-stat"><b>${t.pts}</b><span>Toplam puan</span></div><div class="sc-stat"><b>${pkRank(t.pts)}</b><span>Rütben</span></div><div class="sc-stat"><b>${t.n}</b><span>Sonuçlanan tahmin</span></div><div class="sc-stat"><b>${t.open}</b><span>Bekleyen tahmin</span></div></div>
         <div class="hd-note" style="margin-top:8px">Puanlar sadece bu tarayıcıda saklanır. Oyuncu rating verisi ücretsiz olmadığı için puan pozisyona göre verilir: forvet 3, orta saha 5, defans ve kaleci 7. Tahmin yapıp maç bitince +1 puan da alırsın.</div></div>
         <div class="hd-panel sx-ctl"><div class="sc-row-label">Lig</div><div class="sc-chips">${LEAGUES.map(l => chip(l.code === pkLeague, `${l.flag} ${l.name}`, `setPkLeague('${l.code}')`)).join('')}</div></div>
@@ -1893,6 +1961,8 @@ function fmBlackHtml(d) {
 function fmBlAdd(i) { const t = fmCands[i]; if (!t) return; const lg = (LEAGUES.find(l => l.code === fmLeague) || {}).name || ''; if (blAdd(t.name, lg, t.risk.reasons.join(' · '))) showToast(`⛔ ${t.name} kara listeye eklendi`); fmRender(); }
 function fmBlAddAll() { const lg = (LEAGUES.find(l => l.code === fmLeague) || {}).name || ''; let n = 0; fmCands.forEach(t => { if (blAdd(t.name, lg, t.risk.reasons.join(' · '))) n++; }); showToast(n ? `⛔ ${n} takım kara listeye eklendi` : 'ℹ️ Hepsi zaten listede'); fmRender(); }
 
+function toggleNav() { document.body.classList.toggle('nav-open'); }
+const gamesBarHtml = act => `<div class="sc-chips games-bar"><span class="sc-row-label" style="align-self:center;margin:0 6px 0 0">🎮 Oyunlar</span><button class="filter-btn ${act === 'pick' ? 'active' : ''}" onclick="switchMainTab('pick')">🎯 Tahmin Oyunu</button><button class="filter-btn ${act === 'game' ? 'active' : ''}" onclick="switchMainTab('game')">🥅 Penaltı</button></div>`;
 // ========== PERFORMANS ve AYARLAR SEKMELERİ ==========
 // node backtest.js sonucunu buraya işle (Tüm tekli bahisler tablosu): [kategori, bahis sayısı, model ort. %, gerçek tutma %]
 const BACKTEST_REPORT = { n: 8567, dosya: 35, cats: [['Banko (%85+)', 4784, 88.6, 88.0], ['Güvenilir (%70-85)', 8567, 80.4, 79.3], ['Riskli (%50-70)', 8567, 64.8, 65.5], ['Çılgın (%35-50)', 8564, 46.9, 46.1]], brier: [0.6014, 0.5680], fav: [50.6, 55.1] };
@@ -1976,15 +2046,14 @@ async function loadPredictions() {
 }
 
 async function loadAllLeagues() {
-    let ok = 0;
-    for (const league of LEAGUES) {
-        try {
-            const res = await apiFetch(`${API_URL}/matches/${league.code}`);
-            const data = await res.json();
-            allLeaguesCache[league.code] = data.matches;
-            ok++;
-        } catch (e) { if (!ok) throw e; }   // ilk lig bile gelmediyse bağlantı sorunu vardır
-    }
+    // Ligler aynı anda istenir; biri hata verirse diğerleri beklemez ve sayfa kilitlenmez
+    const rs = await Promise.allSettled(LEAGUES.map(async league => {
+        const res = await apiFetch(`${API_URL}/matches/${league.code}`);
+        const data = await res.json();
+        if (!Array.isArray(data.matches)) throw new Error(data.error || 'Bu lig için veri alınamadı');
+        allLeaguesCache[league.code] = data.matches;
+    }));
+    if (!rs.some(r => r.status === 'fulfilled')) throw (rs[0] && rs[0].reason) || new Error('Veri alınamadı');   // hiçbiri gelmediyse bağlantı sorunu vardır
     allLeaguesLoaded = true;
 }
 

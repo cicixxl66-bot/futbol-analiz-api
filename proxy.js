@@ -21,9 +21,9 @@ const ODDS_CACHE_MS = (parseFloat(process.env.ODDS_CACHE_HOURS) || 24) * 3600e3;
 const VALUE_EDGE = 0.05;                                             // "değerli" için minimum avantaj (%5)
 const PORT = process.env.PORT || 3000;
 // football-data.org (ücretsiz planda olan ligler, sayısal kod)
-const FD_CODES = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017', '2016', '2013'];
+const FD_CODES = ['2015', '2021', '2014', '2002', '2019', '2001', '2003', '2017'];
 // ESPN (anahtarsız, resmi olmayan uç nokta; noktalı kod = ESPN lig kısaltması)
-const ESPN_CODES = ['tur.1', 'uefa.nations', 'uefa.europa', 'uefa.europa.conf'];
+const ESPN_CODES = ['tur.1', 'bel.1', 'nor.1', 'uefa.nations', 'uefa.europa', 'uefa.europa.conf'];
 const LEAGUE_CODES = [...FD_CODES, ...ESPN_CODES];
 const isEspn = code => ESPN_CODES.includes(code);
 if (!API_KEY) console.log('⚠️  API_KEY tanımlı değil. .env dosyası oluştur (.env.example dosyasına bak) ya da Render ortam değişkenlerine ekle.');
@@ -151,7 +151,7 @@ app.get('/api/standings/:leagueId', async (req, res) => {
 
 // ---------- Gerçek piyasa oranı (The Odds API, isteğe bağlı) -> "Değerli" etiketi ----------
 const ODDS_SPORTS = { '2021': 'soccer_epl', '2014': 'soccer_spain_la_liga', '2019': 'soccer_italy_serie_a', '2002': 'soccer_germany_bundesliga', '2015': 'soccer_france_ligue_one', '2001': 'soccer_uefa_champs_league', '2003': 'soccer_netherlands_eredivisie', '2017': 'soccer_portugal_primeira_liga',
-    '2016': 'soccer_efl_champ', '2013': 'soccer_brazil_campeonato', 'tur.1': 'soccer_turkey_super_league', 'uefa.europa': 'soccer_uefa_europa_league', 'uefa.europa.conf': 'soccer_uefa_europa_conference_league' };
+    'tur.1': 'soccer_turkey_super_league', 'bel.1': 'soccer_belgium_first_div', 'nor.1': 'soccer_norway_eliteserien', 'uefa.europa': 'soccer_uefa_europa_league', 'uefa.europa.conf': 'soccer_uefa_europa_conference_league' };
 const STOP = new Set(['fc', 'cf', 'afc', 'ac', 'sc', 'sv', 'ssc', 'as', 'us', 'rc', 'rcd', 'ud', 'cd', 'fk', 'vfl', 'vfb', 'tsg', 'fsv', 'bv', 'sl', 'club', 'de', 'the', 'calcio', '1']);
 const toks = s => new Set((s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t && !STOP.has(t)));
 const jac = (a, b) => { const i = [...a].filter(x => b.has(x)).length, u = new Set([...a, ...b]).size; return u ? i / u : 0; };
@@ -210,7 +210,7 @@ async function attachMarket(code, matches) {
 // ---------- Sakat / cezalı oyuncu bilgisi (API-Football, isteğe bağlı). Olasılıkları DEĞİŞTİRMEZ, sadece gösterir ----------
 const APIFOOTBALL_KEY = process.env.APIFOOTBALL_KEY || '';
 const AF_LEAGUES = { '2021': 39, '2014': 140, '2019': 135, '2002': 78, '2015': 61, '2001': 2, '2003': 88, '2017': 94,
-    '2016': 40, '2013': 71, 'tur.1': 203, 'uefa.nations': 5, 'uefa.europa': 3, 'uefa.europa.conf': 848 };
+    'tur.1': 203, 'bel.1': 144, 'nor.1': 103, 'uefa.nations': 5, 'uefa.europa': 3, 'uefa.europa.conf': 848 };
 const AF_SEASON = parseInt(process.env.AF_SEASON) || (new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1);
 async function fetchInjuries(code) {
     const r = await fetch(`https://v3.football.api-sports.io/injuries?league=${AF_LEAGUES[code]}&season=${AF_SEASON}`, { headers: { 'x-apisports-key': APIFOOTBALL_KEY } });
@@ -237,7 +237,7 @@ async function attachInjuries(code, matches) {
 
 // ---------- Önceki sezonların maçları (veri/*.csv, veri-indir.ps1 hazırlar) -> H2H geçmişi ----------
 // Klasör yoksa (ör. sunucuda) H2H sadece bu sezonun maçlarıyla çalışır.
-const CSV_LEAGUE = { E0: '2021', SP1: '2014', D1: '2002', I1: '2019', F1: '2015', N1: '2003', P1: '2017', E1: '2016', BRA: '2013', T1: 'tur.1', UNL: 'uefa.nations', UEL: 'uefa.europa', UECL: 'uefa.europa.conf' };
+const CSV_LEAGUE = { E0: '2021', SP1: '2014', D1: '2002', I1: '2019', F1: '2015', N1: '2003', P1: '2017', B1: 'bel.1', T1: 'tur.1', UNL: 'uefa.nations', UEL: 'uefa.europa', UECL: 'uefa.europa.conf' };
 const CLUB_CSV = ['E0', 'SP1', 'D1', 'I1', 'F1', 'N1', 'P1', 'T1', 'UEL', 'UECL'];
 let pastDb = null;
 function loadPast() {
@@ -598,7 +598,7 @@ const IDEAL_MODES = {
     yuksek:  { minConf: 48, minOdd: 1.50, tol: 10, maxDis: 12, legsLeague: 4, legsDay: 4, legsWeek: 6, byOdd: true }
 };
 const IDEAL_LEAGUES = { '2015': ['Ligue 1', '🇫🇷'], '2021': ['Premier League', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2014': ['La Liga', '🇪🇸'], '2002': ['Bundesliga', '🇩🇪'], '2019': ['Serie A', '🇮🇹'], '2001': ['Şampiyonlar Ligi', '🇪🇺'], '2003': ['Eredivisie', '🇳🇱'], '2017': ['Primeira Liga', '🇵🇹'],
-    '2016': ['Championship', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], '2013': ['Brasileirão', '🇧🇷'], 'tur.1': ['Süper Lig', '🇹🇷'], 'uefa.nations': ['Uluslar Ligi', '🇪🇺'], 'uefa.europa': ['Avrupa Ligi', '🇪🇺'], 'uefa.europa.conf': ['Konferans Ligi', '🇪🇺'] };
+    'tur.1': ['Süper Lig', '🇹🇷'], 'bel.1': ['Belçika Pro Lig', '🇧🇪'], 'nor.1': ['Eliteserien', '🇳🇴'], 'uefa.nations': ['Uluslar Ligi', '🇪🇺'], 'uefa.europa': ['Avrupa Ligi', '🇪🇺'], 'uefa.europa.conf': ['Konferans Ligi', '🇪🇺'] };
 
 // Tekli bahisler: k = sitedeki bahis anahtarı, pk = tahmin alanı, hit = sonuç kontrolü
 const IDEAL_SINGLES = {
@@ -823,7 +823,7 @@ app.get('/api/season/:leagueId', async (req, res) => {
 // ========== TAHMİN OYUNU: ilk 11 + kim gol atar ==========
 // Veri kaynağı: ESPN (anahtarsız, resmi olmayan uç nokta). football-data.org ücretsiz planı kadro ve gol atan vermez.
 // Oyuncu rating verisi ücretsiz olmadığından puan pozisyona göre: forvet 3, orta saha 5, defans/kaleci 7.
-const ESPN_SLUG = { '2021': 'eng.1', '2014': 'esp.1', '2002': 'ger.1', '2019': 'ita.1', '2015': 'fra.1', '2003': 'ned.1', '2017': 'por.1', '2001': 'uefa.champions', '2016': 'eng.2', '2013': 'bra.1' };
+const ESPN_SLUG = { '2021': 'eng.1', '2014': 'esp.1', '2002': 'ger.1', '2019': 'ita.1', '2015': 'fra.1', '2003': 'ned.1', '2017': 'por.1', '2001': 'uefa.champions' };
 const gameSlug = code => isEspn(code) ? code : (ESPN_SLUG[code] || null);
 const POS_PTS = { FWD: 3, MID: 5, DEF: 7, GK: 7 };
 function posGroup(abbr, name) {
